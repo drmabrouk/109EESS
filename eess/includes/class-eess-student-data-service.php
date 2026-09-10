@@ -250,8 +250,9 @@ class EESS_Student_Data_Service {
                 $st_code = $student_rec->student_code;
                 $user_id = username_exists($st_code);
 
+                $default_pass = $st_code . $st_code;
+
                 if (!$user_id) {
-                    $default_pass = $st_code . $st_code;
                     $st_email = !empty($student_rec->parent_email) ? $student_rec->parent_email : ($st_code . '@eess.local');
                     $user_id = wp_create_user($st_code, $default_pass, $st_email);
                 }
@@ -264,10 +265,17 @@ class EESS_Student_Data_Service {
                         'display_name' => $student_rec->name
                     ));
 
+                    $existing_temp_pass = get_user_meta($user_id, 'sm_temp_pass', true);
+                    if (empty($existing_temp_pass)) {
+                        update_user_meta($user_id, 'sm_temp_pass', $default_pass);
+                    }
+
                     update_user_meta($user_id, 'eess_student_id', $final_id);
                     update_user_meta($user_id, 'eess_student_code', $st_code);
                     update_user_meta($user_id, 'eess_school_id', $student_rec->school_id);
                     update_user_meta($user_id, 'eess_user_type', 'student');
+                    update_user_meta($user_id, 'sm_account_status', 'active');
+                    update_user_meta($user_id, 'eess_account_status', 'active');
                 }
             }
         }

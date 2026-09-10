@@ -1440,6 +1440,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         ?>
                         <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
                             <button class="sm-tab-btn sm-active" onclick="smOpenInternalTab('school-settings', this)">السلطة</button>
+                            <button class="sm-tab-btn" onclick="smOpenInternalTab('central-numbering-settings', this)">نظام الترقيم المركزي</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('sidebar-settings', this)">تخصيص القائمة</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
                             <?php if ($is_admin): ?>
@@ -1478,6 +1479,39 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                         <div>الدعم الفني والبريد الرسمي: <a href="mailto:info@eess.online" style="color: var(--sm-primary-color); text-decoration: none;">info@eess.online</a></div>
                                     </div>
                                 </div>
+                            </form>
+                        </div>
+
+                        <div id="central-numbering-settings" class="sm-internal-tab" style="display:none;">
+                            <form method="post">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); $num_cfg = EESS_ID_Code_Service::get_numbering_config(); ?>
+                                <div style="background: #f8fafc; padding: 20px; border-radius: 14px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+                                    <h4 style="margin: 0 0 10px 0; color: #881337; font-size: 15px; font-weight: 800;">إدارة محرك الترقيم والأكواد المركزية للطلاب والكوادر (EESS Central ID Engine)</h4>
+                                    <p style="margin: 0 0 16px 0; font-size: 12.5px; color: #64748b; line-height: 1.6;">
+                                        يمكن لمدير النظام تخصيص صيغة وقواعد توليد أكواد الطلاب التلقائية، وعدد خانات الترقيم التسلسلي، مع إمكانية تعديل تسلسل الترقيم وتطبيق التغييرات فوراً.
+                                    </p>
+
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                        <div class="sm-form-group">
+                                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">بادئة كود الطالب (Student Prefix):</label>
+                                            <input type="text" name="student_prefix" value="<?php echo esc_attr($num_cfg['student_prefix']); ?>" placeholder="مثال: STU أو فارغ" class="sm-input" style="height: 38px;">
+                                        </div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">عدد خانات التسلسل (Digits Padding):</label>
+                                            <input type="number" min="3" max="8" name="student_digits" value="<?php echo esc_attr($num_cfg['student_digits']); ?>" class="sm-input" style="height: 38px;">
+                                        </div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">نموذج كود الطالب (Format Pattern):</label>
+                                            <input type="text" name="student_format" value="<?php echo esc_attr($num_cfg['student_format']); ?>" placeholder="{inst_code}{seq}" class="sm-input" style="height: 38px;">
+                                            <span style="font-size: 10.5px; color: #64748b;">العناصر المتاحة: {inst_code} (كود المدرسة), {seq} (التسلسل), {year} (السنة)</span>
+                                        </div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">ضبط قيمة التسلسل الحالي للطلاب (Reset Sequence):</label>
+                                            <input type="number" min="1" name="reset_student_counter_val" placeholder="أدخل رقم البداية للـ Sequence" class="sm-input" style="height: 38px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" name="sm_save_central_numbering" class="sm-btn" style="width: auto; background: #881337;">حفظ وتطبيق قواعد الترقيم المركزي الآن</button>
                             </form>
                         </div>
 

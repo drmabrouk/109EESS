@@ -1,37 +1,40 @@
 <?php if (!defined('ABSPATH')) exit; ?>
-<!-- REUSABLE UNIFIED 30-FIELD 4-STEP STUDENT PROFILE EDIT MODAL -->
+<!-- REUSABLE UNIFIED 30-FIELD 5-STEP STUDENT PROFILE WIZARD MODAL -->
 <div id="edit-student-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
     <div class="sm-modal-content" style="max-width: 960px; width: 95vw; border-radius: 20px; padding: 24px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: 'Cairo', sans-serif;">
         <div class="sm-modal-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
             <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-                <span class="dashicons dashicons-admin-users" style="color: #0f172a; font-size: 22px; width: 22px; height: 22px;"></span>
-                <span id="edit-modal-title-text">إدارة وسجل الطالب الكامل</span>
+                <span class="dashicons dashicons-admin-users" style="color: #881337; font-size: 22px; width: 22px; height: 22px;"></span>
+                <span id="edit-modal-title-text">إدارة وسجل الطالب الكامل (30 حقل)</span>
             </h3>
             <button type="button" class="sm-modal-close" onclick="closeUnifiedEditStudentModal()" style="background: none; border: none; font-size: 26px; color: #0f172a; cursor: pointer; line-height: 1;">&times;</button>
         </div>
 
-        <!-- Wizard Step Progress Indicator (4 Steps) -->
+        <!-- Wizard Step Progress Indicator (5 Steps) -->
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; position: relative;">
-            <div style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background: #e2e8f0; z-index: 1;"></div>
+            <div style="position: absolute; top: 50%; left: 8%; right: 8%; height: 2px; background: #e2e8f0; z-index: 1;"></div>
 
             <!-- Step 1 Node: Identity & Personal -->
-            <div id="eess-wiz-node-1" onclick="goUnifiedEditStep(1)" style="position: relative; z-index: 2; width: 38px; height: 38px; border-radius: 50%; background: #881337; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; border: 2px solid #881337; transition: all 0.25s;">1</div>
+            <div id="eess-wiz-node-1" onclick="goUnifiedEditStep(1)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #881337; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid #881337; transition: all 0.25s;" title="1. الهوية والبيانات الشخصية">1</div>
             <!-- Step 2 Node: Academic & Org Placement -->
-            <div id="eess-wiz-node-2" onclick="goUnifiedEditStep(2)" style="position: relative; z-index: 2; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.25s;">2</div>
-            <!-- Step 3 Node: Guardian, Location & Financials -->
-            <div id="eess-wiz-node-3" onclick="goUnifiedEditStep(3)" style="position: relative; z-index: 2; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.25s;">3</div>
-            <!-- Step 4 Node: Health, Behavior & Medical Review -->
-            <div id="eess-wiz-node-4" onclick="goUnifiedEditStep(4)" style="position: relative; z-index: 2; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.25s;">4</div>
+            <div id="eess-wiz-node-2" onclick="goUnifiedEditStep(2)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="2. التنسيق الأكاديمي والتنظيمي">2</div>
+            <!-- Step 3 Node: Guardian & Location -->
+            <div id="eess-wiz-node-3" onclick="goUnifiedEditStep(3)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="3. ولي الأمر والتواصل والموقع">3</div>
+            <!-- Step 4 Node: Financials -->
+            <div id="eess-wiz-node-4" onclick="goUnifiedEditStep(4)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="4. السجل المالي والرسوم">4</div>
+            <!-- Step 5 Node: Health, Behavior & Account -->
+            <div id="eess-wiz-node-5" onclick="goUnifiedEditStep(5)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="5. السجل الصحي والحساب">5</div>
         </div>
 
         <form id="edit-student-form">
             <?php wp_nonce_field('sm_add_student', 'sm_nonce'); ?>
-            <input type="hidden" name="student_id" id="edit_stu_id">
+            <input type="hidden" name="student_id" id="edit_stu_id" value="0">
+            <input type="hidden" name="photo_url" id="edit_stu_photo_url_val" value="">
 
             <!-- STEP 1: Identity & Personal Information -->
             <div id="eess-wiz-step-1" class="eess-wiz-panel" style="display: block;">
                 <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 1: هويّة الطالب والبيانات الشّخصيّة</div>
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 1: هويّة الطالب والبيانات الشّخصيّة والصورة</div>
 
                     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 16px; padding: 14px; background: #ffffff; border-radius: 12px; border: 1px dashed #cbd5e1;">
                         <div id="edit_stu_photo_preview_box" style="width: 80px; height: 80px; border-radius: 12px; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border: 2px solid #cbd5e1; flex-shrink: 0;">
@@ -39,9 +42,9 @@
                             <img id="edit_stu_photo_img" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
                         </div>
                         <div>
-                            <label for="edit_stu_photo_file" class="sm-btn" style="background: #881337; color: #ffffff; height: 32px; padding: 0 14px; font-size: 11.5px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">رفع / تغيير الصورة</label>
+                            <label for="edit_stu_photo_file" class="sm-btn" style="background: #881337; color: #ffffff; height: 32px; padding: 0 14px; font-size: 11.5px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">رفع / تغيير الصورة الشخصية</label>
                             <input type="file" id="edit_stu_photo_file" accept="image/*" style="display: none;" onchange="handleStudentPhotoSelected(this)">
-                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">صورة مربّعة خلفيّة بيضاء (URL/File)</p>
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">صورة شخصية رسمية خلفية بيضاء</p>
                         </div>
                     </div>
 
@@ -51,8 +54,8 @@
                             <input type="text" name="name" id="edit_stu_name" class="sm-input" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">كود الطالب (Serial/Code):</label>
-                            <input type="text" name="student_code" id="edit_stu_code" readonly class="sm-input" placeholder="يولد تلقائياً من نظام الترقيم المركزي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%; background: #f1f5f9; font-weight: 800; color: #881337; cursor: not-allowed;" title="كود معرف الطالب يولد تلقائياً من محرك الترقيم المركزي بالنظام">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">كود الطالب المركزى (Student Code):</label>
+                            <input type="text" name="student_code" id="edit_stu_code" readonly class="sm-input" placeholder="يولد تلقائياً من نظام الترقيم المركزي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%; background: #f1f5f9; font-weight: 800; color: #881337; cursor: not-allowed;" title="كود معرف الطالب يولد تلقائياً من نظام الترقيم المركزي">
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الجنس:</label>
@@ -67,7 +70,7 @@
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الجنسية:</label>
-                            <input type="text" name="nationality" id="edit_stu_nationality" class="sm-input" placeholder="سعودي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <input type="text" name="nationality" id="edit_stu_nationality" class="sm-input" placeholder="سعودي / إماراتي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم الهوية الوطنية / الإقامة:</label>
@@ -80,7 +83,7 @@
             <!-- STEP 2: Academic & Org Placement -->
             <div id="eess-wiz-step-2" class="eess-wiz-panel" style="display: none;">
                 <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 2: التنسيق الأكاديمي والتبعيات التنظيمية</div>
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 2: التنسيق الأكاديمي والتنظيمي وحالة التسجيل</div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div class="sm-form-group">
@@ -88,13 +91,13 @@
                             <select name="school_id" id="edit_stu_school_id" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                                 <option value="">-- اختر المدرسة --</option>
                                 <?php foreach (EESS_Org_Helper::get_all_schools() as $sch): ?>
-                                    <option value="<?php echo $sch->id; ?>"><?php echo esc_html($sch->name); ?> (ID: <?php echo $sch->id; ?>)</option>
+                                    <option value="<?php echo $sch->id; ?>"><?php echo esc_html($sch->name); ?> (كود: <?php echo $sch->school_code ?? $sch->id; ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الصف الدراسي (Grade): <span style="color: #dc2626;">*</span></label>
-                            <input type="text" name="class" id="edit_stu_class" class="sm-input" required placeholder="الصف 10 أو 10" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <input type="text" name="class" id="edit_stu_class" class="sm-input" required placeholder="الصف الأول / Grade 1" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الشعبة (Section): <span style="color: #dc2626;">*</span></label>
@@ -102,10 +105,10 @@
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">المستوى الأكاديمي:</label>
-                            <input type="text" name="academic_level" id="edit_stu_acad_level" class="sm-input" placeholder="ممتاز" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <input type="text" name="academic_level" id="edit_stu_acad_level" class="sm-input" placeholder="ممتاز / جيد جداً" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة الطالب:</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة الطالب (Student Status):</label>
                             <select name="student_status" id="edit_stu_status" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                                 <option value="Active">نشط (Active)</option>
                                 <option value="Inactive">غير نشط (Inactive)</option>
@@ -114,21 +117,25 @@
                             </select>
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة التسجيل:</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة التسجيل (Enrollment Status):</label>
                             <select name="enrollment_status" id="edit_stu_enroll_status" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                                 <option value="Enrolled">مقيد (Enrolled)</option>
                                 <option value="Pending">معلق (Pending)</option>
                                 <option value="Transferred">منقول (Transferred)</option>
                             </select>
                         </div>
+                        <div class="sm-form-group" style="grid-column: span 2;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">تاريخ التسجيل (Registration Date):</label>
+                            <input type="date" name="registration_date" id="edit_stu_reg_date" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 3: Guardian, Location & Financials -->
+            <!-- STEP 3: Guardian & Location -->
             <div id="eess-wiz-step-3" class="eess-wiz-panel" style="display: none;">
                 <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 3: ولي الأمر والموقع والرسوم المدرسية</div>
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 3: ولي الأمر والتواصل والموقع الجغرافي</div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div class="sm-form-group">
@@ -140,11 +147,11 @@
                             <input type="text" name="guardian_relationship" id="edit_stu_guardian_rel" class="sm-input" placeholder="أب" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">البريد الإلكتروني:</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">البريد الإلكتروني لولي الأمر:</label>
                             <input type="email" name="parent_email" id="edit_stu_email" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم الهاتف (واتساب):</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم هاتف ولي الأمر (واتساب):</label>
                             <input type="text" name="guardian_phone" id="edit_stu_phone" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
@@ -160,27 +167,58 @@
                             </select>
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">إجمالي الرسوم المدرسية:</label>
-                            <input type="number" step="0.01" name="total_tuition_fees" id="edit_stu_total_fees" onchange="calcStudentBalance()" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                        </div>
-                        <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المبلغ المدفوع:</label>
-                            <input type="number" step="0.01" name="amount_paid" id="edit_stu_amount_paid" onchange="calcStudentBalance()" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                        </div>
-                        <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المبلغ المتبقي:</label>
-                            <input type="number" step="0.01" readonly id="edit_stu_balance" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%; background: #f8fafc; font-weight: bold; color: #dc2626;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">عنوان السكن والتفاصيل:</label>
+                            <input type="text" name="address" id="edit_stu_address" class="sm-input" placeholder="المنطقة، الشارع، البناية" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 4: Health, Behavior & Medical Review -->
+            <!-- STEP 4: Financials & Tuition Fees -->
             <div id="eess-wiz-step-4" class="eess-wiz-panel" style="display: none;">
                 <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 4: السجل الصحي، أصحاب الهمم والملاحظة السلوكية</div>
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 4: السجل المالي والرسوم المدرسية والدفعات</div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="sm-form-group">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">إجمالي الرسوم المدرسية (Total Tuition Fees):</label>
+                            <input type="number" step="0.01" name="total_tuition_fees" id="edit_stu_total_fees" onchange="calcStudentBalance()" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                        </div>
+                        <div class="sm-form-group">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المبلغ المدفوع (Amount Paid):</label>
+                            <input type="number" step="0.01" name="amount_paid" id="edit_stu_amount_paid" onchange="calcStudentBalance()" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                        </div>
+                        <div class="sm-form-group">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المبلغ المتبقي (Outstanding Balance):</label>
+                            <input type="number" step="0.01" readonly id="edit_stu_balance" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%; background: #f8fafc; font-weight: bold; color: #dc2626;">
+                        </div>
+                        <div class="sm-form-group">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة الدفع (Payment Status):</label>
+                            <select name="payment_status" id="edit_stu_payment_status" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="Pending">معلق (Pending)</option>
+                                <option value="Paid">مدفوع بالكامل (Paid)</option>
+                                <option value="Partial">مدفوع جزئياً (Partial)</option>
+                                <option value="Overdue">متأخر (Overdue)</option>
+                            </select>
+                        </div>
+                        <div class="sm-form-group" style="grid-column: span 2;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">حالة الرسوم (Fee Status):</label>
+                            <select name="fee_status" id="edit_stu_fee_status" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="Unpaid">غير مدفوع (Unpaid)</option>
+                                <option value="Paid">مسدد بالكامل (Paid)</option>
+                                <option value="Partial">تسديد جزئي (Partial)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: Health, Special Needs, Behavior & Account Section -->
+            <div id="eess-wiz-step-5" class="eess-wiz-panel" style="display: none;">
+                <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 5: السجل الصحي، أصحاب الهمم، السلوك وإدارة الحساب الأكاديمي</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">من أصحاب الهمم (Special Needs):</label>
                             <select name="special_needs" id="edit_stu_special_needs" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
@@ -189,12 +227,31 @@
                             </select>
                         </div>
                         <div class="sm-form-group">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">الحالة الصحية العامة (Health Status):</label>
+                            <input type="text" name="health_status" id="edit_stu_health_status" class="sm-input" placeholder="سليم / مريض سكري" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                        </div>
+                        <div class="sm-form-group" style="grid-column: span 2;">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الحساسية والتنبيهات الطبية (Allergies):</label>
                             <input type="text" name="allergies" id="edit_stu_allergies" class="sm-input" placeholder="الفول السوداني; الحليب" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group" style="grid-column: span 2;">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">تسجيل ملاحظة سلوكية أولية (Student Behavior Log):</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">تسجيل ملاحظة سلوكية أولية (Behavior Log):</label>
                             <textarea name="student_behavior" id="edit_stu_behavior" class="sm-textarea" rows="2" placeholder="أدخل أي ملاحظة سلوكية لتوليد سجل سلوكي رسمي فوراً للطالب..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Academic Login Account & Credentials Info Section -->
+                    <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #cbd5e1;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px;">
+                            <h5 style="margin: 0; font-size: 13px; font-weight: 800; color: #0f172a;">🔐 حساب الدخول الأكاديمي وكلمة المرور</h5>
+                            <span style="font-size: 11px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 10px; font-weight: 800;">تلقائي عند الاعتماد</span>
+                        </div>
+                        <p style="margin: 0 0 10px 0; font-size: 11.5px; color: #64748b;">
+                            يتم إنشاء وتفعيل حساب الطالب تلقائياً برتبة <strong>طالب (sm_student)</strong> وبكلمة مرور افتراضية تكون <strong>كود الطالب مكرر مرتين</strong> (مثال: Code: 123456 → Pass: 123456123456).
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                            <div>اسم المستخدم المعتمد: <strong id="edit_stu_username_display" style="color: #881337;">سيتم توليده من الكود</strong></div>
+                            <div>حالة الحساب: <strong style="color: #16a34a;">نشط تلقائياً (Active)</strong></div>
                         </div>
                     </div>
                 </div>
@@ -205,7 +262,7 @@
                 <button type="button" onclick="closeUnifiedEditStudentModal()" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 16px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1;">إلغاء</button>
                 <button type="button" id="eess-wiz-prev-btn" onclick="goUnifiedEditStep(currentUnifiedStep - 1)" class="sm-btn" style="background: #e2e8f0; color: #334155; height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; display: none;">السابق</button>
                 <button type="button" id="eess-wiz-next-btn" onclick="goUnifiedEditStep(currentUnifiedStep + 1)" class="sm-btn" style="background: #0f172a; color: #ffffff; height: 38px; padding: 0 22px; border-radius: 8px; font-weight: 800;">التالي</button>
-                <button type="submit" id="eess-wiz-submit-btn" class="sm-btn" style="background: #881337; color: #ffffff; height: 38px; padding: 0 24px; border-radius: 8px; font-weight: 800; display: none;">اعتماد وحفظ البيانات</button>
+                <button type="submit" id="eess-wiz-submit-btn" class="sm-btn" style="background: #881337; color: #ffffff; height: 38px; padding: 0 24px; border-radius: 8px; font-weight: 800; display: none;">حفظ واعتد السجل الكامل (30 حقل)</button>
             </div>
         </form>
     </div>
@@ -222,13 +279,13 @@ function calcStudentBalance() {
 
 function goUnifiedEditStep(step) {
     if (step < 1) step = 1;
-    if (step > 4) step = 4;
+    if (step > 5) step = 5;
     currentUnifiedStep = step;
 
     document.querySelectorAll('.eess-wiz-panel').forEach(p => p.style.display = 'none');
     document.getElementById('eess-wiz-step-' + step).style.display = 'block';
 
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
         const node = document.getElementById('eess-wiz-node-' + i);
         if (node) {
             if (i === step) {
@@ -242,8 +299,8 @@ function goUnifiedEditStep(step) {
     }
 
     document.getElementById('eess-wiz-prev-btn').style.display = (step > 1) ? 'inline-flex' : 'none';
-    document.getElementById('eess-wiz-next-btn').style.display = (step < 4) ? 'inline-flex' : 'none';
-    document.getElementById('eess-wiz-submit-btn').style.display = (step === 4) ? 'inline-flex' : 'none';
+    document.getElementById('eess-wiz-next-btn').style.display = (step < 5) ? 'inline-flex' : 'none';
+    document.getElementById('eess-wiz-submit-btn').style.display = (step === 5) ? 'inline-flex' : 'none';
 }
 
 function closeUnifiedEditStudentModal() {
@@ -256,8 +313,8 @@ function handleStudentPhotoSelected(input) {
     const file = input.files[0];
     const studentId = document.getElementById('edit_stu_id').value;
 
-    if (!studentId) {
-        alert('يرجى تحديد الطالب أولاً قبل رفع الصورة');
+    if (!studentId || studentId === '0') {
+        alert('يرجى تحديد الطالب أو حفظ بياناته أولاً قبل رفع الصورة');
         return;
     }
 
@@ -278,12 +335,10 @@ function handleStudentPhotoSelected(input) {
             previewImg.src = cacheBustedUrl;
             previewImg.style.display = 'block';
             if (defaultIcon) defaultIcon.style.display = 'none';
+            document.getElementById('edit_stu_photo_url_val').value = res.data.photo_url;
 
-            // Update row photo in main table immediately
             const rowPhoto = document.querySelector('#student-row-' + studentId + ' img.student-avatar');
-            if (rowPhoto) {
-                rowPhoto.src = cacheBustedUrl;
-            }
+            if (rowPhoto) rowPhoto.src = cacheBustedUrl;
 
             if (typeof smShowNotification === 'function') smShowNotification('تم تحديث صورة الطالب بنجاح');
         } else {
@@ -296,8 +351,9 @@ function handleStudentPhotoSelected(input) {
     window.editSmStudent = function(s) {
         if (!s) return;
         const titleEl = document.getElementById('edit-modal-title-text');
-        if (titleEl) titleEl.innerText = 'تعديل بيانات وإدارة سجل الطالب';
-        document.getElementById('edit_stu_id').value = s.id || s.student_id || '';
+        if (titleEl) titleEl.innerText = 'تعديل بيانات وإدارة سجل الطالب (30 حقل)';
+
+        document.getElementById('edit_stu_id').value = s.id || s.student_id || '0';
         document.getElementById('edit_stu_name').value = s.name || s.student_name || '';
         document.getElementById('edit_stu_class').value = s.class_name || s.class || '';
         document.getElementById('edit_stu_section').value = s.section || '';
@@ -312,10 +368,20 @@ function handleStudentPhotoSelected(input) {
         if (document.getElementById('edit_stu_guardian_name')) document.getElementById('edit_stu_guardian_name').value = s.guardian_name || '';
         if (document.getElementById('edit_stu_guardian_rel')) document.getElementById('edit_stu_guardian_rel').value = s.guardian_relationship || 'أب';
         if (document.getElementById('edit_stu_emirate')) document.getElementById('edit_stu_emirate').value = s.emirate || 'أبوظبي';
+        if (document.getElementById('edit_stu_address')) document.getElementById('edit_stu_address').value = s.address || '';
+        if (document.getElementById('edit_stu_status')) document.getElementById('edit_stu_status').value = s.student_status || 'Active';
+        if (document.getElementById('edit_stu_enroll_status')) document.getElementById('edit_stu_enroll_status').value = s.enrollment_status || 'Enrolled';
+        if (document.getElementById('edit_stu_reg_date')) document.getElementById('edit_stu_reg_date').value = s.registration_date || s.enrollment_date || '';
+        if (document.getElementById('edit_stu_acad_level')) document.getElementById('edit_stu_acad_level').value = s.academic_level || 'ممتاز';
         if (document.getElementById('edit_stu_total_fees')) document.getElementById('edit_stu_total_fees').value = s.total_tuition_fees || '0.00';
         if (document.getElementById('edit_stu_amount_paid')) document.getElementById('edit_stu_amount_paid').value = s.amount_paid || '0.00';
+        if (document.getElementById('edit_stu_payment_status')) document.getElementById('edit_stu_payment_status').value = s.payment_status || 'Pending';
+        if (document.getElementById('edit_stu_fee_status')) document.getElementById('edit_stu_fee_status').value = s.fee_status || 'Unpaid';
         if (document.getElementById('edit_stu_special_needs')) document.getElementById('edit_stu_special_needs').value = s.special_needs ? 'نعم' : 'لا';
+        if (document.getElementById('edit_stu_health_status')) document.getElementById('edit_stu_health_status').value = s.health_status || 'سليم';
         if (document.getElementById('edit_stu_allergies')) document.getElementById('edit_stu_allergies').value = s.allergies || '';
+        if (document.getElementById('edit_stu_username_display')) document.getElementById('edit_stu_username_display').innerText = s.student_code || 'سيتم توليده تلقائياً';
+
         calcStudentBalance();
 
         const previewImg = document.getElementById('edit_stu_photo_img');
@@ -323,9 +389,11 @@ function handleStudentPhotoSelected(input) {
         if (s.photo_url) {
             previewImg.src = s.photo_url; previewImg.style.display = 'block';
             if (defaultIcon) defaultIcon.style.display = 'none';
+            document.getElementById('edit_stu_photo_url_val').value = s.photo_url;
         } else {
             previewImg.src = ''; previewImg.style.display = 'none';
             if (defaultIcon) defaultIcon.style.display = 'block';
+            document.getElementById('edit_stu_photo_url_val').value = '';
         }
 
         goUnifiedEditStep(1);
@@ -350,16 +418,16 @@ function handleStudentPhotoSelected(input) {
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
-                    if (typeof smShowNotification === 'function') smShowNotification('✓ تم تحديث جميع بيانات الطالب الـ 30 بنجاح');
+                    if (typeof smShowNotification === 'function') smShowNotification('✓ تم حفظ واعتتماد جميع بيانات الطالب الـ 30 بنجاح');
                     closeUnifiedEditStudentModal();
                     setTimeout(() => location.reload(), 500);
                 } else {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'حفظ وتحديث السجل الكامل'; }
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'حفظ واعتد السجل الكامل (30 حقل)'; }
                     alert('خطأ أثناء التحديث: ' + (res.data || 'فشل حفظ بيانات الطالب.'));
                 }
             })
             .catch(err => {
-                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'حفظ وتحديث السجل الكامل'; }
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'حفظ واعتد السجل الكامل (30 حقل)'; }
                 alert('حدث خطأ أثناء الاتصال بالخادم.');
             });
         });
