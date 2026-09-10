@@ -713,24 +713,12 @@ $to_num = min($offset + $limit, $total_students_count);
     }
 
     function openUnifiedProfileModal(s) {
-        if (document.getElementById('edit_stu_id')) document.getElementById('edit_stu_id').value = s.id || 0;
-        if (document.getElementById('edit_stu_name')) document.getElementById('edit_stu_name').value = s.name || '';
-        if (document.getElementById('edit_stu_class')) document.getElementById('edit_stu_class').value = s.class_name || s.class || '';
-        if (document.getElementById('edit_stu_section')) document.getElementById('edit_stu_section').value = s.section || '';
-        if (document.getElementById('edit_stu_email')) document.getElementById('edit_stu_email').value = s.parent_email || '';
-        if (document.getElementById('edit_stu_code')) document.getElementById('edit_stu_code').value = s.student_code || s.student_id || '';
-        if (document.getElementById('edit_stu_phone')) document.getElementById('edit_stu_phone').value = s.guardian_phone || '';
-        if (document.getElementById('edit_stu_nationality')) document.getElementById('edit_stu_nationality').value = s.nationality || '';
-        if (document.getElementById('edit_stu_reg_date')) document.getElementById('edit_stu_reg_date').value = s.registration_date || '';
-
-        if (document.getElementById('edit-modal-title-text')) {
-            document.getElementById('edit-modal-title-text').innerText = 'تعديل الملف الشامل للطالب: ' + (s.name || '');
+        if (typeof window.editSmStudent === 'function') {
+            window.editSmStudent(s);
+        } else {
+            const modal = document.getElementById('edit-student-modal');
+            if (modal) modal.style.display = 'flex';
         }
-
-        if (typeof goUnifiedEditStep === 'function') goUnifiedEditStep(1);
-        else if (typeof goEditStep === 'function') goEditStep(1);
-        const modal = document.getElementById('edit-student-modal');
-        if (modal) modal.style.display = 'flex';
     }
 
     function updateStudentBulkToolbar() {
