@@ -205,7 +205,10 @@ class EESS_Student_Data_Service {
         }
 
         if ($student_id > 0) {
-            $wpdb->update("{$wpdb->prefix}sm_students", $fields, array('id' => $student_id));
+            $updated = $wpdb->update("{$wpdb->prefix}sm_students", $fields, array('id' => $student_id));
+            if ($updated === false) {
+                return new WP_Error('db_update_failed', 'فشل تحديث بيانات الطالب في قاعدة البيانات: ' . $wpdb->last_error);
+            }
             $final_id = $student_id;
         } else {
             // Resolve institution ID for code generation
@@ -222,9 +225,17 @@ class EESS_Student_Data_Service {
                 $fields['student_code'] = $generated_code;
                 $fields['student_id']   = $generated_code;
             }
-            $wpdb->insert("{$wpdb->prefix}sm_students", $fields);
+            $inserted = $wpdb->insert("{$wpdb->prefix}sm_students", $fields);
+            if ($inserted === false || !$wpdb->insert_id) {
+                return new WP_Error('db_insert_failed', 'فشل إضافة الطالب في قاعدة البيانات: ' . $wpdb->last_error);
+            }
             $final_id = $wpdb->insert_id;
         }
+
+        // Invalidate transient & object caches to ensure immediate data updates
+        $wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name LIKE '_transient_sm_%' OR option_name LIKE '_transient_timeout_sm_%'");
+        $wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name LIKE '_transient_eess_%' OR option_name LIKE '_transient_timeout_eess_%'");
+        wp_cache_flush();
 
         if ($final_id > 0) {
             EESS_Org_Helper::resolve_student_org_ids($final_id, $grade, $section);
