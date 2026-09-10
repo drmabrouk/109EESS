@@ -381,7 +381,7 @@ $to_num = min($offset + $limit, $total_students_count);
                                             </div>
                                         <?php endif; ?>
                                         <div style="line-height: 1.4;">
-                                            <a href="javascript:void(0)" onclick="openUnifiedProfileModal(<?php echo htmlspecialchars(json_encode($student)); ?>)" style="font-weight: 800; font-size: 14px; color: #0f172a; text-decoration: none;" onmouseover="this.style.color='#881337'" onmouseout="this.style.color='#0f172a'" title="اضغط لتعديل بيانات الطالب">
+                                            <a href="javascript:void(0)" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="openUnifiedProfileModal(this)" style="font-weight: 800; font-size: 14px; color: #0f172a; text-decoration: none;" onmouseover="this.style.color='#881337'" onmouseout="this.style.color='#0f172a'" title="اضغط لتعديل بيانات الطالب">
                                                 <?php echo esc_html($student->name); ?>
                                             </a>
                                             <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
@@ -467,13 +467,13 @@ $to_num = min($offset + $limit, $total_students_count);
                                         </a>
 
                                         <!-- Behavioral Profile Drawer -->
-                                        <button type="button" onclick="viewSmStudent(<?php echo htmlspecialchars(json_encode($student)); ?>)" title="الملف السلوكي والتحليلي" class="sm-action-btn sm-action-btn-warning">
+                                        <button type="button" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="viewSmStudent(this)" title="الملف السلوكي والتحليلي" class="sm-action-btn sm-action-btn-warning">
                                             <span class="dashicons dashicons-clipboard"></span>
                                         </button>
 
                                         <?php if ($is_admin): ?>
                                             <!-- Edit Student Button -->
-                                            <button type="button" onclick='openUnifiedProfileModal(<?php echo json_encode($student); ?>)' title="تعديل الطالب" class="sm-action-btn sm-action-btn-warning">
+                                            <button type="button" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="openUnifiedProfileModal(this)" title="تعديل الطالب" class="sm-action-btn sm-action-btn-warning">
                                                 <span class="dashicons dashicons-edit"></span>
                                             </button>
 
@@ -712,13 +712,55 @@ $to_num = min($offset + $limit, $total_students_count);
         if (modal) modal.style.display = 'flex';
     }
 
-    function openUnifiedProfileModal(s) {
+    function openUnifiedProfileModal(btnOrObj) {
+        let s = btnOrObj;
+        if (btnOrObj && btnOrObj.dataset && btnOrObj.dataset.student) {
+            try {
+                s = JSON.parse(btnOrObj.dataset.student);
+            } catch(e) {
+                console.error('Failed to parse student data', e);
+            }
+        } else if (typeof btnOrObj === 'string') {
+            try {
+                s = JSON.parse(btnOrObj);
+            } catch(e) {}
+        }
+
         if (typeof window.editSmStudent === 'function') {
             window.editSmStudent(s);
         } else {
             const modal = document.getElementById('edit-student-modal');
             if (modal) modal.style.display = 'flex';
         }
+    }
+
+    function viewSmStudent(btnOrObj) {
+        let student = btnOrObj;
+        if (btnOrObj && btnOrObj.dataset && btnOrObj.dataset.student) {
+            try {
+                student = JSON.parse(btnOrObj.dataset.student);
+            } catch(e) {}
+        }
+
+        const modal = document.getElementById('view-student-modal');
+        const content = document.getElementById('stu_details_content');
+        const printBtn = document.getElementById('print-full-record-btn');
+        if (!modal || !content) return;
+
+        content.innerHTML = '<div style="text-align:center; padding:50px;"><p style="font-weight:700; color:#718096;">جاري جلب الملف الانضباطي وتنسيقه...</p></div>';
+        modal.style.display = 'flex';
+
+        printBtn.onclick = function() {
+            window.open('<?php echo admin_url('admin-ajax.php'); ?>?action=sm_print&print_type=disciplinary_report&student_id=' + student.id, '_blank');
+        };
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=sm_print&print_type=disciplinary_report&student_id=' + student.id)
+            .then(r => r.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                doc.querySelectorAll('.no-print').forEach(el => el.remove());
+                content.innerHTML = doc.body.innerHTML;
+            });
     }
 
     function updateStudentBulkToolbar() {
