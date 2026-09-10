@@ -5,7 +5,7 @@
         <div class="sm-modal-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
             <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
                 <span class="dashicons dashicons-admin-users" style="color: #0f172a; font-size: 22px; width: 22px; height: 22px;"></span>
-                إدارة وسجل الطالب الكامل
+                <span id="edit-modal-title-text">إدارة وسجل الطالب الكامل</span>
             </h3>
             <button type="button" class="sm-modal-close" onclick="closeUnifiedEditStudentModal()" style="background: none; border: none; font-size: 26px; color: #0f172a; cursor: pointer; line-height: 1;">&times;</button>
         </div>
@@ -295,6 +295,8 @@ function handleStudentPhotoSelected(input) {
 (function() {
     window.editSmStudent = function(s) {
         if (!s) return;
+        const titleEl = document.getElementById('edit-modal-title-text');
+        if (titleEl) titleEl.innerText = 'تعديل بيانات وإدارة سجل الطالب';
         document.getElementById('edit_stu_id').value = s.id || s.student_id || '';
         document.getElementById('edit_stu_name').value = s.name || s.student_name || '';
         document.getElementById('edit_stu_class').value = s.class_name || s.class || '';
@@ -334,7 +336,8 @@ function handleStudentPhotoSelected(input) {
     window.editSmStudentFromStats = window.editSmStudent;
 
     const editForm = document.getElementById('edit-student-form');
-    if (editForm) {
+    if (editForm && !editForm.dataset.listenerAttached) {
+        editForm.dataset.listenerAttached = 'true';
         editForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = this.querySelector('button[type="submit"]');

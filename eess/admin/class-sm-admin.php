@@ -114,20 +114,6 @@ class SM_Admin {
             echo '<div class="updated"><p>تم حفظ بيانات المدرسة بنجاح.</p></div>';
         }
 
-        if (isset($_POST['sm_save_appearance'])) {
-            check_admin_referer('sm_admin_action', 'sm_admin_nonce');
-            SM_Settings::save_appearance(array(
-                'primary_color' => sanitize_hex_color($_POST['primary_color']),
-                'secondary_color' => sanitize_hex_color($_POST['secondary_color']),
-                'accent_color' => sanitize_hex_color($_POST['accent_color']),
-                'dark_color' => sanitize_hex_color($_POST['dark_color']),
-                'font_size' => sanitize_text_field($_POST['font_size']),
-                'border_radius' => sanitize_text_field($_POST['border_radius']),
-                'table_style' => sanitize_text_field($_POST['table_style']),
-                'button_style' => sanitize_text_field($_POST['button_style'])
-            ));
-            echo '<div class="updated"><p>تم حفظ إعدادات التصميم بنجاح.</p></div>';
-        }
 
         if (isset($_POST['sm_save_violation_settings'])) {
             check_admin_referer('sm_admin_action', 'sm_admin_nonce');

@@ -704,6 +704,7 @@ class EESS_Org_Helper {
     public static function get_schools() {
         global $wpdb;
         self::ensure_institutions_columns_exist();
+        self::seed_mandatory_institutions();
         return $wpdb->get_results("SELECT s.*, i.name as institution_name, u1.display_name as manager_display_name, u2.display_name as deputy_manager_display_name FROM {$wpdb->prefix}eess_schools s LEFT JOIN {$wpdb->prefix}eess_institutions i ON s.institution_id = i.id LEFT JOIN {$wpdb->users} u1 ON s.manager_id = u1.ID LEFT JOIN {$wpdb->users} u2 ON s.deputy_manager_id = u2.ID WHERE (s.status = 'active' OR s.status IS NULL) ORDER BY s.name ASC");
     }
 

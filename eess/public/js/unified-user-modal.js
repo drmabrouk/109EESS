@@ -205,10 +205,13 @@ window.eessRenderStepSummary = function() {
     var empId = document.getElementById('u_employee_id').value;
 
     var instSel = document.getElementById('u_institution_id');
-    var instTxt = instSel.options[instSel.selectedIndex] ? instSel.options[instSel.selectedIndex].text : '-';
+    var instTxt = (instSel && instSel.options && instSel.options[instSel.selectedIndex]) ? instSel.options[instSel.selectedIndex].text : '-';
+
+    var schSel = document.getElementById('u_school_id') || document.getElementById('u_institution_id');
+    var schTxt = (schSel && schSel.options && schSel.options[schSel.selectedIndex]) ? schSel.options[schSel.selectedIndex].text : '-';
 
     var specSel = document.getElementById('u_specialization');
-    var specTxt = specSel.options[specSel.selectedIndex] ? specSel.options[specSel.selectedIndex].text : '-';
+    var specTxt = (specSel && specSel.options && specSel.options[specSel.selectedIndex]) ? specSel.options[specSel.selectedIndex].text : '-';
 
     var sectionsTxt = 'جميع الشعب';
 

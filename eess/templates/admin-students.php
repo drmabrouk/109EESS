@@ -869,51 +869,6 @@ $to_num = min($offset + $limit, $total_students_count);
                 });
         };
 
-        const addForm = document.getElementById('add-student-form');
-        if (addForm) {
-            addForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                formData.append('action', 'sm_add_student_ajax');
-                
-                fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        smShowNotification('تمت إضافة الطالب بنجاح');
-                        setTimeout(() => location.reload(), 500);
-                    } else {
-                        smShowNotification('خطأ: ' + res.data, true);
-                    }
-                })
-                .catch(err => {
-                    smShowNotification('حدث خطأ أثناء الاتصال بالخادم', true);
-                });
-            });
-        }
-
-        const editForm = document.getElementById('edit-student-form');
-        if (editForm) {
-            editForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                formData.append('action', 'sm_update_student_ajax');
-                
-                fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        smShowNotification('تم تحديث بيانات الطالب');
-                        setTimeout(() => location.reload(), 500);
-                    } else {
-                        smShowNotification('خطأ: ' + res.data, true);
-                    }
-                })
-                .catch(err => {
-                    smShowNotification('حدث خطأ أثناء الاتصال بالخادم', true);
-                });
-            });
-        }
 
         window.confirmDeleteStudent = function(id, name) {
             document.getElementById('confirm_delete_stu_id').value = id;

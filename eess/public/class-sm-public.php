@@ -5618,65 +5618,6 @@ class SM_Public {
             }
         }
 
-        // Handle Appearance Settings Save & Reset
-        if (isset($_POST['sm_reset_appearance']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
-            if (current_user_can('إدارة_النظام')) {
-                delete_option('sm_appearance');
-                SM_Logger::log('إعادة ضبط تصميم النظام', "تمت إعادة ضبط الألوان والمظهر للقيم الافتراضية.");
-                wp_redirect(add_query_arg('sm_admin_msg', 'settings_saved', $_SERVER['REQUEST_URI']));
-                exit;
-            }
-        }
-
-        if (isset($_POST['sm_save_appearance']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
-            if (current_user_can('إدارة_النظام')) {
-                $saved = array(
-                    'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#8B0000'),
-                    'primary_hover' => sanitize_hex_color($_POST['primary_hover'] ?? '#6F0000'),
-                    'danger_color'  => sanitize_hex_color($_POST['danger_color'] ?? '#C62828'),
-                    'danger_hover'  => sanitize_hex_color($_POST['danger_hover'] ?? '#A61B1B'),
-                    'black_color'   => sanitize_hex_color($_POST['black_color'] ?? '#000000'),
-                    'white_color'   => sanitize_hex_color($_POST['white_color'] ?? '#FFFFFF'),
-
-                    'gray_50'  => sanitize_hex_color($_POST['gray_50'] ?? '#F8F8F8'),
-                    'gray_100' => sanitize_hex_color($_POST['gray_100'] ?? '#F5F5F5'),
-                    'gray_200' => sanitize_hex_color($_POST['gray_200'] ?? '#EEEEEE'),
-                    'gray_300' => sanitize_hex_color($_POST['gray_300'] ?? '#E0E0E0'),
-                    'gray_400' => sanitize_hex_color($_POST['gray_400'] ?? '#BDBDBD'),
-                    'gray_500' => sanitize_hex_color($_POST['gray_500'] ?? '#9E9E9E'),
-                    'gray_600' => sanitize_hex_color($_POST['gray_600'] ?? '#757575'),
-                    'gray_700' => sanitize_hex_color($_POST['gray_700'] ?? '#424242'),
-                    'gray_800' => sanitize_hex_color($_POST['gray_800'] ?? '#212121'),
-                    'gray_900' => sanitize_hex_color($_POST['gray_900'] ?? '#000000'),
-
-                    'pastel_red_bg'     => sanitize_hex_color($_POST['pastel_red_bg'] ?? '#FDECEC'),
-                    'pastel_red_text'   => sanitize_hex_color($_POST['pastel_red_text'] ?? '#C62828'),
-                    'pastel_green_bg'   => sanitize_hex_color($_POST['pastel_green_bg'] ?? '#EAF7EE'),
-                    'pastel_green_text' => sanitize_hex_color($_POST['pastel_green_text'] ?? '#2E7D32'),
-                    'pastel_blue_bg'    => sanitize_hex_color($_POST['pastel_blue_bg'] ?? '#EAF3FB'),
-                    'pastel_blue_text'  => sanitize_hex_color($_POST['pastel_blue_text'] ?? '#1565C0'),
-                    'pastel_yellow_bg'  => sanitize_hex_color($_POST['pastel_yellow_bg'] ?? '#FFF8E1'),
-                    'pastel_yellow_text'=> sanitize_hex_color($_POST['pastel_yellow_text'] ?? '#B77900'),
-                    'pastel_gray_bg'    => sanitize_hex_color($_POST['pastel_gray_bg'] ?? '#F5F5F5'),
-                    'pastel_gray_text'  => sanitize_hex_color($_POST['pastel_gray_text'] ?? '#616161'),
-
-                    'button_radius' => sanitize_text_field($_POST['button_radius'] ?? '9999px'),
-                    'card_radius'   => sanitize_text_field($_POST['card_radius'] ?? '20px'),
-                    'field_radius'  => sanitize_text_field($_POST['field_radius'] ?? '9999px'),
-                    'modal_radius'  => sanitize_text_field($_POST['modal_radius'] ?? '20px'),
-
-                    'font_size'       => sanitize_text_field($_POST['font_size'] ?? '15px'),
-                    'secondary_color' => sanitize_hex_color($_POST['gray_700'] ?? '#424242'),
-                    'accent_color'    => sanitize_hex_color($_POST['primary_color'] ?? '#8B0000'),
-                    'dark_color'      => sanitize_hex_color($_POST['gray_800'] ?? '#212121'),
-                    'border_radius'   => sanitize_text_field($_POST['card_radius'] ?? '20px')
-                );
-                SM_Settings::save_appearance($saved);
-                SM_Logger::log('تحديث تصميم النظام', "تم تغيير إعدادات الألوان والمظهر العام للنظام بالكامل.");
-                wp_redirect(add_query_arg('sm_admin_msg', 'settings_saved', $_SERVER['REQUEST_URI']));
-                exit;
-            }
-        }
 
         // Handle Violation Settings Save
         if (isset($_POST['sm_save_violation_settings']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
@@ -6125,11 +6066,8 @@ class SM_Public {
 
         if (!$user_scope['unrestricted']) {
             if (!empty($user_scope['schools'])) {
-                $placeholders = implode(',', array_fill(0, count($user_scope['schools']), '%d'));
-                $where_clauses[] = "(school_id IN ($placeholders) OR institution_id IN ($placeholders))";
-                foreach ($user_scope['schools'] as $sch_id) {
-                    $params[] = $sch_id;
-                }
+                $school_ids_clean = implode(',', array_map('intval', $user_scope['schools']));
+                $where_clauses[] = "(school_id IN ($school_ids_clean) OR institution_id IN ($school_ids_clean))";
             } else {
                 $where_clauses[] = "1=0";
             }
@@ -6141,7 +6079,7 @@ class SM_Public {
         }
         $sql .= " ORDER BY name ASC";
 
-        $records = !empty($params) ? $wpdb->get_results($wpdb->prepare($sql, $params)) : $wpdb->get_results($sql);
+        $records = $wpdb->get_results($sql);
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=student_affairs_export_'.date('Y-m-d').'.csv');
@@ -6490,105 +6428,28 @@ class SM_Public {
                 );
             }
 
+            $is_existing = false;
+            $check_code = $row_data['student_code'] ?? '';
+            $check_nat = $row_data['national_id'] ?? '';
+            if (!empty($check_code)) {
+                $is_existing = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE student_id = %s OR student_code = %s", $check_code, $check_code));
+            }
+            if (!$is_existing && !empty($check_nat)) {
+                $is_existing = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE national_id = %s", $check_nat));
+            }
+
             $saved_id = EESS_Student_Data_Service::process_and_save_student($row_data);
             if (is_wp_error($saved_id)) {
                 $results['error']++;
                 $results['details'][] = array('type' => 'error', 'msg' => "السطر $row_index: " . $saved_id->get_error_message());
             } else {
                 $results['success']++;
-            }
-            continue;
-
-            // Handle legacy 7-column fallback if A is Name instead of Code
-            if (empty($name) && !empty($student_code) && (mb_strlen($student_code) > 4 && !preg_replace('/[^a-zA-Z]/', '', $student_code))) {
-                $name = $student_code;
-                $student_code = '';
-                $class_name   = isset($data[1]) ? trim($data[1]) : '';
-                $section      = isset($data[2]) ? trim($data[2]) : '';
-                $nationality  = isset($data[3]) ? trim($data[3]) : '';
-                $email        = isset($data[4]) ? trim($data[4]) : '';
-                $phone        = isset($data[5]) ? trim($data[5]) : '';
-                $national_id  = isset($data[6]) ? trim($data[6]) : null;
-            }
-
-            if (empty($name)) {
-                $errors[] = "الاسم الكامل مفقود في السطر $row_index";
-            }
-            if (empty($class_name)) {
-                $errors[] = "الصف الدراسي مفقود في السطر $row_index";
-            }
-
-            if (!empty($errors)) {
-                $results['error']++;
-                foreach ($errors as $err) $results['details'][] = array('type' => 'error', 'msg' => $err);
-            } else {
-                // Normalize Grade
-                $grade_number = preg_replace('/[^0-9]/', '', $class_name);
-                if (!empty($grade_number)) {
-                    $class_name = 'الصف ' . $grade_number;
-                    $grade_val = (int)$grade_number;
-                    if (!in_array($grade_val, $academic['active_grades'])) {
-                        $warnings[] = "الصف ($grade_number) غير مفعل في الهيكل المعتمد.";
-                    }
+                if ($is_existing) {
+                    $results['duplicate']++;
+                    $results['details'][] = array('type' => 'info', 'msg' => "تم تحديث سجل ({$row_data['name']}) في السطر $row_index");
                 }
-
-                $existing_id = SM_DB::student_exists($name, $class_name, $section, $national_id ?: $student_code);
-                $extra = array(
-                    'guardian_phone' => $phone,
-                    'nationality' => $nationality,
-                    'national_id' => $national_id,
-                    'registration_date' => !empty($reg_date) ? $reg_date : date('Y-m-d'),
-                    'photo_url' => $photo_url,
-                    'school_id' => $school_id
-                );
-
-                try {
-                    if ($existing_id) {
-                        $update_data = array(
-                            'name' => $name,
-                            'class_name' => $class_name,
-                            'section' => $section,
-                            'parent_email' => $email,
-                            'guardian_phone' => $phone,
-                            'nationality' => $nationality,
-                            'national_id' => $national_id,
-                            'photo_url' => $photo_url
-                        );
-                        if (!empty($reg_date)) $update_data['registration_date'] = $reg_date;
-                        if (!empty($school_id)) $update_data['school_id'] = $school_id;
-                        if (!empty($teacher_id)) $update_data['teacher_id'] = $teacher_id;
-                        if (!empty($student_code)) $update_data['student_code'] = $student_code;
-
-                        SM_DB::update_student($existing_id, $update_data);
-
-                        if (!empty($dob)) SM_DB::update_student_meta($existing_id, 'date_of_birth', $dob);
-                        if (!empty($gender)) SM_DB::update_student_meta($existing_id, 'gender', $gender);
-
-                        $results['success']++;
-                        $results['duplicate']++;
-                        $results['details'][] = array('type' => 'info', 'msg' => "تم تحديث سجل ($name) في السطر $row_index");
-                    } else {
-                        $extra['sort_order'] = $next_sort_order++;
-                        $final_code_to_use = !empty($student_code) ? $student_code : (!empty($national_id) ? $national_id : '');
-
-                        $imported_id = SM_DB::add_student($name, $class_name, $email, $final_code_to_use, null, $teacher_id, $section, $extra);
-                        if ($imported_id) {
-                            if (!empty($dob)) SM_DB::update_student_meta($imported_id, 'date_of_birth', $dob);
-                            if (!empty($gender)) SM_DB::update_student_meta($imported_id, 'gender', $gender);
-
-                            if (empty($final_code_to_use)) {
-                                $results['generated']++;
-                                SM_DB::update_student_meta($imported_id, 'sm_incomplete_identity', '1');
-                            }
-                            $results['success']++;
-                            foreach ($warnings as $warn) $results['details'][] = array('type' => 'warning', 'msg' => $warn);
-                        } else {
-                            throw new Exception("فشل حفظ البيانات في قاعدة البيانات");
-                        }
-                    }
-                } catch (Exception $e) {
-                    $results['error']++;
-                    $results['details'][] = array('type' => 'error', 'msg' => "خطأ في السطر $row_index: " . $e->getMessage());
+                if (empty($row_data['student_code'])) {
+                    $results['generated']++;
                 }
             }
         }
