@@ -129,10 +129,10 @@ class EESS_Student_Data_Service {
         }
 
         // De-duplication check during CSV Import / Creation
-        $stu_code = sanitize_text_field($data['code'] ?? ($data['student_id_code'] ?? ''));
+        $stu_code = sanitize_text_field($data['code'] ?? ($data['student_id_code'] ?? ($data['student_code'] ?? '')));
         if ($student_id == 0) {
             if (!empty($stu_code)) {
-                $existing_by_code = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE student_id = %s", $stu_code));
+                $existing_by_code = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE student_code = %s", $stu_code));
                 if ($existing_by_code) {
                     $student_id = intval($existing_by_code);
                 }
@@ -195,7 +195,6 @@ class EESS_Student_Data_Service {
 
         if (!empty($data['student_code'])) {
             $fields['student_code'] = sanitize_text_field($data['student_code']);
-            $fields['student_id']   = sanitize_text_field($data['student_code']);
         }
         if (!empty($data['parent_user_id'])) {
             $fields['parent_user_id'] = intval($data['parent_user_id']);
@@ -216,14 +215,13 @@ class EESS_Student_Data_Service {
             if ($school_id > 0) {
                 $inst_id = $wpdb->get_var($wpdb->prepare("SELECT institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id)) ?: 1;
             }
-            if (empty($fields['student_code']) || empty($fields['student_id'])) {
+            if (empty($fields['student_code'])) {
                 if (class_exists('EESS_ID_Code_Service')) {
                     $generated_code = EESS_ID_Code_Service::generate_student_code($inst_id);
                 } else {
                     $generated_code = SM_DB::generate_student_code($school_id);
                 }
                 $fields['student_code'] = $generated_code;
-                $fields['student_id']   = $generated_code;
             }
             $inserted = $wpdb->insert("{$wpdb->prefix}sm_students", $fields);
             if ($inserted === false || !$wpdb->insert_id) {

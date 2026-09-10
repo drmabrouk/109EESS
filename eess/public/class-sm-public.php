@@ -6609,7 +6609,7 @@ class SM_Public {
             $check_code = $row_data['student_code'] ?? '';
             $check_nat = $row_data['national_id'] ?? '';
             if (!empty($check_code)) {
-                $is_existing = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE student_id = %s OR student_code = %s", $check_code, $check_code));
+                $is_existing = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE student_code = %s", $check_code));
             }
             if (!$is_existing && !empty($check_nat)) {
                 $is_existing = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_students WHERE national_id = %s", $check_nat));
