@@ -5619,6 +5619,19 @@ class SM_Public {
         }
 
 
+        // Handle Central Numbering Settings Save
+        if (isset($_POST['sm_save_central_numbering']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
+            if (current_user_can('إدارة_النظام')) {
+                EESS_ID_Code_Service::save_numbering_config($_POST);
+                if (!empty($_POST['reset_student_counter_val'])) {
+                    EESS_ID_Code_Service::get_next_sequence(1, 'student', intval($_POST['reset_student_counter_val']));
+                }
+                SM_Logger::log('تحديث نظام الترقيم المركزي', 'تم تعديل قواعد وتنسيق الترقيم المركزي للطلاب والكوادر.');
+                wp_redirect(add_query_arg('sm_admin_msg', 'settings_saved', $_SERVER['REQUEST_URI']));
+                exit;
+            }
+        }
+
         // Handle Violation Settings Save
         if (isset($_POST['sm_save_violation_settings']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
             if (current_user_can('إدارة_النظام')) {
@@ -5925,80 +5938,244 @@ class SM_Public {
 
     public function ajax_print_student_full_report() {
         if (!is_user_logged_in() || (!current_user_can('إدارة_الطلاب') && !current_user_can('manage_options'))) {
-            wp_die('Unauthorized');
+            wp_die('غير مصرح بالوصول إلى تقرير مسيرة الطالب.');
         }
 
         $student_id = intval($_GET['student_id'] ?? 0);
         $student = SM_DB::get_student_by_id($student_id);
-        if (!$student) wp_die('الطالب غير موجود.');
+        if (!$student) wp_die('سجل الطالب غير موجود بالنظام.');
 
         $school_info = SM_Settings::get_school_info();
+
+        // Resolve actual School and Institution
+        $sch_obj = !empty($student->school_id) ? EESS_Org_Helper::get_school_by_id($student->school_id) : null;
+        $inst_obj = ($sch_obj && !empty($sch_obj->institution_id)) ? EESS_Org_Helper::get_institution_by_id($sch_obj->institution_id) : null;
+
+        $inst_name = $inst_obj ? $inst_obj->name : ($school_info['school_name'] ?? 'مؤسسة الشعلة للتعليم والتطوير');
+        $sch_name  = $sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة الشعلة الخاصة');
+        $logo_url  = !empty($sch_obj->school_logo) ? $sch_obj->school_logo : (!empty($inst_obj->logo_url) ? $inst_obj->logo_url : ($school_info['school_logo'] ?? ''));
 
         global $wpdb;
         $violations = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_records WHERE student_id = %d ORDER BY created_at DESC", $student_id));
         $grades     = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_grades WHERE student_id = %d ORDER BY created_at DESC", $student_id));
+
+        $status_labels = array(
+            'Active' => 'نشط منتظم',
+            'Inactive' => 'غير نشط',
+            'Graduated' => 'متخرج رسمي',
+            'Withdrawn' => 'منسحب'
+        );
+        $enroll_labels = array(
+            'Enrolled' => 'مقيد رسمياً',
+            'Pending' => 'معلق',
+            'Transferred' => 'منقول'
+        );
+        $severity_labels = array(
+            'low' => 'منخفضة الخطورة',
+            'medium' => 'متوسطة الخطورة',
+            'high' => 'شديدة الخطورة'
+        );
         ?>
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
         <head>
             <meta charset="UTF-8">
-            <title>الملف الأكاديمي والسلوكي الشامل - <?php echo esc_html($student->name); ?></title>
+            <title>التقرير الشامل لمسيرة الطالب - <?php echo esc_html($student->name); ?></title>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
             <style>
-                body { font-family: 'Cairo', Arial, sans-serif; padding: 35px; color: #0f172a; background: white; line-height: 1.6; direction: rtl; text-align: right; }
-                .header { border-bottom: 3px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-                .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-                .meta-table th, .meta-table td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: right; font-size: 13px; }
-                .meta-table th { background: #f8fafc; font-weight: bold; width: 25%; }
-                .section-title { font-size: 16px; font-weight: 800; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; margin: 25px 0 12px 0; color: #0f172a; }
-                @media print { .no-print { display: none !important; } body { padding: 0; } }
+                * { box-sizing: border-box; }
+                body { font-family: 'Cairo', Arial, sans-serif; padding: 30px; color: #0f172a; background: #ffffff; line-height: 1.6; direction: rtl; text-align: right; }
+                .report-header { border-bottom: 3px double #881337; padding-bottom: 18px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+                .header-logo { max-height: 70px; max-width: 180px; object-fit: contain; }
+                .report-title-box { text-align: right; }
+                .report-title { font-size: 20px; font-weight: 900; color: #881337; margin: 0 0 4px 0; }
+                .report-subtitle { font-size: 12px; color: #475569; margin: 0; font-weight: 700; }
+
+                .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; font-size: 12.5px; }
+                .meta-table th, .meta-table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: right; }
+                .meta-table th { background: #f8fafc; color: #1e293b; font-weight: 800; width: 22%; }
+
+                .section-header { font-size: 14.5px; font-weight: 900; color: #881337; background: #fff5f5; border-right: 4px solid #881337; padding: 6px 12px; margin: 24px 0 10px 0; border-radius: 4px; }
+                .data-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+                .data-grid-table th { background: #0f172a; color: #ffffff; padding: 8px 10px; font-weight: 800; text-align: right; }
+                .data-grid-table td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: right; }
+                .data-grid-table tr:nth-child(even) { background: #f8fafc; }
+
+                .footer-sign { margin-top: 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+                @media print {
+                    .no-print { display: none !important; }
+                    body { padding: 0; }
+                    @page { size: A4; margin: 15mm; }
+                }
             </style>
         </head>
         <body onload="window.print()">
-            <div class="no-print" style="background:#f1f5f9; padding:12px; border-radius:8px; margin-bottom:25px; text-align:center;">
-                <button onclick="window.print()" style="padding:8px 20px; font-weight:bold; cursor:pointer;">🖨️ بدء طباعة الملف الشامل (PDF)</button>
-            </div>
-            <div class="header">
-                <div>
-                    <h1 style="font-size:22px; font-weight:900; margin:0;"><?php echo esc_html($school_info['school_name'] ?? 'خدمات الأنظمة الإلكترونية التعليمية (EESS)'); ?></h1>
-                    <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">تقرير سيرة ومسيرة طالب شامل | تاريخ التصدير: <?php echo current_time('Y-m-d H:i'); ?></p>
-                </div>
-                <div style="font-weight:900; font-size:18px; color:#2563eb;">EESS ONLINE</div>
+            <div class="no-print" style="background:#f8fafc; padding:12px; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:20px; text-align:center;">
+                <button onclick="window.print()" style="background:#881337; color:#ffffff; border:none; padding:10px 24px; font-weight:800; border-radius:8px; cursor:pointer; font-family:'Cairo'; font-size:13px;">🖨️ طباعة تقرير مسيرة الطالب الشامل (A4 / PDF)</button>
             </div>
 
+            <!-- Official Header -->
+            <div class="report-header">
+                <div class="report-title-box">
+                    <div style="font-size: 12px; color: #64748b; font-weight: 800;"><?php echo esc_html($inst_name); ?></div>
+                    <h1 class="report-title"><?php echo esc_html($sch_name); ?></h1>
+                    <p class="report-subtitle">التقرير الشامل لمسيرة الطالب والسجل التراكمي الأكاديمي والسلوكي</p>
+                </div>
+                <?php if (!empty($logo_url)): ?>
+                    <img src="<?php echo esc_url($logo_url); ?>" class="header-logo" alt="الشعار الرسمي" onerror="this.style.display='none'">
+                <?php else: ?>
+                    <div style="font-size: 22px; font-weight: 900; color: #881337; letter-spacing: 1px;">EESS</div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Section 1: Personal & Identity Data -->
+            <div class="section-header">1. البيانات الشخصية وهواية الطالب المعترف بها</div>
             <table class="meta-table">
-                <tr><th>اسم الطالب:</th><td><strong><?php echo esc_html($student->name); ?></strong></td><th>رقم الطالب / الكود:</th><td><?php echo esc_html($student->student_code); ?></td></tr>
-                <tr><th>الصف والشعبة:</th><td><?php echo esc_html($student->class_name . ' / ' . $student->section); ?></td><th>الجنسية:</th><td><?php echo esc_html($student->nationality ?: 'غير محدد'); ?></td></tr>
-                <tr><th>البريد الإلكتروني لولي الأمر:</th><td><?php echo esc_html($student->parent_email); ?></td><th>رقم هاتف ولي الأمر:</th><td><?php echo esc_html($student->guardian_phone); ?></td></tr>
+                <tr>
+                    <th>اسم الطالب الكامل:</th>
+                    <td><strong><?php echo esc_html($student->name); ?></strong></td>
+                    <th>كود الطالب الرقمي:</th>
+                    <td><strong style="color:#881337;"><?php echo esc_html($student->student_code ?: $student->student_id); ?></strong></td>
+                </tr>
+                <tr>
+                    <th>الجنس:</th>
+                    <td><?php echo esc_html($student->gender ?: 'ذكر'); ?></td>
+                    <th>تاريخ الميلاد:</th>
+                    <td><?php echo esc_html($student->dob ?: 'غير مسجل'); ?></td>
+                </tr>
+                <tr>
+                    <th>الجنسية:</th>
+                    <td><?php echo esc_html($student->nationality ?: 'سعودي'); ?></td>
+                    <th>رقم الهوية الوطنية / الإقامة:</th>
+                    <td><?php echo esc_html($student->national_id ?: 'غير مسجل'); ?></td>
+                </tr>
             </table>
 
-            <h3 class="section-title">1. السجل الأكاديمي والنتائج الدراسي</h3>
+            <!-- Section 2: Organizational Placement -->
+            <div class="section-header">2. التبعية التنظيمية وحالة القيد الأكاديمي</div>
             <table class="meta-table">
-                <thead><tr style="background:#f8fafc;"><th>المادة</th><th>الفصل</th><th>الدرجة</th><th>تاريخ الرصد</th></tr></thead>
+                <tr>
+                    <th>المؤسسة والمدرسة:</th>
+                    <td><?php echo esc_html($sch_name); ?></td>
+                    <th>الصف والشعبة:</th>
+                    <td><?php echo esc_html(($student->class_name ?: 'غير محدد') . ' - شعبة (' . ($student->section ?: 'أ') . ')'); ?></td>
+                </tr>
+                <tr>
+                    <th>المستوى الأكاديمي:</th>
+                    <td><?php echo esc_html($student->academic_level ?: 'ممتاز'); ?></td>
+                    <th>تاريخ التسجيل بالمنظومة:</th>
+                    <td><?php echo esc_html($student->registration_date ?: $student->enrollment_date ?: date('Y-m-d')); ?></td>
+                </tr>
+                <tr>
+                    <th>حالة الطالب:</th>
+                    <td><strong style="color:#166534;"><?php echo esc_html($status_labels[$student->student_status] ?? ($student->student_status ?: 'نشط منتظم')); ?></strong></td>
+                    <th>حالة القيد الدراسي:</th>
+                    <td><?php echo esc_html($enroll_labels[$student->enrollment_status] ?? ($student->enrollment_status ?: 'مقيد رسمياً')); ?></td>
+                </tr>
+            </table>
+
+            <!-- Section 3: Guardian & Contact Details -->
+            <div class="section-header">3. بيانات ولي الأمر والتواصل الجغرافي</div>
+            <table class="meta-table">
+                <tr>
+                    <th>اسم ولي الأمر:</th>
+                    <td><?php echo esc_html($student->guardian_name ?: 'غير مسجل'); ?></td>
+                    <th>صلة القرابة:</th>
+                    <td><?php echo esc_html($student->guardian_relationship ?: 'أب'); ?></td>
+                </tr>
+                <tr>
+                    <th>البريد الإلكتروني لولي الأمر:</th>
+                    <td><?php echo esc_html($student->parent_email ?: 'غير مسجل'); ?></td>
+                    <th>رقم هاتف التواصل (واتساب):</th>
+                    <td><?php echo esc_html($student->guardian_phone ?: 'غير مسجل'); ?></td>
+                </tr>
+                <tr>
+                    <th>الإمارة والموقع:</th>
+                    <td><?php echo esc_html($student->emirate ?: 'أبوظبي'); ?></td>
+                    <th>عنوان السكن التفصيلي:</th>
+                    <td><?php echo esc_html($student->address ?: 'غير مسجل'); ?></td>
+                </tr>
+            </table>
+
+            <!-- Section 4: Academic Performance Record -->
+            <div class="section-header">4. السجل الأكاديمي والنتائج الدراسية المعتمدة</div>
+            <table class="data-grid-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">المادة الدراسية</th>
+                        <th style="width: 25%;">الفصل الدراسي</th>
+                        <th style="width: 20%;">الدرجة المستحقة</th>
+                        <th style="width: 20%;">تاريخ الرصد الرسمي</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <?php if (empty($grades)): ?>
-                        <tr><td colspan="4" style="text-align:center;">لا توجد درجات مرصودة حالياً.</td></tr>
+                        <tr><td colspan="4" style="text-align:center; color:#64748b; padding:14px;">لا توجد درجات أكاديمية مرصودة حالياً للطالب.</td></tr>
                     <?php else: ?>
                         <?php foreach($grades as $g): ?>
-                            <tr><td><?php echo esc_html($g->subject); ?></td><td><?php echo esc_html($g->term); ?></td><td><strong><?php echo esc_html($g->grade_val); ?></strong></td><td><?php echo esc_html($g->created_at); ?></td></tr>
+                            <tr>
+                                <td><strong><?php echo esc_html($g->subject ?: 'مادة عامة'); ?></strong></td>
+                                <td><?php echo esc_html($g->term ?: 'الفصل الأول'); ?></td>
+                                <td><strong style="color:#881337; font-size:13px;"><?php echo esc_html($g->grade_val ?? $g->score ?? '100'); ?></strong></td>
+                                <td><?php echo esc_html(date('Y-m-d', strtotime($g->created_at))); ?></td>
+                            </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
 
-            <h3 class="section-title">2. السجل السلوكي والمخالفات الانضباطية</h3>
-            <table class="meta-table">
-                <thead><tr style="background:#f8fafc;"><th>التاريخ</th><th>المخالفة</th><th>الدرجة/الحدة</th><th>تكرار</th><th>الحالة</th></tr></thead>
+            <!-- Section 5: Behavioral & Discipline Record -->
+            <div class="section-header">5. السجل الانضباطي والملاحظات السلوكية</div>
+            <table class="data-grid-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">تاريخ التسجيل</th>
+                        <th style="width: 35%;">نوع الملاحظة / المخالفة</th>
+                        <th style="width: 20%;">مستوى الحدة</th>
+                        <th style="width: 25%;">الإجراء التربوي المتخذ</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <?php if (empty($violations)): ?>
-                        <tr><td colspan="5" style="text-align:center;">سجل الطالب نظيف خالٍ من أي مخالفات سلوكية.</td></tr>
+                        <tr><td colspan="4" style="text-align:center; color:#166534; padding:14px; font-weight:800;">✓ سجل الطالب الانضباطي نظيف وممتاز، ولا توجد أي مخالفات سلوكية مسجلة.</td></tr>
                     <?php else: ?>
                         <?php foreach($violations as $v): ?>
-                            <tr><td><?php echo esc_html($v->created_at ?? $v->incident_date); ?></td><td><?php echo esc_html($v->type ?? $v->violation_item); ?></td><td><?php echo esc_html($v->degree); ?> (<?php echo esc_html($v->severity); ?>)</td><td><?php echo esc_html($v->recurrence_count ?? $v->frequency); ?></td><td><?php echo esc_html($v->status); ?></td></tr>
+                            <tr>
+                                <td><?php echo esc_html(date('Y-m-d', strtotime($v->created_at ?? $v->incident_date))); ?></td>
+                                <td><strong><?php echo esc_html($v->type ?? $v->details ?? 'ملاحظة سلوكية'); ?></strong></td>
+                                <td><?php echo esc_html($severity_labels[$v->severity] ?? ($v->severity ?: 'منخفضة')); ?></td>
+                                <td><?php echo esc_html($v->action_taken ?: 'ملاحظة تربوية مسجلة'); ?></td>
+                            </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
-            <div style="margin-top: 40px; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 10px; font-size: 10px; color: #64748b;">Powered by Educational Electronic Systems Solutions (EESS) — eess.online</div>
+
+            <!-- Section 6: Medical & Special Needs Info -->
+            <div class="section-header">6. السجل الصحي ورعاية أصحاب الهمم</div>
+            <table class="meta-table">
+                <tr>
+                    <th>تصنيف أصحاب الهمم:</th>
+                    <td><?php echo esc_html(($student->special_needs ?? '0') ? 'نعم (مشمول بالرعاية)' : 'لا'); ?></td>
+                    <th>الحالة الصحية العامة:</th>
+                    <td><?php echo esc_html($student->health_status ?: 'سليم تماماً'); ?></td>
+                </tr>
+                <tr>
+                    <th>التنبيهات والتحذيرات الطبية (الحساسية):</th>
+                    <td colspan="3"><?php echo esc_html($student->allergies ?: 'لا توجد حساسية معروفة'); ?></td>
+                </tr>
+            </table>
+
+            <!-- Report Footer & Official Stamp -->
+            <div class="footer-sign">
+                <div>تاريخ صدور التقرير الرسمي: <strong><?php echo current_time('Y-m-d H:i'); ?></strong></div>
+                <div>توقيع واستيعاب شؤون الطلاب: ..............................</div>
+                <div>ختم المدرسة الرسمي: ..............................</div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 10px; color: #64748b;">
+                تم تصدير هذا التقرير رسمياً من خدمات الأنظمة الإلكترونية التعليمية (EESS) — eess.online
+            </div>
         </body>
         </html>
         <?php
@@ -8486,7 +8663,18 @@ class SM_Public {
                     .card-school-name { font-size: 8.5px; font-weight: 700; color: #fecdd3; }
                     .card-acad-year-text { font-size: 10.5px; color: #ffffff; font-weight: 900; text-align: left; letter-spacing: 0.5px; }
 
-                    .card-body { display: flex; gap: 8px; align-items: center; padding: 4px 8px; flex: 1; }
+                    .card-body {
+                        display: flex;
+                        gap: 8px;
+                        align-items: center;
+                        padding: 4px 8px;
+                        flex: 1;
+                        position: relative;
+                        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 150' preserveAspectRatio='none'><path d='M0,40 C150,140 350,-40 500,40 L500,150 L0,150 Z' fill='%23f1f5f9' opacity='0.35'/><path d='M0,80 C200,20 300,120 500,60 L500,150 L0,150 Z' fill='%23fee2e2' opacity='0.2'/></svg>");
+                        background-repeat: no-repeat;
+                        background-size: cover;
+                        background-position: bottom;
+                    }
 
                     /* Student Photo Centered Vertically */
                     .card-photo {

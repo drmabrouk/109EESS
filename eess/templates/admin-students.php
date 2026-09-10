@@ -472,11 +472,6 @@ $to_num = min($offset + $limit, $total_students_count);
                                         </button>
 
                                         <?php if ($is_admin): ?>
-                                            <!-- Credentials Button -->
-                                            <button type="button" onclick="showStudentCreds('<?php echo esc_js($student->student_code); ?>', '<?php echo esc_js(get_user_meta($student->parent_user_id, 'sm_temp_pass', true)); ?>', '<?php echo esc_js($student->name); ?>', <?php echo $student->id; ?>)" title="حساب الدخول الأكاديمي" class="sm-action-btn sm-action-btn-neutral">
-                                                <span class="dashicons dashicons-key"></span>
-                                            </button>
-
                                             <!-- Edit Student Button -->
                                             <button type="button" onclick='openUnifiedProfileModal(<?php echo json_encode($student); ?>)' title="تعديل الطالب" class="sm-action-btn sm-action-btn-warning">
                                                 <span class="dashicons dashicons-edit"></span>
