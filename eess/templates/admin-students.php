@@ -393,14 +393,15 @@ $to_num = min($offset + $limit, $total_students_count);
                                     </div>
                                 </td>
 
-                                <!-- Academic Placement Cell (School, Grade, Section) -->
+                                <!-- Academic Placement Cell (Institution / School, Grade, Section) -->
                                 <td style="padding: 14px 18px;">
                                     <?php
-                                    $sch_obj = $student->school_id ? EESS_Org_Helper::get_school_by_id($student->school_id) : null;
-                                    $sch_name = $sch_obj ? $sch_obj->name : ($student->school_name ?? 'المدرسة الرئيسية');
+                                    $inst_obj = !empty($student->institution_id) ? EESS_Org_Helper::get_institution_by_id($student->institution_id) : null;
+                                    $sch_obj = !empty($student->school_id) ? EESS_Org_Helper::get_school_by_id($student->school_id) : null;
+                                    $sch_name = $inst_obj ? $inst_obj->name : ($sch_obj ? $sch_obj->name : ($student->school_name ?? 'المؤسسة الرئيسية'));
                                     ?>
-                                    <div style="font-weight: 700; font-size: 11px; color: #64748b; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                        <span class="dashicons dashicons-bank" style="font-size: 13px; width: 13px; height: 13px; color: #64748b;"></span>
+                                    <div style="font-weight: 700; font-size: 11px; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                        <span class="dashicons dashicons-bank" style="font-size: 13px; width: 13px; height: 13px; color: #881337;"></span>
                                         <span><?php echo esc_html($sch_name); ?></span>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
