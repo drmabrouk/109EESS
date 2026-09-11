@@ -443,6 +443,15 @@ $to_num = min($offset + $limit, $total_students_count);
                                 <!-- Circular Action Buttons -->
                                 <td style="padding: 14px 18px; text-align: center;">
                                     <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <?php if (!empty($student->guardian_phone)):
+                                            $clean_wa_phone = preg_replace('/[^0-9]/', '', $student->guardian_phone);
+                                        ?>
+                                            <!-- Parent WhatsApp Direct Link Button -->
+                                            <a href="https://wa.me/<?php echo esc_attr($clean_wa_phone); ?>" target="_blank" title="التواصل الفوري مع ولي الأمر عبر واتساب (WhatsApp)" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+                                                <span class="dashicons dashicons-whatsapp" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
+                                            </a>
+                                        <?php endif; ?>
+
                                         <!-- Print Student Exit Card Button -->
                                         <a href="<?php echo admin_url('admin-ajax.php?action=sm_print&print_type=student_card&student_id=' . $student->id); ?>" target="_blank" title="طباعة بطاقة تصريح الخروج (Student Exit Card)" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #eff6ff; color: #1d4ed8; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
                                             <span class="dashicons dashicons-id" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
@@ -453,53 +462,10 @@ $to_num = min($offset + $limit, $total_students_count);
                                             <span class="dashicons dashicons-printer" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                                         </a>
 
-                                        <!-- Student Account Actions Popover Panel -->
-                                        <div style="position: relative; display: inline-block;">
-                                            <button type="button" onclick="eessToggleStudentAccountDropdown(event, <?php echo $student->id; ?>)" title="إجراءات وسجل حساب الطالب الرقمي" class="sm-action-btn" style="background: #f8fafc; color: #334155; width: 36px; height: 36px; border-radius: 50% !important; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
-                                                <span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                                            </button>
-                                            <div id="eess-stu-account-menu-<?php echo $student->id; ?>" class="eess-stu-account-menu" style="display: none; position: absolute; left: 0; top: 100%; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.18); width: 280px; padding: 12px; text-align: right; margin-top: 6px;">
-                                                <div style="padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-weight: 800; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
-                                                    <span>إجراءات الحساب الرقمي</span>
-                                                    <span style="padding: 2px 8px; border-radius: 10px; font-size: 10px; background: <?php echo ($student->student_status === 'Active' || $student->student_status === 'نشط') ? '#dcfce7' : '#fee2e2'; ?>; color: <?php echo ($student->student_status === 'Active' || $student->student_status === 'نشط') ? '#15803d' : '#b91c1c'; ?>;">
-                                                        <?php echo esc_html($student->student_status ?: 'نشط'); ?>
-                                                    </span>
-                                                </div>
-
-                                                <!-- Action 1: Restrict / Disable Account -->
-                                                <div onclick="eessOpenRestrictModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>', '<?php echo esc_js($student->student_status ?: 'Active'); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                                                        <span class="dashicons dashicons-lock" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                                                    </div>
-                                                    <div>
-                                                        <div style="font-size: 12px; font-weight: 800; color: #991b1b;">تقييد / تعطيل حساب الطالب</div>
-                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">إيقاف صلاحيات الدخول للمنظومة مؤقتاً</div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Action 2: Password Change Request -->
-                                                <div onclick="eessOpenPasswordRequestModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
-                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                                                        <span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                                                    </div>
-                                                    <div>
-                                                        <div style="font-size: 12px; font-weight: 800; color: #1e40af;">إرسال طلب تغيير كلمة المرور</div>
-                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">إلزام الطالب بتعيين كلمة مرور عند الدخول</div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Action 3: Send Message to Student -->
-                                                <div onclick="eessOpenSendMessageModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='transparent'">
-                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                                                        <span class="dashicons dashicons-email-alt" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                                                    </div>
-                                                    <div>
-                                                        <div style="font-size: 12px; font-weight: 800; color: #166534;">إرسال رسالة رسمية للطالب</div>
-                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">عرض إشعار إجباري بصفحة الدخول للقراءة</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- Student Account Actions Centered System Modal Trigger -->
+                                        <button type="button" onclick="eessOpenStudentAccountActionsModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>', '<?php echo esc_js($student->student_status ?: 'Active'); ?>')" title="إجراءات وسجل حساب الطالب الرقمي" class="sm-action-btn" style="background: #f8fafc; color: #334155; width: 36px; height: 36px; border-radius: 50% !important; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
+                                            <span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                        </button>
 
                                         <?php if ($is_admin): ?>
                                             <!-- Edit Student Button -->
@@ -665,6 +631,63 @@ $to_num = min($offset + $limit, $total_students_count);
             </div>
             <div class="sm-modal-body" id="stu_details_content" style="max-height: 70vh; overflow-y: auto;">
                 <!-- Loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTERED STUDENT DIGITAL ACCOUNT ACTIONS SYSTEM MODAL -->
+    <div id="eess-stu-account-actions-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
+        <div class="sm-modal-content" style="max-width: 500px; width: 90%; border-radius: 20px; padding: 24px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;" dir="rtl">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: flex; align-items: center; justify-content: center;">
+                        <span class="dashicons dashicons-admin-network" style="font-size: 20px; width: 20px; height: 20px;"></span>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">إجراءات الحساب الرقمي للطالب</h3>
+                        <div id="eess_stu_actions_modal_subtitle" style="font-size: 11.5px; color: #64748b; font-weight: 700;"></div>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('eess-stu-account-actions-modal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Action 1: Restrict / Disable Account -->
+                <div id="eess_act_restrict_btn" style="padding: 12px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff5f5; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.borderColor='#fca5a5'" onmouseout="this.style.borderColor='#fee2e2'">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span class="dashicons dashicons-lock" style="font-size: 18px; width: 18px; height: 18px;"></span>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 800; color: #991b1b;">تقييد / تعطيل حساب الطالب</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">إيقاف صلاحيات الدخول للمنظومة مؤقتاً وحظر الحساب</div>
+                    </div>
+                </div>
+
+                <!-- Action 2: Password Change Request -->
+                <div id="eess_act_passreq_btn" style="padding: 12px; border-radius: 12px; border: 1px solid #dbeafe; background: #f0f9ff; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#dbeafe'">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span class="dashicons dashicons-key" style="font-size: 18px; width: 18px; height: 18px;"></span>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 800; color: #1e40af;">طلب إعادة ضبط كلمة المرور</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">إلزام الطالب بتعيين كلمة جديدة عند الدخول القادم</div>
+                    </div>
+                </div>
+
+                <!-- Action 3: Direct Message to Student -->
+                <div id="eess_act_msg_btn" style="padding: 12px; border-radius: 12px; border: 1px solid #dcfce7; background: #f0fdf4; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.borderColor='#86efac'" onmouseout="this.style.borderColor='#dcfce7'">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span class="dashicons dashicons-email-alt" style="font-size: 18px; width: 18px; height: 18px;"></span>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 800; color: #166534;">إرسال رسالة توجيهية إدارية</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">إشعار إجباري بصفحة الدخول يتطلب موافقة وإقرار إلكتروني</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 18px; text-align: left;">
+                <button type="button" onclick="document.getElementById('eess-stu-account-actions-modal').style.display='none'" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 36px; padding: 0 20px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;">إغلاق</button>
             </div>
         </div>
     </div>
@@ -1064,6 +1087,22 @@ $to_num = min($offset + $limit, $total_students_count);
         document.addEventListener('click', function() {
             document.querySelectorAll('.eess-stu-account-menu').forEach(m => m.style.display = 'none');
         });
+
+        window.eessOpenStudentAccountActionsModal = function(stuId, stuName, currentStatus) {
+            const modal = document.getElementById('eess-stu-account-actions-modal');
+            const subtitle = document.getElementById('eess_stu_actions_modal_subtitle');
+            if (subtitle) subtitle.innerText = 'الطالب: ' + stuName + ' (' + (currentStatus || 'نشط') + ')';
+
+            const rBtn = document.getElementById('eess_act_restrict_btn');
+            const pBtn = document.getElementById('eess_act_passreq_btn');
+            const mBtn = document.getElementById('eess_act_msg_btn');
+
+            if (rBtn) rBtn.onclick = function() { modal.style.display = 'none'; eessOpenRestrictModal(stuId, stuName, currentStatus); };
+            if (pBtn) pBtn.onclick = function() { modal.style.display = 'none'; eessOpenPasswordRequestModal(stuId, stuName); };
+            if (mBtn) mBtn.onclick = function() { modal.style.display = 'none'; eessOpenDirectMessageModal(stuId, stuName); };
+
+            if (modal) modal.style.display = 'flex';
+        };
 
         window.eessOpenRestrictModal = function(stuId, stuName, currentStatus) {
             document.getElementById('eess_restrict_stu_id').value = stuId;
