@@ -415,12 +415,12 @@ class EESS_Org_Helper {
             $sub_clauses = array();
 
             if (!empty($scope['grades'])) {
-                $escaped_grades = array_map(function($g) use ($wpdb) { return "'" . $wpdb->esc_like($g) . "'"; }, $scope['grades']);
+                $escaped_grades = array_map(function($g) use ($wpdb) { return "'" . esc_sql($g) . "'"; }, $scope['grades']);
                 $sub_clauses[] = "{$prefix}class_name IN (" . implode(',', $escaped_grades) . ")";
             }
 
             if (!empty($scope['sections'])) {
-                $escaped_sections = array_map(function($s) use ($wpdb) { return "'" . $wpdb->esc_like($s) . "'"; }, $scope['sections']);
+                $escaped_sections = array_map(function($s) use ($wpdb) { return "'" . esc_sql($s) . "'"; }, $scope['sections']);
                 $sub_clauses[] = "{$prefix}section IN (" . implode(',', $escaped_sections) . ")";
             }
 

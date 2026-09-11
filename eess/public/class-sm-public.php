@@ -1088,14 +1088,14 @@ class SM_Public {
                     <div style="margin-bottom: 12px; position: relative;">
                         <div class="eess-float-container" style="position: relative; width: 100%;">
                             <input type="text" id="m_emp_id_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
-                            <label for="m_emp_id_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">الهوية الوطنية / الرقم الوظيفي / الكود *</label>
+                            <label for="m_emp_id_input" class="eess-float-label">الهوية الوطنية / الرقم الوظيفي / الكود *</label>
                         </div>
                     </div>
 
                     <div style="margin-bottom: 12px; position: relative;">
                         <div class="eess-float-container eess-password-wrapper" style="position: relative; width: 100%;">
-                            <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 38px 0 12px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
-                            <label for="m_password_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">كلمة المرور *</label>
+                            <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px 0 38px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
+                            <label for="m_password_input" class="eess-float-label">كلمة المرور *</label>
                             <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" title="إظهار / إخفاء كلمة المرور" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
