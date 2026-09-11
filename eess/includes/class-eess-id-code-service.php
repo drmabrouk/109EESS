@@ -170,8 +170,8 @@ class EESS_ID_Code_Service {
             );
 
             $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}sm_students WHERE student_id = %s OR student_code = %s LIMIT 1",
-                $code, $code
+                "SELECT id FROM {$wpdb->prefix}sm_students WHERE student_code = %s LIMIT 1",
+                $code
             ));
         } while (!empty($exists));
 
