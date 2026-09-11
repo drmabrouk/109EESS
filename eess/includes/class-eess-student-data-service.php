@@ -151,16 +151,33 @@ class EESS_Student_Data_Service {
             }
         }
 
-        // Automatic School Recognition
+        // Automatic Institution & School Scope Resolution
         $school_id = intval($data['school_id'] ?? 0);
+        $institution_id = null;
+
         if ($school_id > 0) {
-            $sch_exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id));
-            if (!$sch_exists) {
-                return new WP_Error('invalid_school', "معرف المدرسة ($school_id) غير مسجل في الهيكل التنظيمي.");
+            $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE id = %d OR code = %d", $school_id, $school_id));
+            if ($inst_row) {
+                $institution_id = $inst_row->id;
+                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d OR school_code = %d", $inst_row->id, $inst_row->code));
+                if ($sch_row) {
+                    $school_id = $sch_row->id;
+                }
+            } else {
+                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id, institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id));
+                if ($sch_row) {
+                    $school_id = $sch_row->id;
+                    $institution_id = $sch_row->institution_id;
+                }
             }
         }
 
         $financials = self::normalize_financials($data['total_tuition_fees'] ?? 0, $data['amount_paid'] ?? 0);
+
+        // Standardize Guardian Phone Number with Country Code
+        $phone_country = sanitize_text_field($data['guardian_phone_country'] ?? '+971');
+        $phone_number  = sanitize_text_field($data['guardian_phone'] ?? '');
+        $full_phone    = !empty($phone_number) ? (strpos($phone_number, '+') === 0 ? $phone_number : trim($phone_country . ' ' . $phone_number)) : '';
 
         $fields = array(
             'name'                  => $name,
@@ -168,13 +185,14 @@ class EESS_Student_Data_Service {
             'section'               => $section,
             'gender'                => sanitize_text_field($data['gender'] ?? 'ذكر'),
             'dob'                   => !empty($data['dob']) ? sanitize_text_field($data['dob']) : null,
-            'nationality'           => sanitize_text_field($data['nationality'] ?? ''),
+            'nationality'           => sanitize_text_field($data['nationality'] ?? 'الإمارات العربية المتحدة'),
             'national_id'           => $national_id,
+            'institution_id'        => $institution_id ?: null,
             'school_id'             => $school_id ?: null,
             'guardian_name'         => sanitize_text_field($data['guardian_name'] ?? ($data['parent_name'] ?? '')),
             'guardian_relationship' => sanitize_text_field($data['guardian_relationship'] ?? 'أب'),
             'parent_email'          => sanitize_email($data['parent_email'] ?? ($data['guardian_email'] ?? '')),
-            'guardian_phone'        => sanitize_text_field($data['guardian_phone'] ?? ''),
+            'guardian_phone'        => $full_phone,
             'student_status'        => sanitize_text_field($data['student_status'] ?? 'Active'),
             'enrollment_status'     => sanitize_text_field($data['enrollment_status'] ?? 'Enrolled'),
             'enrollment_date'       => !empty($data['enrollment_date']) ? sanitize_text_field($data['enrollment_date']) : (!empty($data['registration_date']) ? sanitize_text_field($data['registration_date']) : date('Y-m-d')),

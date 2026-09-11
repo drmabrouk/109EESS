@@ -718,6 +718,13 @@ class EESS_Org_Helper {
         return self::get_schools();
     }
 
+    public static function get_all_institutions_and_schools() {
+        global $wpdb;
+        self::ensure_institutions_columns_exist();
+        self::seed_mandatory_institutions();
+        return $wpdb->get_results("SELECT id, code as school_code, name, type FROM {$wpdb->prefix}eess_institutions WHERE status = 'active' AND code IN (1,2,3,4,5,6) ORDER BY code ASC");
+    }
+
     public static function add_school($inst_id, $name) {
         global $wpdb;
         return $wpdb->insert("{$wpdb->prefix}eess_schools", array('institution_id' => $inst_id, 'name' => $name, 'status' => 'active'));

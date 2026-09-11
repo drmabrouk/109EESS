@@ -639,22 +639,21 @@ $to_num = min($offset + $limit, $total_students_count);
         </div>
     </div>
 
-    <!-- DELETE STUDENT MODAL -->
-    <div id="delete-student-modal" class="sm-modal-overlay">
-        <div class="sm-modal-content" style="max-width: 450px;">
-            <div class="sm-modal-header">
-                <h3 style="color:#e53e3e;">تأكيد حذف الطالب نهائياً</h3>
-                <button class="sm-modal-close" onclick="document.getElementById('delete-student-modal').style.display='none'">&times;</button>
+    <!-- DELETE STUDENT MODAL (CLEAN WHITE DESIGN) -->
+    <div id="delete-student-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
+        <div class="sm-modal-content" style="max-width: 500px; border-radius: 20px; padding: 28px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                    <span class="dashicons dashicons-trash" style="font-size: 26px; width: 26px; height: 26px;"></span>
+                </div>
+                <h3 id="delete-modal-title" style="margin: 0 0 8px 0; font-size: 17px; font-weight: 800; color: #0f172a;">تأكيد حذف الطالب نهائياً</h3>
+                <p id="delete-confirm-msg" style="margin: 0; font-size: 13.5px; color: #475569; font-weight: 700; line-height: 1.6;"></p>
             </div>
             <form id="delete-student-form">
-                <p id="delete-confirm-msg" style="font-size:13px; color:#4a5568; line-height:1.6;"></p>
-                <div style="background:#fff5f5; border:1px solid #fed7d7; padding:12px; border-radius:8px; font-size:11px; color:#c53030; margin-bottom:20px;">
-                    ⚠️ تحذير: هذا الإجراء سيقوم بمسح كافة مخالفات الطالب، سجل الحضور، السجل الطبي، والدرجات نهائياً من قاعدة البيانات، ولا يمكن التراجع عنه.
-                </div>
                 <input type="hidden" id="confirm_delete_stu_id">
-                <div style="display:flex; gap:10px; justify-content:flex-end;">
-                    <button type="submit" class="sm-btn" style="background:#e53e3e; width:auto; height:36px; padding:0 20px; font-size:12px;">نعم، حذف الطالب الآن</button>
-                    <button type="button" onclick="document.getElementById('delete-student-modal').style.display='none'" class="sm-btn sm-btn-outline" style="width:auto; height:36px; padding:0 15px; font-size:12px;">تراجع</button>
+                <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+                    <button type="submit" class="sm-btn" style="background: #dc2626; color: #ffffff; height: 38px; padding: 0 24px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer;">نعم، حذف السجل نهائياً</button>
+                    <button type="button" onclick="document.getElementById('delete-student-modal').style.display='none'" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 20px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -897,7 +896,7 @@ $to_num = min($offset + $limit, $total_students_count);
 
         window.confirmDeleteStudent = function(id, name) {
             document.getElementById('confirm_delete_stu_id').value = id;
-            document.getElementById('delete-confirm-msg').innerText = `هل أنت متأكد من حذف الطالب "${name}" وكافة سجلاته؟`;
+            document.getElementById('delete-confirm-msg').innerText = `تأكيد حذف الطالب "${name}" وكافة سجلاته المرتبطة نهائياً؟`;
             document.getElementById('delete-student-modal').style.display = 'flex';
         };
 

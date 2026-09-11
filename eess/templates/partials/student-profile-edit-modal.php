@@ -54,7 +54,7 @@
                             <input type="text" name="name" id="edit_stu_name" class="sm-input" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">كود الطالب المركزى (Student Code):</label>
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">كود الطالب المركزي (Student Code):</label>
                             <input type="text" name="student_code" id="edit_stu_code" readonly class="sm-input" placeholder="يولد تلقائياً من نظام الترقيم المركزي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%; background: #f1f5f9; font-weight: 800; color: #881337; cursor: not-allowed;" title="كود معرف الطالب يولد تلقائياً من نظام الترقيم المركزي">
                         </div>
                         <div class="sm-form-group">
@@ -69,8 +69,31 @@
                             <input type="date" name="dob" id="edit_stu_dob" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">الجنسية:</label>
-                            <input type="text" name="nationality" id="edit_stu_nationality" class="sm-input" placeholder="سعودي / إماراتي" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">الجنسية المعترف بها:</label>
+                            <select name="nationality" id="edit_stu_nationality" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="الإمارات العربية المتحدة">الإمارات العربية المتحدة</option>
+                                <option value="المملكة العربية السعودية">المملكة العربية السعودية</option>
+                                <option value="جمهورية مصر العربية">جمهورية مصر العربية</option>
+                                <option value="الأردن">الأردن</option>
+                                <option value="سوريا">سوريا</option>
+                                <option value="اليمن">اليمن</option>
+                                <option value="السودان">السودان</option>
+                                <option value="سلطنة عمان">سلطنة عمان</option>
+                                <option value="الكويت">الكويت</option>
+                                <option value="البحرين">البحرين</option>
+                                <option value="قطر">قطر</option>
+                                <option value="فلسطين">فلسطين</option>
+                                <option value="لبنان">لبنان</option>
+                                <option value="العراق">العراق</option>
+                                <option value="تونس">تونس</option>
+                                <option value="الجزائر">الجزائر</option>
+                                <option value="المغرب">المغرب</option>
+                                <option value="أثيوبيا">أثيوبيا</option>
+                                <option value="الهند">الهند</option>
+                                <option value="باكستان">باكستان</option>
+                                <option value="الفلبين">الفلبين</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم الهوية الوطنية / الإقامة:</label>
@@ -83,25 +106,44 @@
             <!-- STEP 2: Academic & Org Placement -->
             <div id="eess-wiz-step-2" class="eess-wiz-panel" style="display: none;">
                 <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 2: التنسيق الأكاديمي والتنظيمي وحالة التسجيل</div>
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; color: #881337; font-weight: 800; font-size: 13.5px;">الخطوة 2: التنسيق الأكاديمي والتنظيمي (الكود 1 إلى الكود 6)</div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                        <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المدرسة التابعة (School ID): <span style="color: #dc2626;">*</span></label>
+                        <div class="sm-form-group" style="grid-column: span 2;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المؤسسة / المدرسة التابعة (Code 1 - Code 6): <span style="color: #dc2626;">*</span></label>
                             <select name="school_id" id="edit_stu_school_id" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                                <option value="">-- اختر المدرسة --</option>
-                                <?php foreach (EESS_Org_Helper::get_all_schools() as $sch): ?>
-                                    <option value="<?php echo $sch->id; ?>"><?php echo esc_html($sch->name); ?> (كود: <?php echo $sch->school_code ?? $sch->id; ?>)</option>
+                                <option value="">-- اختر المؤسسة أو المدرسة --</option>
+                                <?php foreach (EESS_Org_Helper::get_all_institutions_and_schools() as $org): ?>
+                                    <option value="<?php echo $org->id; ?>">Code <?php echo $org->school_code; ?> — <?php echo esc_html($org->name); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الصف الدراسي (Grade): <span style="color: #dc2626;">*</span></label>
-                            <input type="text" name="class" id="edit_stu_class" class="sm-input" required placeholder="الصف الأول / Grade 1" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <select name="class" id="edit_stu_class" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="الصف الأول">الصف الأول</option>
+                                <option value="الصف الثاني">الصف الثاني</option>
+                                <option value="الصف الثالث">الصف الثالث</option>
+                                <option value="الصف الرابع">الصف الرابع</option>
+                                <option value="الصف الخامس">الصف الخامس</option>
+                                <option value="الصف السادس">الصف السادس</option>
+                                <option value="الصف السابع">الصف السابع</option>
+                                <option value="الصف الثامن">الصف الثامن</option>
+                                <option value="الصف التاسع">الصف التاسع</option>
+                                <option value="الصف العاشر">الصف العاشر</option>
+                                <option value="الصف الحادي عشر">الصف الحادي عشر</option>
+                                <option value="الصف الثاني عشر">الصف الثاني عشر</option>
+                            </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الشعبة (Section): <span style="color: #dc2626;">*</span></label>
-                            <input type="text" name="section" id="edit_stu_section" class="sm-input" required placeholder="أ / A" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <select name="section" id="edit_stu_section" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="أ">أ</option>
+                                <option value="ب">ب</option>
+                                <option value="ج">ج</option>
+                                <option value="د">د</option>
+                                <option value="هـ">هـ</option>
+                            </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">المستوى الأكاديمي:</label>
@@ -124,7 +166,7 @@
                                 <option value="Transferred">منقول (Transferred)</option>
                             </select>
                         </div>
-                        <div class="sm-form-group" style="grid-column: span 2;">
+                        <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">تاريخ التسجيل (Registration Date):</label>
                             <input type="date" name="registration_date" id="edit_stu_reg_date" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
@@ -143,16 +185,39 @@
                             <input type="text" name="guardian_name" id="edit_stu_guardian_name" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">صلة القرابة:</label>
-                            <input type="text" name="guardian_relationship" id="edit_stu_guardian_rel" class="sm-input" placeholder="أب" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">صلة القرابة المعتمدة:</label>
+                            <select name="guardian_relationship" id="edit_stu_guardian_rel" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="أب">أب (Father)</option>
+                                <option value="أم">أم (Mother)</option>
+                                <option value="أخي / أختي">أخي / أختي (Brother / Sister)</option>
+                                <option value="أخرى">أخرى (Other)</option>
+                            </select>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">البريد الإلكتروني لولي الأمر:</label>
                             <input type="email" name="parent_email" id="edit_stu_email" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
                         </div>
                         <div class="sm-form-group">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم هاتف ولي الأمر (واتساب):</label>
-                            <input type="text" name="guardian_phone" id="edit_stu_phone" class="sm-input" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">رقم هاتف ولي الأمر (مع مفتاح الدولة):</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select name="guardian_phone_country" id="edit_stu_phone_country" class="sm-select" style="width: 110px; height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 11.5px;">
+                                    <option value="+971">+971 (الإمارات)</option>
+                                    <option value="+966">+966 (السعودية)</option>
+                                    <option value="+20">+20 (مصر)</option>
+                                    <option value="+962">+962 (الأردن)</option>
+                                    <option value="+963">+963 (سوريا)</option>
+                                    <option value="+967">+967 (اليمن)</option>
+                                    <option value="+249">+249 (السودان)</option>
+                                    <option value="+968">+968 (عمان)</option>
+                                    <option value="+965">+965 (الكويت)</option>
+                                    <option value="+973">+973 (البحرين)</option>
+                                    <option value="+974">+974 (قطر)</option>
+                                    <option value="+970">+970 (فلسطين)</option>
+                                    <option value="+961">+961 (لبنان)</option>
+                                    <option value="+964">+964 (العراق)</option>
+                                </select>
+                                <input type="text" name="guardian_phone" id="edit_stu_phone" class="sm-input" placeholder="501234567" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; flex: 1;">
+                            </div>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الإمارة:</label>
@@ -262,7 +327,7 @@
                 <button type="button" onclick="closeUnifiedEditStudentModal()" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 16px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1;">إلغاء</button>
                 <button type="button" id="eess-wiz-prev-btn" onclick="goUnifiedEditStep(currentUnifiedStep - 1)" class="sm-btn" style="background: #e2e8f0; color: #334155; height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; display: none;">السابق</button>
                 <button type="button" id="eess-wiz-next-btn" onclick="goUnifiedEditStep(currentUnifiedStep + 1)" class="sm-btn" style="background: #0f172a; color: #ffffff; height: 38px; padding: 0 22px; border-radius: 8px; font-weight: 800;">التالي</button>
-                <button type="submit" id="eess-wiz-submit-btn" class="sm-btn" style="background: #881337; color: #ffffff; height: 38px; padding: 0 24px; border-radius: 8px; font-weight: 800; display: none;">حفظ واعتد السجل الكامل (30 حقل)</button>
+                <button type="submit" id="eess-wiz-submit-btn" class="sm-btn" style="background: #881337; color: #ffffff; height: 38px; padding: 0 24px; border-radius: 8px; font-weight: 800; display: none;">حفظ واعتتماد بيانات الطالب الكاملة (30 حقل)</button>
             </div>
         </form>
     </div>
@@ -355,11 +420,10 @@ function handleStudentPhotoSelected(input) {
 
         document.getElementById('edit_stu_id').value = s.id || s.student_id || '0';
         document.getElementById('edit_stu_name').value = s.name || s.student_name || '';
-        document.getElementById('edit_stu_class').value = s.class_name || s.class || '';
-        document.getElementById('edit_stu_section').value = s.section || '';
+        document.getElementById('edit_stu_class').value = s.class_name || s.class || 'الصف الأول';
+        document.getElementById('edit_stu_section').value = s.section || 'أ';
         document.getElementById('edit_stu_email').value = s.parent_email || '';
-        document.getElementById('edit_stu_phone').value = s.guardian_phone || '';
-        document.getElementById('edit_stu_nationality').value = s.nationality || '';
+        document.getElementById('edit_stu_nationality').value = s.nationality || 'الإمارات العربية المتحدة';
         document.getElementById('edit_stu_code').value = s.student_code || s.student_id || '';
         if (document.getElementById('edit_stu_national_id')) document.getElementById('edit_stu_national_id').value = s.national_id || '';
         if (document.getElementById('edit_stu_dob')) document.getElementById('edit_stu_dob').value = s.dob || '';
@@ -367,6 +431,19 @@ function handleStudentPhotoSelected(input) {
         if (document.getElementById('edit_stu_school_id') && s.school_id) document.getElementById('edit_stu_school_id').value = s.school_id;
         if (document.getElementById('edit_stu_guardian_name')) document.getElementById('edit_stu_guardian_name').value = s.guardian_name || '';
         if (document.getElementById('edit_stu_guardian_rel')) document.getElementById('edit_stu_guardian_rel').value = s.guardian_relationship || 'أب';
+
+        // Parse Phone & Country Code
+        let fullPhone = s.guardian_phone || '';
+        let phoneCountry = '+971';
+        let phoneNum = fullPhone;
+        if (fullPhone.startsWith('+')) {
+            let parts = fullPhone.split(' ');
+            phoneCountry = parts[0] || '+971';
+            phoneNum = parts.slice(1).join('') || parts[0];
+        }
+        if (document.getElementById('edit_stu_phone_country')) document.getElementById('edit_stu_phone_country').value = phoneCountry;
+        if (document.getElementById('edit_stu_phone')) document.getElementById('edit_stu_phone').value = phoneNum;
+
         if (document.getElementById('edit_stu_emirate')) document.getElementById('edit_stu_emirate').value = s.emirate || 'أبوظبي';
         if (document.getElementById('edit_stu_address')) document.getElementById('edit_stu_address').value = s.address || '';
         if (document.getElementById('edit_stu_status')) document.getElementById('edit_stu_status').value = s.student_status || 'Active';
