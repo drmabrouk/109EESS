@@ -415,12 +415,12 @@ class EESS_Org_Helper {
             $sub_clauses = array();
 
             if (!empty($scope['grades'])) {
-                $escaped_grades = array_map(function($g) use ($wpdb) { return "'" . $wpdb->esc_like($g) . "'"; }, $scope['grades']);
+                $escaped_grades = array_map(function($g) use ($wpdb) { return "'" . esc_sql($g) . "'"; }, $scope['grades']);
                 $sub_clauses[] = "{$prefix}class_name IN (" . implode(',', $escaped_grades) . ")";
             }
 
             if (!empty($scope['sections'])) {
-                $escaped_sections = array_map(function($s) use ($wpdb) { return "'" . $wpdb->esc_like($s) . "'"; }, $scope['sections']);
+                $escaped_sections = array_map(function($s) use ($wpdb) { return "'" . esc_sql($s) . "'"; }, $scope['sections']);
                 $sub_clauses[] = "{$prefix}section IN (" . implode(',', $escaped_sections) . ")";
             }
 
@@ -638,16 +638,21 @@ class EESS_Org_Helper {
         $name = sanitize_text_field($data['name'] ?? '');
         if (empty($name)) return new WP_Error('empty_name', 'اسم القسم مطلوب');
 
-        $code = !empty($data['code']) ? sanitize_text_field($data['code']) : ('DEPT-' . $inst_id . '-' . substr(md5($name), 0, 4));
-        $head_user_id = !empty($data['head_user_id']) ? intval($data['head_user_id']) : null;
-        $description = sanitize_textarea_field($data['description'] ?? '');
+        $code = !empty($data['code']) ? preg_replace('/[^0-9]/', '', $data['code']) : intval($wpdb->get_var("SELECT MAX(id) FROM {$wpdb->prefix}eess_departments") + 101);
+
+        if (empty($code)) {
+            return new WP_Error('invalid_code', 'كود القسم يجب أن يحتوي على أرقام فقط');
+        }
+
+        $existing_code = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_departments WHERE code = %s", $code));
+        if ($existing_code) {
+            return new WP_Error('duplicate_code', 'كود القسم الرقمي مُستخدم بالفعل، يرجى اختيار كود آخر');
+        }
 
         $wpdb->insert("{$wpdb->prefix}eess_departments", array(
-            'institution_id' => intval($inst_id),
+            'institution_id' => 1,
             'code'           => $code,
             'name'           => $name,
-            'description'    => $description,
-            'head_user_id'   => $head_user_id,
             'status'         => 'active'
         ));
         return $wpdb->insert_id;
@@ -658,10 +663,17 @@ class EESS_Org_Helper {
         self::ensure_institutions_columns_exist();
         $update = array();
         if (isset($data['name'])) $update['name'] = sanitize_text_field($data['name']);
-        if (isset($data['code'])) $update['code'] = sanitize_text_field($data['code']);
-        if (isset($data['description'])) $update['description'] = sanitize_textarea_field($data['description']);
-        if (isset($data['head_user_id'])) $update['head_user_id'] = !empty($data['head_user_id']) ? intval($data['head_user_id']) : null;
-        if (isset($data['status'])) $update['status'] = sanitize_text_field($data['status']);
+        if (isset($data['code'])) {
+            $code = preg_replace('/[^0-9]/', '', $data['code']);
+            if (empty($code)) {
+                return new WP_Error('invalid_code', 'كود القسم يجب أن يحتوي على أرقام فقط');
+            }
+            $existing_code = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_departments WHERE code = %s AND id != %d", $code, $id));
+            if ($existing_code) {
+                return new WP_Error('duplicate_code', 'كود القسم الرقمي مُستخدم بالفعل في قسم آخر');
+            }
+            $update['code'] = $code;
+        }
 
         if (!empty($update)) {
             $wpdb->update("{$wpdb->prefix}eess_departments", $update, array('id' => intval($id)));
@@ -671,17 +683,6 @@ class EESS_Org_Helper {
 
     public static function delete_department($id) {
         global $wpdb;
-        // Check dependencies before deleting
-        $sub_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}eess_subjects WHERE department_id = %d AND status = 'active'", $id));
-        if ($sub_count > 0) {
-            return new WP_Error('has_subjects', 'لا يمكن حذف القسم لوجود مواد دراسية تابعة له. يرجى نقل أو حذف المواد أولاً.');
-        }
-
-        $user_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}eess_user_assignments WHERE department_id = %d", $id));
-        if ($user_count > 0) {
-            return new WP_Error('has_users', 'لا يمكن حذف القسم لوجود مستخدمين معينين عليه.');
-        }
-
         return $wpdb->delete("{$wpdb->prefix}eess_departments", array('id' => intval($id)));
     }
 

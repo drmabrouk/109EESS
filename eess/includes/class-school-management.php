@@ -211,6 +211,7 @@ class School_Management {
 
         // Organizational Sub-Tab AJAX Actions
         $this->loader->add_action('wp_ajax_eess_save_department', $plugin_public, 'ajax_eess_save_department');
+        $this->loader->add_action('wp_ajax_eess_delete_department', $plugin_public, 'ajax_eess_delete_department');
         $this->loader->add_action('wp_ajax_eess_save_subject', $plugin_public, 'ajax_eess_save_subject');
         $this->loader->add_action('wp_ajax_eess_save_grade', $plugin_public, 'ajax_eess_save_grade');
     }

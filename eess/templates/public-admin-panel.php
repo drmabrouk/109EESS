@@ -1036,27 +1036,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                         elseif ($inst->type === 'مدرسة') { $type_badge_bg = '#fef2f2'; $type_badge_col = '#881337'; }
 
                                         $manager_name = $inst->manager_display_name ?: ($inst->director_name ?: 'غير محدد');
-
-                                        // Fetch assigned staff count for this single-level institution
-                                        global $wpdb;
-                                        $assigned_staff_ids = $wpdb->get_col($wpdb->prepare(
-                                            "SELECT DISTINCT user_id FROM {$wpdb->prefix}eess_user_assignments WHERE institution_id = %d",
-                                            $inst->id
-                                        ));
-                                        $staff_count = count($assigned_staff_ids);
-                                    ?>
-                                    <?php
-                                        // Fetch child schools for this parent institution
-                                        $child_schools = EESS_Org_Helper::get_schools_by_institution($inst->id);
-                                        $child_schools_count = count($child_schools);
-
-                                        // Calculate total students & staff for child schools
-                                        $school_ids = wp_list_pluck($child_schools, 'id');
-                                        $total_inst_students = 0;
-                                        if (!empty($school_ids)) {
-                                            $placeholders = implode(',', array_fill(0, count($school_ids), '%d'));
-                                            $total_inst_students = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}sm_students WHERE school_id IN ($placeholders)", $school_ids)) ?: 0;
-                                        }
                                     ?>
                                     <div class="eess-institution-card"
                                          data-id="<?php echo $inst->id; ?>"
@@ -1094,97 +1073,34 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                                 </div>
                                             </div>
 
-                                            <!-- Metadata List & Child Hierarchy Accordion -->
+                                            <!-- Core Basic Metadata List -->
                                             <div style="background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #334155;">
                                                 <div style="display: flex; align-items: center; gap: 6px;">
                                                     <span class="dashicons dashicons-admin-users" style="font-size: 15px; width: 15px; height: 15px; color: #881337;"></span>
                                                     <span><strong>مدير المؤسسة:</strong> <?php echo esc_html($manager_name); ?></span>
                                                 </div>
                                                 <div style="display: flex; align-items: center; gap: 6px;">
-                                                    <span class="dashicons dashicons-welcome-widgets-menus" style="font-size: 15px; width: 15px; height: 15px; color: #0284c7;"></span>
-                                                    <span><strong>المدارس التابعة:</strong> <strong style="color: #0284c7;"><?php echo $child_schools_count; ?> مدارس / فروع</strong></span>
+                                                    <span class="dashicons dashicons-location" style="font-size: 15px; width: 15px; height: 15px; color: #0284c7;"></span>
+                                                    <span><strong>الدولة / الموقع:</strong> <?php echo esc_html($inst->country ?: 'غير محدد'); ?></span>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 6px;">
-                                                    <span class="dashicons dashicons-groups" style="font-size: 15px; width: 15px; height: 15px; color: #16a34a;"></span>
-                                                    <span><strong>إجمالي الطلاب بالمؤسسة:</strong> <strong style="color: #16a34a;"><?php echo $total_inst_students; ?> طالب</strong></span>
-                                                </div>
-
-                                                <?php if ($child_schools_count > 0): ?>
-                                                    <div style="margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
-                                                        <button type="button" onclick="jQuery('#inst-child-schools-<?php echo $inst->id; ?>').toggle()" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: space-between;">
-                                                            <span>عرض المدارس والفروع التابعة (<?php echo $child_schools_count; ?>)</span>
-                                                            <span class="dashicons dashicons-arrow-down-alt2" style="font-size: 12px;"></span>
-                                                        </button>
-
-                                                        <div id="inst-child-schools-<?php echo $inst->id; ?>" style="display: none; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-                                                            <?php foreach ($child_schools as $cs):
-                                                                $cs_stu_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}sm_students WHERE school_id = %d", $cs->id)) ?: 0;
-                                                            ?>
-                                                                <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                                                                    <div>
-                                                                        <strong style="color: #0f172a;"><?php echo esc_html($cs->name); ?></strong>
-                                                                        <span style="font-size: 9.5px; color: #64748b; font-family: monospace;">(كود: <?php echo intval($cs->school_code ?: $cs->id); ?>)</span>
-                                                                    </div>
-                                                                    <span style="background: #f0fdf4; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 800; font-size: 10px;"><?php echo $cs_stu_count; ?> طالب</span>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        </div>
+                                                <?php if (!empty($inst->phone)): ?>
+                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                        <span class="dashicons dashicons-phone" style="font-size: 15px; width: 15px; height: 15px; color: #16a34a;"></span>
+                                                        <span><strong>الهاتف:</strong> <?php echo esc_html($inst->phone); ?></span>
                                                     </div>
                                                 <?php endif; ?>
-
-                                                <!-- Expandable 9 Standard Departments Accordion -->
-                                                <?php
-                                                $inst_departments = EESS_Org_Helper::get_departments_by_institution($inst->id);
-                                                $inst_subjects = EESS_Org_Helper::get_subjects_by_institution($inst->id);
-                                                $dept_count = count($inst_departments);
-                                                ?>
-                                                <div style="margin-top: 8px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
-                                                    <button type="button" onclick="jQuery('#inst-depts-<?php echo $inst->id; ?>').toggle()" style="background: #fef2f2; color: #881337; border: 1px solid #fecdd3; border-radius: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 800; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: space-between;">
-                                                        <span style="display: flex; align-items: center; gap: 6px;">
-                                                            <span class="dashicons dashicons-category" style="font-size: 14px; width: 14px; height: 14px;"></span>
-                                                            <span>الأقسام الإدارية والأكاديمية الـ 9 بالمؤسسة (<?php echo $dept_count; ?>)</span>
-                                                        </span>
-                                                        <span class="dashicons dashicons-arrow-down-alt2" style="font-size: 12px;"></span>
-                                                    </button>
-
-                                                    <div id="inst-depts-<?php echo $inst->id; ?>" style="display: none; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-                                                        <?php foreach ($inst_departments as $idept):
-                                                            // Count users assigned to this department in this institution
-                                                            $d_user_count = $wpdb->get_var($wpdb->prepare(
-                                                                "SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}eess_user_assignments WHERE institution_id = %d AND department_id = %d",
-                                                                $inst->id, $idept->id
-                                                            )) ?: 0;
-
-                                                            // Count subjects if this is the Academic Department
-                                                            $d_sub_count = 0;
-                                                            if (strpos($idept->name, 'الأكاديمية') !== false) {
-                                                                $d_sub_count = count($inst_subjects);
-                                                            }
-                                                        ?>
-                                                            <div style="background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; gap: 6px;">
-                                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                    <strong style="color: #0f172a; font-size: 12px;"><?php echo esc_html($idept->name); ?></strong>
-                                                                    <div style="display: flex; gap: 4px; align-items: center;">
-                                                                        <span style="background: #e0f2fe; color: #0369a1; padding: 1px 8px; border-radius: 50px; font-weight: 800; font-size: 10px;"><?php echo $d_user_count; ?> موظف/كادر</span>
-                                                                        <?php if ($d_sub_count > 0): ?>
-                                                                            <span style="background: #fef3c7; color: #b45309; padding: 1px 8px; border-radius: 50px; font-weight: 800; font-size: 10px;"><?php echo $d_sub_count; ?> مادة دراسية</span>
-                                                                        <?php endif; ?>
-                                                                    </div>
-                                                                </div>
-                                                                <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
-                                                                    <span>رئيس القسم: <strong><?php echo esc_html($idept->head_display_name ?: 'غير محدد'); ?></strong></span>
-                                                                    <small style="font-family: monospace; color: #94a3b8;"><?php echo esc_html($idept->code); ?></small>
-                                                                </div>
-                                                            </div>
-                                                        <?php endforeach; ?>
+                                                <?php if (!empty($inst->address)): ?>
+                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                        <span class="dashicons dashicons-admin-home" style="font-size: 15px; width: 15px; height: 15px; color: #64748b;"></span>
+                                                        <span><strong>العنوان:</strong> <?php echo esc_html($inst->address); ?></span>
                                                     </div>
-                                                </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 
                                         <!-- Circular Action Buttons -->
                                         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
-                                            <button type="button" onclick='eessOpenEditInstitutionModal(<?php echo json_encode($inst); ?>, <?php echo json_encode($assigned_staff_ids); ?>)' title="تعديل المؤسسة والمدير وتكليفات الكادر" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+                                            <button type="button" onclick='eessOpenEditInstitutionModal(<?php echo json_encode($inst); ?>)' title="تعديل بيانات المؤسسة" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
                                                 <span class="dashicons dashicons-edit" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                                             </button>
 
@@ -1203,45 +1119,32 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 <?php endif; ?>
                             </div>
 
-                            <!-- DEPARTMENTS SUB-TAB GRID (3-Card Layout) -->
+                            <!-- DEPARTMENTS SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-departments-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $all_depts_list = array();
-                                foreach ($institutions as $inst_item) {
-                                    $d_list = EESS_Org_Helper::get_departments_by_institution($inst_item->id);
-                                    foreach ($d_list as $dl) {
-                                        $dl->inst_name = $inst_item->name;
-                                        $all_depts_list[] = $dl;
-                                    }
-                                }
-                                if (empty($all_depts_list)): ?>
+                                $central_depts = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}eess_departments WHERE status = 'active' OR status IS NULL ORDER BY CAST(code AS UNSIGNED) ASC, id ASC");
+                                if (empty($central_depts)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-category" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
-                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد أقسام إدارية مسجلة حالياً</div>
+                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد أقسام إدارية مركزية مسجلة حالياً</div>
                                     </div>
                                 <?php else: ?>
-                                    <?php foreach ($all_depts_list as $dept):
-                                        $staff_assigned = $wpdb->get_var($wpdb->prepare(
-                                            "SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}eess_user_assignments WHERE department_id = %d",
-                                            $dept->id
-                                        )) ?: 0;
+                                    <?php foreach ($central_depts as $dept):
+                                        $numeric_code = preg_replace('/[^0-9]/', '', $dept->code) ?: intval($dept->id);
                                     ?>
                                         <div style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
                                             <div>
                                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                                     <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;"><?php echo esc_html($dept->name); ?></h3>
-                                                    <span style="font-family: monospace; font-size: 10.5px; background: #fef2f2; color: #881337; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fecdd3;"><?php echo esc_html($dept->code); ?></span>
-                                                </div>
-                                                <p style="margin: 0 0 10px 0; font-size: 11.5px; color: #64748b;"><?php echo esc_html($dept->description ?: 'قسم إداري وأكاديمي عام بالمنظومة'); ?></p>
-                                                <div style="background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 6px;">
-                                                    <div><strong>المؤسسة التابعة:</strong> <?php echo esc_html($dept->inst_name); ?></div>
-                                                    <div><strong>رئيس القسم:</strong> <?php echo esc_html($dept->head_display_name ?: 'غير محدد'); ?></div>
-                                                    <div><strong>إجمالي الموظفين:</strong> <span style="color: #0284c7; font-weight: bold;"><?php echo $staff_assigned; ?> موظف</span></div>
+                                                    <span style="font-family: monospace; font-size: 11px; background: #fef2f2; color: #881337; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fecdd3;">كود القسم الرقمي: <?php echo esc_html($numeric_code); ?></span>
                                                 </div>
                                             </div>
-                                            <div style="display: flex; justify-content: flex-end;">
-                                                <button type="button" onclick='eessOpenEditDeptModal(<?php echo json_encode($dept); ?>)' style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                                <button type="button" onclick='eessOpenEditDeptModal(<?php echo json_encode($dept); ?>)' title="تعديل اسم أو كود القسم" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
+                                                </button>
+                                                <button type="button" onclick="eessDeleteDeptAjax(<?php echo $dept->id; ?>)" title="حذف القسم" style="width: 34px; height: 34px; border-radius: 50%; background: #fee2e2; color: #dc2626; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                                    <span class="dashicons dashicons-trash" style="font-size: 15px;"></span>
                                                 </button>
                                             </div>
                                         </div>
@@ -1249,38 +1152,28 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 <?php endif; ?>
                             </div>
 
-                            <!-- SUBJECTS SUB-TAB GRID (3-Card Layout) -->
+                            <!-- SUBJECTS SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-subjects-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $all_subjects_list = array();
-                                foreach ($institutions as $inst_item) {
-                                    $s_list = EESS_Org_Helper::get_subjects_by_institution($inst_item->id);
-                                    foreach ($s_list as $sl) {
-                                        $sl->inst_name = $inst_item->name;
-                                        $all_subjects_list[] = $sl;
-                                    }
-                                }
-                                if (empty($all_subjects_list)): ?>
+                                $central_subjects = $wpdb->get_results("SELECT DISTINCT name, code, id FROM {$wpdb->prefix}eess_subjects WHERE status = 'active' OR status IS NULL GROUP BY name ORDER BY name ASC");
+                                if (empty($central_subjects)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-book-alt" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
-                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد مواد دراسية مسجلة حالياً</div>
+                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد مواد دراسية مركزية مسجلة حالياً</div>
                                     </div>
                                 <?php else: ?>
-                                    <?php foreach ($all_subjects_list as $subj): ?>
+                                    <?php foreach ($central_subjects as $subj):
+                                        $numeric_subj_code = preg_replace('/[^0-9]/', '', $subj->code) ?: intval($subj->id);
+                                    ?>
                                         <div style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
                                             <div>
                                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                                     <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;"><?php echo esc_html($subj->name); ?></h3>
-                                                    <span style="font-family: monospace; font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #bae6fd;"><?php echo esc_html($subj->code); ?></span>
-                                                </div>
-                                                <div style="background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 6px;">
-                                                    <div><strong>المؤسسة:</strong> <?php echo esc_html($subj->inst_name); ?></div>
-                                                    <div><strong>القسم التابع:</strong> <?php echo esc_html($subj->department_name ?: 'الأقسام الأكاديمية'); ?></div>
-                                                    <div><strong>المنسق:</strong> <?php echo esc_html($subj->coordinator_display_name ?: 'غير محدد'); ?></div>
+                                                    <span style="font-family: monospace; font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #bae6fd;">كود المادة: <?php echo esc_html($numeric_subj_code); ?></span>
                                                 </div>
                                             </div>
-                                            <div style="display: flex; justify-content: flex-end;">
-                                                <button type="button" onclick='eessOpenEditSubjectModal(<?php echo json_encode($subj); ?>)' style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                                <button type="button" onclick='eessOpenEditSubjectModal(<?php echo json_encode($subj); ?>)' title="تعديل المادة الدراسية" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
                                                 </button>
                                             </div>
@@ -1289,33 +1182,28 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 <?php endif; ?>
                             </div>
 
-                            <!-- GRADES SUB-TAB GRID (3-Card Layout) -->
+                            <!-- GRADES SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-grades-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $all_grades_list = EESS_Org_Helper::get_grades();
-                                if (empty($all_grades_list)): ?>
+                                $central_grades = $wpdb->get_results("SELECT DISTINCT name, id FROM {$wpdb->prefix}sm_grades ORDER BY id ASC");
+                                if (empty($central_grades)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-welcome-learn-more" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
-                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد صفوف دراسية مسجلة حالياً</div>
+                                        <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد صفوف دراسية مركزية مسجلة حالياً</div>
                                     </div>
                                 <?php else: ?>
-                                    <?php foreach ($all_grades_list as $grd):
+                                    <?php foreach ($central_grades as $grd):
                                         $clean_num = intval(preg_replace('/[^0-9]/', '', $grd->name)) ?: $grd->id;
-                                        $stu_count_grade = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}sm_students WHERE class_name LIKE %s", '%' . $wpdb->esc_like($grd->name) . '%')) ?: 0;
                                     ?>
                                         <div style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
                                             <div>
                                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                                     <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;"><?php echo esc_html($grd->name); ?></h3>
-                                                    <span style="font-family: monospace; font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fde68a;">كود الصف: <?php echo $clean_num; ?></span>
-                                                </div>
-                                                <div style="background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 6px;">
-                                                    <div><strong>المدرسة / المؤسسة:</strong> <?php echo esc_html($grd->school_name ?: 'المؤسسة الرئيسية'); ?></div>
-                                                    <div><strong>عدد الطلاب المسجلين بالصف:</strong> <strong style="color: #16a34a;"><?php echo $stu_count_grade; ?> طالب</strong></div>
+                                                    <span style="font-family: monospace; font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fde68a;">كود الصف الرقمي: <?php echo $clean_num; ?></span>
                                                 </div>
                                             </div>
-                                            <div style="display: flex; justify-content: flex-end;">
-                                                <button type="button" onclick='eessOpenEditGradeModal(<?php echo json_encode($grd); ?>)' style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                                <button type="button" onclick='eessOpenEditGradeModal(<?php echo json_encode($grd); ?>)' title="تعديل اسم الصف" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
                                                 </button>
                                             </div>
@@ -1326,39 +1214,52 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                         </div>
 
-                        <!-- ADD / EDIT DEPARTMENT MODAL -->
+                        <!-- ADD / EDIT CENTRAL DEPARTMENT MODAL -->
                         <div id="eess-dept-modal" class="sm-modal-overlay" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; font-family: 'Cairo', sans-serif;">
-                            <div style="background: #ffffff; border-radius: 20px; max-width: 520px; width: 100%; border: 1px solid #cbd5e1; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+                            <div style="background: #ffffff; border-radius: 20px; max-width: 480px; width: 100%; border: 1px solid #cbd5e1; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
                                 <div style="background: #0f172a; color: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
-                                    <h3 id="dept-modal-title" style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">إضافة / تعديل قسم إداري</h3>
+                                    <h3 id="dept-modal-title" style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">إضافة / تعديل قسم مركزي</h3>
                                     <button type="button" onclick="document.getElementById('eess-dept-modal').style.display='none';" style="background: none; border: none; color: #ffffff; font-size: 22px; cursor: pointer;">&times;</button>
                                 </div>
                                 <form id="eess-dept-form" onsubmit="eessSaveDeptAjax(event)" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                                     <input type="hidden" id="dept_modal_id" value="0">
                                     <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">اسم القسم الإداري *</label>
-                                        <input type="text" id="dept_modal_name" required class="sm-input" style="width: 100%; height: 38px;">
+                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">اسم القسم *</label>
+                                        <input type="text" id="dept_modal_name" required placeholder="مثال: الشؤون التعليمية" class="sm-input" style="width: 100%; height: 38px;">
                                     </div>
                                     <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">كود القسم (رمز محدد)</label>
-                                        <input type="text" id="dept_modal_code" placeholder="مثال: DEPT-01" class="sm-input" style="width: 100%; height: 38px;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">رئيس القسم / المسؤول المباشر</label>
-                                        <select id="dept_modal_head_id" class="sm-select" style="width: 100%; height: 38px;">
-                                            <option value="">-- اختر من مستخدمي النظام --</option>
-                                            <?php foreach ($all_users as $u): ?>
-                                                <option value="<?php echo $u->ID; ?>"><?php echo esc_html($u->display_name); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">الوصف المقتضب</label>
-                                        <textarea id="dept_modal_desc" rows="2" class="sm-input" style="width: 100%; padding: 8px;"></textarea>
+                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">كود القسم الرقمي الفريد (أرقام فقط) *</label>
+                                        <input type="text" id="dept_modal_code" required pattern="[0-9]+" placeholder="مثال: 101" class="sm-input" style="width: 100%; height: 38px; font-family: monospace; font-weight: bold;">
+                                        <small style="font-size: 10.5px; color: #64748b;">يجب أن يتكون الكود من أرقام فقط بدون أحرف أو رموز.</small>
                                     </div>
                                     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
                                         <button type="button" onclick="document.getElementById('eess-dept-modal').style.display='none';" class="sm-btn sm-btn-outline" style="height: 36px;">إلغاء</button>
-                                        <button type="submit" class="sm-btn" style="background: #881337; color: #fff !important; height: 36px; padding: 0 20px;">حفظ القسم</button>
+                                        <button type="submit" class="sm-btn" style="background: #881337; color: #fff !important; height: 36px; padding: 0 20px;">حفظ القسم المركزي</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- ADD / EDIT SUBJECT MODAL -->
+                        <div id="eess-subj-modal" class="sm-modal-overlay" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; font-family: 'Cairo', sans-serif;">
+                            <div style="background: #ffffff; border-radius: 20px; max-width: 480px; width: 100%; border: 1px solid #cbd5e1; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+                                <div style="background: #0f172a; color: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 id="subj-modal-title" style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">إضافة / تعديل مادة دراسية</h3>
+                                    <button type="button" onclick="document.getElementById('eess-subj-modal').style.display='none';" style="background: none; border: none; color: #ffffff; font-size: 22px; cursor: pointer;">&times;</button>
+                                </div>
+                                <form id="eess-subj-form" onsubmit="eessSaveSubjectAjax(event)" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                                    <input type="hidden" id="subj_modal_id" value="0">
+                                    <div>
+                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">اسم المادة الدراسية *</label>
+                                        <input type="text" id="subj_modal_name" required placeholder="مثال: الرياضيات، اللغة العربية..." class="sm-input" style="width: 100%; height: 38px;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px;">كود المادة الدراسية (أرقام فقط) *</label>
+                                        <input type="text" id="subj_modal_code" required pattern="[0-9]+" placeholder="مثال: 201" class="sm-input" style="width: 100%; height: 38px; font-family: monospace; font-weight: bold;">
+                                    </div>
+                                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                                        <button type="button" onclick="document.getElementById('eess-subj-modal').style.display='none';" class="sm-btn sm-btn-outline" style="height: 36px;">إلغاء</button>
+                                        <button type="submit" class="sm-btn" style="background: #881337; color: #fff !important; height: 36px; padding: 0 20px;">حفظ المادة المركزية</button>
                                     </div>
                                 </form>
                             </div>
@@ -1407,8 +1308,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('dept_modal_id').value = '0';
                             document.getElementById('dept_modal_name').value = '';
                             document.getElementById('dept_modal_code').value = '';
-                            document.getElementById('dept_modal_head_id').value = '';
-                            document.getElementById('dept_modal_desc').value = '';
                             document.getElementById('dept-modal-title').innerText = 'إضافة قسم إداري جديد';
                             document.getElementById('eess-dept-modal').style.display = 'flex';
                         }
@@ -1416,9 +1315,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         function eessOpenEditDeptModal(dept) {
                             document.getElementById('dept_modal_id').value = dept.id;
                             document.getElementById('dept_modal_name').value = dept.name || '';
-                            document.getElementById('dept_modal_code').value = dept.code || '';
-                            document.getElementById('dept_modal_head_id').value = dept.head_user_id || '';
-                            document.getElementById('dept_modal_desc').value = dept.description || '';
+                            document.getElementById('dept_modal_code').value = (dept.code || '').replace(/[^0-9]/g, '') || dept.id;
                             document.getElementById('dept-modal-title').innerText = 'تعديل قسم: ' + dept.name;
                             document.getElementById('eess-dept-modal').style.display = 'flex';
                         }
@@ -1427,9 +1324,12 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             e.preventDefault();
                             const deptId = document.getElementById('dept_modal_id').value;
                             const name = document.getElementById('dept_modal_name').value;
-                            const code = document.getElementById('dept_modal_code').value;
-                            const headId = document.getElementById('dept_modal_head_id').value;
-                            const desc = document.getElementById('dept_modal_desc').value;
+                            const code = document.getElementById('dept_modal_code').value.trim();
+
+                            if (!/^\d+$/.test(code)) {
+                                alert('خطأ: يجب أن يتكون كود القسم من أرقام فقط بدون أحرف أو رموز.');
+                                return;
+                            }
 
                             jQuery.ajax({
                                 url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
@@ -1439,9 +1339,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                     nonce: '<?php echo wp_create_nonce('sm_admin_action'); ?>',
                                     dept_id: deptId,
                                     name: name,
-                                    code: code,
-                                    head_user_id: headId,
-                                    description: desc
+                                    code: code
                                 },
                                 success: function(res) {
                                     if (res.success) {
@@ -1454,12 +1352,69 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             });
                         }
 
+                        function eessDeleteDeptAjax(deptId) {
+                            if (!confirm('هل أنت متأكد من حذف هذا القسم المركزي؟')) return;
+
+                            jQuery.ajax({
+                                url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
+                                type: 'POST',
+                                data: {
+                                    action: 'eess_delete_department',
+                                    nonce: '<?php echo wp_create_nonce('sm_admin_action'); ?>',
+                                    dept_id: deptId
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        alert(res.data.message || 'تم حذف القسم بنجاح');
+                                        location.reload();
+                                    } else {
+                                        alert('خطأ: ' + (res.data || 'فشل الحذف'));
+                                    }
+                                }
+                            });
+                        }
+
                         function eessOpenAddSubjectModal() {
-                            eessOpenGlobalSubjectModal();
+                            document.getElementById('subj_modal_id').value = '0';
+                            document.getElementById('subj_modal_name').value = '';
+                            document.getElementById('subj_modal_code').value = '';
+                            document.getElementById('subj-modal-title').innerText = 'إضافة مادة دراسية جديدة';
+                            document.getElementById('eess-subj-modal').style.display = 'flex';
                         }
 
                         function eessOpenEditSubjectModal(subj) {
-                            eessOpenGlobalSubjectModal();
+                            document.getElementById('subj_modal_id').value = subj.id || '0';
+                            document.getElementById('subj_modal_name').value = subj.name || '';
+                            document.getElementById('subj_modal_code').value = (subj.code || '').replace(/[^0-9]/g, '') || subj.id;
+                            document.getElementById('subj-modal-title').innerText = 'تعديل مادة دراسية: ' + (subj.name || '');
+                            document.getElementById('eess-subj-modal').style.display = 'flex';
+                        }
+
+                        function eessSaveSubjectAjax(e) {
+                            e.preventDefault();
+                            const subId = document.getElementById('subj_modal_id').value;
+                            const name = document.getElementById('subj_modal_name').value;
+                            const code = document.getElementById('subj_modal_code').value.trim();
+
+                            jQuery.ajax({
+                                url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
+                                type: 'POST',
+                                data: {
+                                    action: 'eess_save_subject',
+                                    nonce: '<?php echo wp_create_nonce('sm_admin_action'); ?>',
+                                    sub_id: subId,
+                                    name: name,
+                                    code: code
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        alert(res.data.message || 'تم حفظ المادة بنجاح');
+                                        location.reload();
+                                    } else {
+                                        alert('خطأ: ' + (res.data || 'فشل الحفظ'));
+                                    }
+                                }
+                            });
                         }
 
                         function eessOpenAddGradeModal() {
@@ -1533,16 +1488,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                             <div>
                                                 <label style="display: block; font-size: 12px; font-weight: 800; color: #334155; margin-bottom: 6px;">اسم المؤسسة التعليمية <span style="color:#ef4444;">*</span></label>
                                                 <input type="text" name="inst_name" id="inst_input_name" required placeholder="مثال: مدرسة الأمل النموذجية، جامعة الإمارات..." class="sm-input" style="width: 100%; height: 40px;">
-                                            </div>
-
-                                            <div>
-                                                <label style="display: block; font-size: 12px; font-weight: 800; color: #334155; margin-bottom: 6px;">المؤسسة الأم (الهيكل الهرمي)</label>
-                                                <select name="inst_parent_id" id="inst_input_parent_id" class="sm-select" style="width: 100%; height: 40px;">
-                                                    <option value="">-- رئيسية (بدون مؤسسة أم) --</option>
-                                                    <?php foreach ($institutions as $parent_inst): ?>
-                                                        <option value="<?php echo $parent_inst->id; ?>"><?php echo esc_html($parent_inst->name); ?> (كود: <?php echo intval($parent_inst->code ?: $parent_inst->id); ?>)</option>
-                                                    <?php endforeach; ?>
-                                                </select>
                                             </div>
 
                                             <div>
@@ -1623,13 +1568,12 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('eess-inst-modal').style.display = 'flex';
                         }
 
-                        function eessOpenEditInstitutionModal(inst, assignedStaff) {
+                        function eessOpenEditInstitutionModal(inst) {
                             document.getElementById('inst_form_action').value = 'edit';
                             document.getElementById('inst_form_id').value = inst.id;
-                            document.getElementById('inst-modal-title').innerText = 'تعديل بيانات وتكليفات: ' + inst.name;
+                            document.getElementById('inst-modal-title').innerText = 'تعديل بيانات المؤسسة: ' + inst.name;
 
                             document.getElementById('inst_input_code').value = inst.code || '';
-                            if (document.getElementById('inst_input_parent_id')) document.getElementById('inst_input_parent_id').value = inst.parent_id || '';
                             document.getElementById('inst_input_name').value = inst.name || '';
                             document.getElementById('inst_input_type').value = inst.type || 'مدرسة';
                             document.getElementById('inst_input_country').value = inst.country || 'الإمارات العربية المتحدة';
@@ -1638,11 +1582,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('inst_input_phone').value = inst.phone || '';
                             document.getElementById('inst_input_logo_url').value = inst.logo_url || '';
                             document.getElementById('inst_input_address').value = inst.address || '';
-
-                            document.querySelectorAll('.inst-staff-checkbox').forEach(cb => {
-                                const uid = parseInt(cb.value);
-                                cb.checked = Array.isArray(assignedStaff) && assignedStaff.includes(uid);
-                            });
 
                             document.getElementById('eess-inst-modal').style.display = 'flex';
                         }
