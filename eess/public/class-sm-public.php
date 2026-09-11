@@ -6778,7 +6778,7 @@ class SM_Public {
             <table class="meta-table">
                 <tr>
                     <th>تصنيف أصحاب الهمم:</th>
-                    <td><?php echo esc_html(($student->special_needs ?? '0') ? 'نعم (مشمول بالرعاية)' : 'لا'); ?></td>
+                    <td><?php echo esc_html((!empty($student->special_needs) && !in_array($student->special_needs, array('لا', 'No', '0', 'none'), true)) ? 'نعم (مشمول بالرعاية)' : 'لا'); ?></td>
                     <th>الحالة الصحية العامة:</th>
                     <td><?php echo esc_html($student->health_status ?: 'سليم تماماً'); ?></td>
                 </tr>

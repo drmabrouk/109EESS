@@ -463,7 +463,9 @@ function handleStudentPhotoSelected(input) {
         if (document.getElementById('edit_stu_dob')) document.getElementById('edit_stu_dob').value = s.dob || '';
         if (document.getElementById('edit_stu_gender')) document.getElementById('edit_stu_gender').value = s.gender || 'ذكر';
         if (document.getElementById('edit_stu_school_id')) {
-            document.getElementById('edit_stu_school_id').value = s.institution_id || s.school_id || '';
+            // For new student, default to Institution Code 2 if no institution_id/school_id is set
+            const targetInst = (s.institution_id || s.school_id) ? (s.institution_id || s.school_id) : ((!s.id || s.id == '0') ? '2' : '2');
+            document.getElementById('edit_stu_school_id').value = targetInst;
         }
         if (document.getElementById('edit_stu_teacher_id')) {
             document.getElementById('edit_stu_teacher_id').value = s.teacher_id || '';

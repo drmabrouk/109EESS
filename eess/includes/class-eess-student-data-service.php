@@ -155,26 +155,7 @@ class EESS_Student_Data_Service {
             return new WP_Error('missing_name', 'اسم الطالب حقل إجباري.');
         }
 
-        // Enforce Strict Uniqueness on National ID
-        if (!empty($national_id)) {
-            $existing_nat_stu = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}sm_students WHERE national_id = %s AND id != %d",
-                $national_id, $student_id
-            ));
-            if ($existing_nat_stu) {
-                return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
-            }
-
-            $existing_nat_user = username_exists($national_id);
-            if ($existing_nat_user) {
-                $linked_stu_id = get_user_meta($existing_nat_user, 'eess_student_id', true);
-                if ($linked_stu_id && intval($linked_stu_id) !== $student_id) {
-                    return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
-                }
-            }
-        }
-
-        // De-duplication check during CSV Import / Creation
+        // De-duplication check during CSV Import / Creation (Resolve student_id before National ID check)
         $stu_code = sanitize_text_field($data['code'] ?? ($data['student_id_code'] ?? ($data['student_code'] ?? '')));
         if ($student_id == 0) {
             if (!empty($stu_code)) {
@@ -197,8 +178,33 @@ class EESS_Student_Data_Service {
             }
         }
 
+        // Enforce Strict Uniqueness on National ID
+        if (!empty($national_id)) {
+            $existing_nat_stu = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}sm_students WHERE national_id = %s AND id != %d",
+                $national_id, $student_id
+            ));
+            if ($existing_nat_stu) {
+                return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
+            }
+
+            $existing_nat_user = username_exists($national_id);
+            if ($existing_nat_user) {
+                $linked_stu_id = get_user_meta($existing_nat_user, 'eess_student_id', true);
+                if ($linked_stu_id && intval($linked_stu_id) !== $student_id) {
+                    return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
+                }
+            }
+        }
+
+
+
         // Automatic Institution & School Scope Resolution
+        // Default new students to Institution Code 2 if no institution was explicitly passed
         $raw_input_org = intval($data['school_id'] ?? ($data['institution_id'] ?? 0));
+        if ($student_id == 0 && $raw_input_org <= 0) {
+            $raw_input_org = 2; // Default institution for new students
+        }
         $school_id = $raw_input_org;
         $institution_id = $raw_input_org;
 
