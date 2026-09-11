@@ -35,6 +35,7 @@
         </div>
 
         <form id="edit-student-form">
+            <input type="hidden" name="action" value="sm_update_student_ajax">
             <?php wp_nonce_field('sm_add_student', 'sm_nonce'); ?>
             <input type="hidden" name="student_id" id="edit_stu_id" value="0">
             <input type="hidden" name="photo_url" id="edit_stu_photo_url_val" value="">
@@ -463,9 +464,21 @@ function handleStudentPhotoSelected(input) {
         if (document.getElementById('edit_stu_dob')) document.getElementById('edit_stu_dob').value = s.dob || '';
         if (document.getElementById('edit_stu_gender')) document.getElementById('edit_stu_gender').value = s.gender || 'ذكر';
         if (document.getElementById('edit_stu_school_id')) {
-            // For new student, default to Institution Code 2 if no institution_id/school_id is set
-            const targetInst = (s.institution_id || s.school_id) ? (s.institution_id || s.school_id) : ((!s.id || s.id == '0') ? '2' : '2');
-            document.getElementById('edit_stu_school_id').value = targetInst;
+            const selectEl = document.getElementById('edit_stu_school_id');
+            let targetInst = String(s.institution_id || s.school_id || '');
+            let matched = false;
+
+            for (let i = 0; i < selectEl.options.length; i++) {
+                if (selectEl.options[i].value === targetInst) {
+                    selectEl.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched && (!s.id || s.id == '0' || !targetInst || targetInst == '0')) {
+                selectEl.value = '2'; // Default to Institution Code 2 for new students
+            }
         }
         if (document.getElementById('edit_stu_teacher_id')) {
             document.getElementById('edit_stu_teacher_id').value = s.teacher_id || '';

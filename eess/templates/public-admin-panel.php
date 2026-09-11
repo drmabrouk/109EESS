@@ -946,6 +946,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 case 'school-structure':
                     if ($is_admin || current_user_can('إدارة_النظام')) {
+                        global $wpdb;
                         $institutions = EESS_Org_Helper::get_institutions();
                         $all_users = get_users();
                         ?>
@@ -964,11 +965,15 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 </div>
 
                                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <button type="button" onclick="eessOpenAddSubjectModal()" class="sm-btn" style="background: #ffffff; color: #0f172a !important; height: 38px; border-radius: 9999px !important; padding: 0 16px; font-weight: 800; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                    <button type="button" onclick="eessOpenAddGradeModal()" class="sm-btn" style="background: #ffffff; color: #0f172a !important; height: 38px; border-radius: 9999px !important; padding: 0 14px; font-weight: 800; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span class="dashicons dashicons-plus-alt2" style="font-size: 14px; width: 14px; height: 14px; color: #0f172a;"></span>
+                                        <span>إضافة صف دراسي</span>
+                                    </button>
+                                    <button type="button" onclick="eessOpenAddSubjectModal()" class="sm-btn" style="background: #ffffff; color: #0f172a !important; height: 38px; border-radius: 9999px !important; padding: 0 14px; font-weight: 800; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                                         <span class="dashicons dashicons-plus-alt2" style="font-size: 14px; width: 14px; height: 14px; color: #0f172a;"></span>
                                         <span>إضافة مادة دراسية</span>
                                     </button>
-                                    <button type="button" onclick="eessOpenAddDeptModal()" class="sm-btn" style="background: #ffffff; color: #0f172a !important; height: 38px; border-radius: 9999px !important; padding: 0 16px; font-weight: 800; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                    <button type="button" onclick="eessOpenAddDeptModal()" class="sm-btn" style="background: #ffffff; color: #0f172a !important; height: 38px; border-radius: 9999px !important; padding: 0 14px; font-weight: 800; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                                         <span class="dashicons dashicons-plus-alt2" style="font-size: 14px; width: 14px; height: 14px; color: #0f172a;"></span>
                                         <span>إضافة قسم جديد</span>
                                     </button>
@@ -1100,7 +1105,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                                         <!-- Circular Action Buttons -->
                                         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
-                                            <button type="button" onclick='eessOpenEditInstitutionModal(<?php echo json_encode($inst); ?>)' title="تعديل بيانات المؤسسة" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+                                            <button type="button" data-json="<?php echo esc_attr(json_encode($inst)); ?>" onclick="eessOpenEditInstitutionModal(this)" title="تعديل بيانات المؤسسة" style="width: 36px; height: 36px; border-radius: 50% !important; flex-shrink: 0; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
                                                 <span class="dashicons dashicons-edit" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                                             </button>
 
@@ -1140,7 +1145,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                                 </div>
                                             </div>
                                             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                                                <button type="button" onclick='eessOpenEditDeptModal(<?php echo json_encode($dept); ?>)' title="تعديل اسم أو كود القسم" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                                <button type="button" data-json="<?php echo esc_attr(json_encode($dept)); ?>" onclick="eessOpenEditDeptModal(this)" title="تعديل اسم أو كود القسم" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
                                                 </button>
                                                 <button type="button" onclick="eessDeleteDeptAjax(<?php echo $dept->id; ?>)" title="حذف القسم" style="width: 34px; height: 34px; border-radius: 50%; background: #fee2e2; color: #dc2626; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
@@ -1155,7 +1160,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <!-- SUBJECTS SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-subjects-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $central_subjects = $wpdb->get_results("SELECT DISTINCT name, code, id FROM {$wpdb->prefix}eess_subjects WHERE status = 'active' OR status IS NULL GROUP BY name ORDER BY name ASC");
+                                $central_subjects = $wpdb->get_results("SELECT id, name, code FROM {$wpdb->prefix}eess_subjects WHERE status = 'active' OR status IS NULL ORDER BY name ASC");
                                 if (empty($central_subjects)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-book-alt" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
@@ -1173,7 +1178,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                                 </div>
                                             </div>
                                             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                                                <button type="button" onclick='eessOpenEditSubjectModal(<?php echo json_encode($subj); ?>)' title="تعديل المادة الدراسية" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                                <button type="button" data-json="<?php echo esc_attr(json_encode($subj)); ?>" onclick="eessOpenEditSubjectModal(this)" title="تعديل المادة الدراسية" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
                                                 </button>
                                             </div>
@@ -1185,7 +1190,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <!-- GRADES SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-grades-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $central_grades = $wpdb->get_results("SELECT DISTINCT name, id FROM {$wpdb->prefix}sm_grades ORDER BY id ASC");
+                                $central_grades = EESS_Org_Helper::get_grades();
                                 if (empty($central_grades)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-welcome-learn-more" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
@@ -1203,7 +1208,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                                 </div>
                                             </div>
                                             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                                                <button type="button" onclick='eessOpenEditGradeModal(<?php echo json_encode($grd); ?>)' title="تعديل اسم الصف" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                                                <button type="button" data-json="<?php echo esc_attr(json_encode($grd)); ?>" onclick="eessOpenEditGradeModal(this)" title="تعديل اسم الصف" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
                                                     <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
                                                 </button>
                                             </div>
@@ -1312,7 +1317,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('eess-dept-modal').style.display = 'flex';
                         }
 
-                        function eessOpenEditDeptModal(dept) {
+                        function eessOpenEditDeptModal(btn) {
+                            const dept = typeof btn === 'object' && btn.dataset ? JSON.parse(btn.dataset.json || '{}') : btn;
                             document.getElementById('dept_modal_id').value = dept.id;
                             document.getElementById('dept_modal_name').value = dept.name || '';
                             document.getElementById('dept_modal_code').value = (dept.code || '').replace(/[^0-9]/g, '') || dept.id;
@@ -1382,7 +1388,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('eess-subj-modal').style.display = 'flex';
                         }
 
-                        function eessOpenEditSubjectModal(subj) {
+                        function eessOpenEditSubjectModal(btn) {
+                            const subj = typeof btn === 'object' && btn.dataset ? JSON.parse(btn.dataset.json || '{}') : btn;
                             document.getElementById('subj_modal_id').value = subj.id || '0';
                             document.getElementById('subj_modal_name').value = subj.name || '';
                             document.getElementById('subj_modal_code').value = (subj.code || '').replace(/[^0-9]/g, '') || subj.id;
@@ -1424,7 +1431,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('eess-grade-modal').style.display = 'flex';
                         }
 
-                        function eessOpenEditGradeModal(grd) {
+                        function eessOpenEditGradeModal(btn) {
+                            const grd = typeof btn === 'object' && btn.dataset ? JSON.parse(btn.dataset.json || '{}') : btn;
                             document.getElementById('grade_modal_id').value = grd.id;
                             document.getElementById('grade_modal_name').value = grd.name || '';
                             document.getElementById('grade-modal-title').innerText = 'تعديل صف: ' + grd.name;
@@ -1568,10 +1576,11 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             document.getElementById('eess-inst-modal').style.display = 'flex';
                         }
 
-                        function eessOpenEditInstitutionModal(inst) {
+                        function eessOpenEditInstitutionModal(btn) {
+                            const inst = typeof btn === 'object' && btn.dataset ? JSON.parse(btn.dataset.json || '{}') : btn;
                             document.getElementById('inst_form_action').value = 'edit';
                             document.getElementById('inst_form_id').value = inst.id;
-                            document.getElementById('inst-modal-title').innerText = 'تعديل بيانات المؤسسة: ' + inst.name;
+                            document.getElementById('inst-modal-title').innerText = 'تعديل بيانات المؤسسة: ' + (inst.name || '');
 
                             document.getElementById('inst_input_code').value = inst.code || '';
                             document.getElementById('inst_input_name').value = inst.name || '';
