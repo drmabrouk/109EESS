@@ -136,6 +136,7 @@ class School_Management {
         $this->loader->add_action('wp_ajax_sm_verify_employee_id', $plugin_public, 'ajax_verify_employee_id');
         $this->loader->add_action('wp_ajax_nopriv_sm_submit_mobile_lesson', $plugin_public, 'ajax_submit_mobile_lesson');
         $this->loader->add_action('wp_ajax_sm_submit_mobile_lesson', $plugin_public, 'ajax_submit_mobile_lesson');
+        $this->loader->add_action('wp_ajax_eess_upload_mobile_profile_photo', $plugin_public, 'ajax_upload_mobile_profile_photo');
 
         // System Announcements & Notifications AJAX actions
         $this->loader->add_action('wp_ajax_sm_create_system_announcement', $plugin_public, 'ajax_create_system_announcement');
