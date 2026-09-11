@@ -5647,7 +5647,7 @@ class SM_Public {
 
         // Handle Single-Level Institution Model CRUD and Staff Assignments
         if (isset($_POST['eess_save_single_inst']) && wp_verify_nonce($_POST['sm_admin_nonce'], 'sm_admin_action')) {
-            if (current_user_can('إدارة_النظام')) {
+            if (current_user_can('manage_options') || current_user_can('إدارة_النظام')) {
                 $action = sanitize_text_field($_POST['inst_action'] ?? '');
                 $inst_id = intval($_POST['inst_id'] ?? 0);
 
@@ -12211,7 +12211,7 @@ class SM_Public {
     }
 
     public function ajax_eess_save_department() {
-        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+        if (!is_user_logged_in() || (!current_user_can('manage_options') && !current_user_can('إدارة_النظام'))) {
             wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
         }
         check_ajax_referer('sm_admin_action', 'nonce');
@@ -12247,7 +12247,7 @@ class SM_Public {
     }
 
     public function ajax_eess_delete_department() {
-        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+        if (!is_user_logged_in() || (!current_user_can('manage_options') && !current_user_can('إدارة_النظام'))) {
             wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
         }
         check_ajax_referer('sm_admin_action', 'nonce');
@@ -12266,7 +12266,7 @@ class SM_Public {
     }
 
     public function ajax_eess_save_subject() {
-        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+        if (!is_user_logged_in() || (!current_user_can('manage_options') && !current_user_can('إدارة_النظام'))) {
             wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
         }
         check_ajax_referer('sm_admin_action', 'nonce');
@@ -12301,7 +12301,7 @@ class SM_Public {
     }
 
     public function ajax_eess_save_grade() {
-        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+        if (!is_user_logged_in() || (!current_user_can('manage_options') && !current_user_can('إدارة_النظام'))) {
             wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
         }
         check_ajax_referer('sm_admin_action', 'nonce');

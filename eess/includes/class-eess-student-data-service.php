@@ -200,26 +200,22 @@ class EESS_Student_Data_Service {
 
 
         // Automatic Institution & School Scope Resolution
-        // Default new students to Institution Code 2 if no institution was explicitly passed
         $raw_input_org = intval($data['school_id'] ?? ($data['institution_id'] ?? 0));
         if ($student_id == 0 && $raw_input_org <= 0) {
             $raw_input_org = 2; // Default institution for new students
         }
-        $school_id = $raw_input_org;
+
         $institution_id = $raw_input_org;
+        $school_id      = $raw_input_org;
 
         if ($raw_input_org > 0) {
-            $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE id = %d OR code = %d", $raw_input_org, $raw_input_org));
+            $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE id = %d", $raw_input_org));
+            if (!$inst_row) {
+                $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE code = %d", $raw_input_org));
+            }
             if ($inst_row) {
                 $institution_id = $inst_row->id;
-                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d OR school_code = %d", $inst_row->id, $inst_row->code));
-                $school_id = $sch_row ? $sch_row->id : $inst_row->id;
-            } else {
-                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id, institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $raw_input_org));
-                if ($sch_row) {
-                    $school_id = $sch_row->id;
-                    $institution_id = $sch_row->institution_id ?: $sch_row->id;
-                }
+                $school_id      = $inst_row->id;
             }
         }
 
@@ -367,6 +363,8 @@ class EESS_Student_Data_Service {
                         update_user_meta($user_id, 'eess_student_code', $st_code);
                         update_user_meta($user_id, 'eess_national_id', $student_rec->national_id);
                         update_user_meta($user_id, 'eess_school_id', $student_rec->school_id);
+                        update_user_meta($user_id, 'eess_institution_id', $student_rec->institution_id);
+                        update_user_meta($user_id, 'institution_id', $student_rec->institution_id);
                         update_user_meta($user_id, 'eess_user_type', 'student');
                         update_user_meta($user_id, 'sm_account_status', 'active');
                         update_user_meta($user_id, 'eess_account_status', 'active');

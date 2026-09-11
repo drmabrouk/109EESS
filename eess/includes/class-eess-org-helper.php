@@ -207,9 +207,9 @@ class EESS_Org_Helper {
             }
         }
 
-        // 3. Mark any existing non-mandatory institutions as archived
-        $wpdb->query("UPDATE {$wpdb->prefix}eess_institutions SET status = 'archived' WHERE code NOT IN (1,2,3,4,5,6)");
-        $wpdb->query("UPDATE {$wpdb->prefix}eess_schools SET status = 'archived' WHERE school_code NOT IN (2,3,4,5,6)");
+        // 3. Ensure mandatory institutions remain active without archiving custom institutions
+        $wpdb->query("UPDATE {$wpdb->prefix}eess_institutions SET status = 'active' WHERE code IN (1,2,3,4,5,6)");
+        $wpdb->query("UPDATE {$wpdb->prefix}eess_schools SET status = 'active' WHERE school_code IN (2,3,4,5,6)");
     }
 
     /**
@@ -470,12 +470,16 @@ class EESS_Org_Helper {
             $class_id = $wpdb->insert_id;
         }
 
-        // 4. Update the student table row
+        // 4. Update the student table row (preserve existing institution_id and school_id without overwriting)
+        $curr_row = $wpdb->get_row($wpdb->prepare("SELECT institution_id, school_id FROM {$wpdb->prefix}sm_students WHERE id = %d", $student_id));
+        $inst_to_set = ($curr_row && intval($curr_row->institution_id) > 0) ? intval($curr_row->institution_id) : 1;
+        $sch_to_set  = ($curr_row && intval($curr_row->school_id) > 0) ? intval($curr_row->school_id) : $inst_to_set;
+
         $wpdb->update("{$wpdb->prefix}sm_students", array(
-            'institution_id' => 1,
-            'school_id' => $school_id,
-            'grade_id' => $grade_id,
-            'class_id' => $class_id
+            'institution_id' => $inst_to_set,
+            'school_id'      => $sch_to_set,
+            'grade_id'       => $grade_id,
+            'class_id'       => $class_id
         ), array('id' => $student_id));
 
         return array(
@@ -547,7 +551,7 @@ class EESS_Org_Helper {
         global $wpdb;
         self::ensure_institutions_columns_exist();
         self::seed_mandatory_institutions();
-        return $wpdb->get_results("SELECT i.*, u.display_name as manager_display_name FROM {$wpdb->prefix}eess_institutions i LEFT JOIN {$wpdb->users} u ON i.manager_id = u.ID WHERE i.status = 'active' AND i.code IN (1,2,3,4,5,6) ORDER BY i.code ASC");
+        return $wpdb->get_results("SELECT i.*, u.display_name as manager_display_name FROM {$wpdb->prefix}eess_institutions i LEFT JOIN {$wpdb->users} u ON i.manager_id = u.ID WHERE (i.status = 'active' OR i.status IS NULL) ORDER BY CAST(i.code AS UNSIGNED) ASC, i.id ASC");
     }
 
     public static function get_institution_by_id($id) {
@@ -807,7 +811,7 @@ class EESS_Org_Helper {
         global $wpdb;
         self::ensure_institutions_columns_exist();
         self::seed_mandatory_institutions();
-        return $wpdb->get_results("SELECT id, code as school_code, name, type FROM {$wpdb->prefix}eess_institutions WHERE status = 'active' AND code IN (1,2,3,4,5,6) ORDER BY code ASC");
+        return $wpdb->get_results("SELECT id, code as school_code, name, type FROM {$wpdb->prefix}eess_institutions WHERE (status = 'active' OR status IS NULL) ORDER BY CAST(code AS UNSIGNED) ASC, id ASC");
     }
 
     /**
