@@ -227,7 +227,7 @@ class EESS_Org_Helper {
         global $wpdb;
 
         $user = get_userdata($user_id);
-        if (!$user) return array('unrestricted' => false, 'schools' => array(), 'grades' => array(), 'classes' => array(), 'subjects' => array(), 'departments' => array());
+        if (!$user) return array('unrestricted' => false, 'institutions' => array(), 'schools' => array(), 'grades' => array(), 'classes' => array(), 'sections' => array(), 'subjects' => array(), 'departments' => array());
 
         $roles = (array) $user->roles;
         $is_admin = in_array('administrator', $roles) || in_array('sm_system_admin', $roles);
@@ -235,11 +235,33 @@ class EESS_Org_Helper {
         if ($is_admin) {
             // Unrestricted access for System Admin
             $all_schools = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_schools WHERE status='active'");
+            $all_insts   = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_institutions WHERE status='active'");
             return array(
                 'unrestricted' => true,
+                'institutions' => $all_insts,
                 'schools' => $all_schools,
                 'grades' => array(),
                 'classes' => array(),
+                'sections' => array(),
+                'subjects' => array(),
+                'departments' => array()
+            );
+        }
+
+        // Check if user is assigned to Institution Code 1 (Parent/Owner Institution)
+        $meta_inst_id = get_user_meta($user_id, 'eess_institution_id', true) ?: get_user_meta($user_id, 'institution_id', true);
+        $user_inst_id = intval($meta_inst_id);
+
+        if ($user_inst_id === 1) {
+            $all_schools = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_schools WHERE status='active'");
+            $all_insts   = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_institutions WHERE status='active'");
+            return array(
+                'unrestricted' => true,
+                'institutions' => $all_insts,
+                'schools' => $all_schools,
+                'grades' => array(),
+                'classes' => array(),
+                'sections' => array(),
                 'subjects' => array(),
                 'departments' => array()
             );
@@ -251,20 +273,29 @@ class EESS_Org_Helper {
             $user_id
         ));
 
+        $institutions = array();
         $schools = array();
         $grades = array();
         $classes = array();
+        $sections = array();
         $subjects = array();
         $departments = array();
 
+        if ($user_inst_id > 0) {
+            $institutions[] = $user_inst_id;
+        }
+
         foreach ($assignments as $asn) {
-            if ($asn->institution_id && (!$asn->school_id || $asn->school_id == 0)) {
-                // Main Institution Scope -> Expand to all child schools under this institution
-                $child_schools = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d AND status='active'", $asn->institution_id));
-                if (!empty($child_schools)) {
-                    foreach ($child_schools as $csid) $schools[] = intval($csid);
+            if ($asn->institution_id) {
+                $institutions[] = intval($asn->institution_id);
+                if (!$asn->school_id || $asn->school_id == 0) {
+                    $child_schools = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d AND status='active'", $asn->institution_id));
+                    if (!empty($child_schools)) {
+                        foreach ($child_schools as $csid) $schools[] = intval($csid);
+                    }
                 }
-            } elseif ($asn->school_id) {
+            }
+            if ($asn->school_id) {
                 $schools[] = intval($asn->school_id);
             }
             if ($asn->grade_id) $grades[] = intval($asn->grade_id);
@@ -273,21 +304,59 @@ class EESS_Org_Helper {
             if ($asn->department_id) $departments[] = intval($asn->department_id);
         }
 
-        // Fallback to user_meta 'eess_school_id' if assignments table is empty
+        // Fallback to user_meta if assignments table is empty
         if (empty($schools)) {
-            $meta_school_id = get_user_meta($user_id, 'eess_school_id', true);
+            $meta_school_id = get_user_meta($user_id, 'eess_school_id', true) ?: get_user_meta($user_id, 'sm_school_id', true);
             if ($meta_school_id) {
                 $schools[] = intval($meta_school_id);
             }
         }
 
+        // Teacher-specific grade & section assignment mapping
+        if (in_array('sm_teacher', $roles)) {
+            $raw_grades = get_user_meta($user_id, 'sm_assigned_grades', true) ?: (get_user_meta($user_id, 'eess_assigned_grades', true) ?: (get_user_meta($user_id, 'sm_grade_level', true) ?: ''));
+            if (is_array($raw_grades)) {
+                $grades_list = $raw_grades;
+            } elseif (is_string($raw_grades) && !empty($raw_grades)) {
+                $decoded = json_decode($raw_grades, true);
+                if (is_array($decoded)) {
+                    $grades_list = $decoded;
+                } else {
+                    $grades_list = array_map('trim', explode(',', $raw_grades));
+                }
+            } else {
+                $grades_list = array();
+            }
+
+            foreach ($grades_list as $g_item) {
+                $clean_g = trim(preg_replace('/^(الصف|صف|Grade|grade)\s*:?\s*/u', '', (string)$g_item));
+                if (!empty($clean_g)) $grades[] = $clean_g;
+            }
+
+            $raw_sections = get_user_meta($user_id, 'sm_assigned_sections', true) ?: (get_user_meta($user_id, 'eess_assigned_sections', true) ?: (get_user_meta($user_id, 'sm_class_section', true) ?: ''));
+            if (is_array($raw_sections)) {
+                $sections_list = $raw_sections;
+            } elseif (is_string($raw_sections) && !empty($raw_sections)) {
+                $sections_list = array_map('trim', explode(',', $raw_sections));
+            } else {
+                $sections_list = array();
+            }
+
+            foreach ($sections_list as $s_item) {
+                $clean_s = trim(preg_replace('/^(الشعبة|شعبة|Section|section)\s*:?\s*/u', '', (string)$s_item));
+                if (!empty($clean_s)) $sections[] = $clean_s;
+            }
+        }
+
         return array(
             'unrestricted' => false,
-            'schools' => array_unique($schools),
-            'grades' => array_unique($grades),
-            'classes' => array_unique($classes),
-            'subjects' => array_unique($subjects),
-            'departments' => array_unique($departments)
+            'institutions' => array_unique(array_filter($institutions)),
+            'schools' => array_unique(array_filter($schools)),
+            'grades' => array_unique(array_filter($grades)),
+            'classes' => array_unique(array_filter($classes)),
+            'sections' => array_unique(array_filter($sections)),
+            'subjects' => array_unique(array_filter($subjects)),
+            'departments' => array_unique(array_filter($departments))
         );
     }
 
@@ -331,21 +400,36 @@ class EESS_Org_Helper {
         $scope = self::get_user_scope();
         if ($scope['unrestricted']) return " 1=1 ";
 
-        $school_ids = !empty($scope['schools']) ? implode(',', array_map('intval', $scope['schools'])) : '0';
-        $class_ids = !empty($scope['classes']) ? implode(',', array_map('intval', $scope['classes'])) : '0';
-
         $prefix = !empty($query_alias) ? $query_alias . '.' : '';
-
-        // Principal / Supervisor can access all students in their assigned schools
         $user = wp_get_current_user();
         $roles = (array) $user->roles;
-        $is_principal = in_array('sm_principal', $roles);
-        $is_supervisor = in_array('sm_supervisor', $roles);
-        $is_hr = in_array('sm_hr', $roles);
 
-        // For school managers, supervisors, discipline officers, HR, coordinators, teachers, and school-bound staff:
-        // Filter strictly by assigned school ID or institution ID
-        return " ({$prefix}school_id IN ($school_ids) OR {$prefix}institution_id IN ($school_ids)) ";
+        $inst_ids = !empty($scope['institutions']) ? implode(',', array_map('intval', $scope['institutions'])) : '0';
+        $school_ids = !empty($scope['schools']) ? implode(',', array_map('intval', $scope['schools'])) : '0';
+
+        // Base institution / school boundary
+        $clause = " ({$prefix}institution_id IN ($inst_ids) OR {$prefix}school_id IN ($school_ids)) ";
+
+        // Teacher strict class / grade / section scoping
+        if (in_array('sm_teacher', $roles)) {
+            $sub_clauses = array();
+
+            if (!empty($scope['grades'])) {
+                $escaped_grades = array_map(function($g) use ($wpdb) { return "'" . $wpdb->esc_like($g) . "'"; }, $scope['grades']);
+                $sub_clauses[] = "{$prefix}class_name IN (" . implode(',', $escaped_grades) . ")";
+            }
+
+            if (!empty($scope['sections'])) {
+                $escaped_sections = array_map(function($s) use ($wpdb) { return "'" . $wpdb->esc_like($s) . "'"; }, $scope['sections']);
+                $sub_clauses[] = "{$prefix}section IN (" . implode(',', $escaped_sections) . ")";
+            }
+
+            if (!empty($sub_clauses)) {
+                $clause .= " AND (" . implode(' AND ', $sub_clauses) . ") ";
+            }
+        }
+
+        return $clause;
     }
 
     public static function resolve_student_org_ids($student_id, $class_name, $section, $school_name = '') {
