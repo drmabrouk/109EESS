@@ -809,6 +809,68 @@ class EESS_Org_Helper {
         return $wpdb->get_results("SELECT id, code as school_code, name, type FROM {$wpdb->prefix}eess_institutions WHERE status = 'active' AND code IN (1,2,3,4,5,6) ORDER BY code ASC");
     }
 
+    /**
+     * Deterministically repair student institution_id and school_id references across the database
+     */
+    public static function repair_student_institution_references() {
+        global $wpdb;
+        self::ensure_institutions_columns_exist();
+        self::seed_mandatory_institutions();
+
+        // Map code -> institution_id
+        $inst_code_map = $wpdb->get_results("SELECT id, code, name FROM {$wpdb->prefix}eess_institutions WHERE status = 'active'", OBJECT_K);
+        $code_to_id = array();
+        foreach ($inst_code_map as $item) {
+            $code_to_id[intval($item->code)] = intval($item->id);
+        }
+
+        // Repair students with 0 or null institution_id by checking school_id or setting default Institution Code 1
+        $students = $wpdb->get_results("SELECT id, institution_id, school_id FROM {$wpdb->prefix}sm_students WHERE institution_id IS NULL OR institution_id = 0 OR school_id IS NULL OR school_id = 0");
+
+        $repaired_count = 0;
+        foreach ($students as $s) {
+            $new_inst_id = intval($s->institution_id);
+            $new_sch_id  = intval($s->school_id);
+
+            if ($new_inst_id > 0 && isset($code_to_id[$new_inst_id])) {
+                $new_inst_id = $code_to_id[$new_inst_id];
+            }
+
+            if ($new_inst_id <= 0 && $new_sch_id > 0) {
+                if (isset($code_to_id[$new_sch_id])) {
+                    $new_inst_id = $code_to_id[$new_sch_id];
+                } else {
+                    $sch_inst = $wpdb->get_var($wpdb->prepare("SELECT institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $new_sch_id));
+                    if ($sch_inst) $new_inst_id = intval($sch_inst);
+                }
+            }
+
+            if ($new_inst_id <= 0) {
+                $new_inst_id = $code_to_id[1] ?? 1;
+            }
+
+            if ($new_sch_id <= 0) {
+                $sch_row = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d LIMIT 1", $new_inst_id));
+                $new_sch_id = $sch_row ? intval($sch_row) : $new_inst_id;
+            }
+
+            if ($new_inst_id !== intval($s->institution_id) || $new_sch_id !== intval($s->school_id)) {
+                $wpdb->update(
+                    "{$wpdb->prefix}sm_students",
+                    array('institution_id' => $new_inst_id, 'school_id' => $new_sch_id),
+                    array('id' => $s->id)
+                );
+                $repaired_count++;
+            }
+        }
+
+        if ($repaired_count > 0) {
+            SM_Logger::log('معالجة مرجعيات المؤسسات', "تم إصلاح وتحديث مرجعيات المؤسسة لعدد ($repaired_count) من الطلاب بنجاح.");
+        }
+
+        return $repaired_count;
+    }
+
     public static function add_school($inst_id, $name) {
         global $wpdb;
         return $wpdb->insert("{$wpdb->prefix}eess_schools", array('institution_id' => $inst_id, 'name' => $name, 'status' => 'active'));

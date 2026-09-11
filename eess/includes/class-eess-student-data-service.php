@@ -270,12 +270,17 @@ class EESS_Student_Data_Service {
                 return new WP_Error('db_update_failed', 'فشل تحديث بيانات الطالب في قاعدة البيانات: ' . $wpdb->last_error);
             }
             $final_id = $student_id;
+
+            // Database Persistence Verification: Query actual database record to verify institution ID was saved
+            if ($institution_id > 0) {
+                $saved_inst_id = $wpdb->get_var($wpdb->prepare("SELECT institution_id FROM {$wpdb->prefix}sm_students WHERE id = %d", $final_id));
+                if (intval($saved_inst_id) !== intval($institution_id)) {
+                    return new WP_Error('db_verification_failed', 'فشل التحقق من حفظ المؤسسة في قاعدة البيانات. لم تتم عملية الحفظ بنجاح.');
+                }
+            }
         } else {
             // Resolve institution ID for code generation
-            $inst_id = 1;
-            if ($school_id > 0) {
-                $inst_id = $wpdb->get_var($wpdb->prepare("SELECT institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id)) ?: 1;
-            }
+            $inst_id = $institution_id ?: 1;
             if (empty($fields['student_code'])) {
                 if (class_exists('EESS_ID_Code_Service')) {
                     $generated_code = EESS_ID_Code_Service::generate_student_code($inst_id);
@@ -289,6 +294,14 @@ class EESS_Student_Data_Service {
                 return new WP_Error('db_insert_failed', 'فشل إضافة الطالب في قاعدة البيانات: ' . $wpdb->last_error);
             }
             $final_id = $wpdb->insert_id;
+
+            // Database Persistence Verification for New Record
+            if ($institution_id > 0) {
+                $saved_inst_id = $wpdb->get_var($wpdb->prepare("SELECT institution_id FROM {$wpdb->prefix}sm_students WHERE id = %d", $final_id));
+                if (intval($saved_inst_id) !== intval($institution_id)) {
+                    return new WP_Error('db_verification_failed', 'فشل التحقق من حفظ المؤسسة في قاعدة البيانات. لم تتم عملية الحفظ بنجاح.');
+                }
+            }
         }
 
         // Invalidate transient & object caches to ensure immediate data updates
