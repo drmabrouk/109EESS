@@ -145,17 +145,11 @@
                                 <option value="هـ">هـ</option>
                             </select>
                         </div>
-                        <div class="sm-form-group" style="grid-column: span 2;">
-                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المعلم المربّي / المشرف الأكاديمي (Homeroom Teacher):</label>
-                            <select name="teacher_id" id="edit_stu_teacher_id" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                                <option value="">-- اختر المعلم المربّي --</option>
-                                <?php
-                                $all_teachers = get_users(array('role' => 'sm_teacher', 'orderby' => 'display_name', 'order' => 'ASC'));
-                                foreach ($all_teachers as $t):
-                                ?>
-                                    <option value="<?php echo $t->ID; ?>"><?php echo esc_html($t->display_name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="sm-form-group" style="grid-column: span 2; position: relative;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المعلم المربّي / المشرف الأكاديمي (Homeroom Teacher Search):</label>
+                            <input type="hidden" name="teacher_id" id="edit_stu_teacher_id">
+                            <input type="text" id="edit_stu_teacher_search" autocomplete="off" class="sm-input" placeholder="ابحث باسم المعلم المربّي (أدخل 3 أحرف على الأقل)..." style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                            <div id="edit_stu_teacher_results" style="display: none; position: absolute; top: 100%; right: 0; left: 0; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); max-height: 180px; overflow-y: auto; margin-top: 2px;"></div>
                         </div>
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">المستوى الأكاديمي:</label>
@@ -446,6 +440,9 @@ function handleStudentPhotoSelected(input) {
         if (document.getElementById('edit_stu_teacher_id')) {
             document.getElementById('edit_stu_teacher_id').value = s.teacher_id || '';
         }
+        if (document.getElementById('edit_stu_teacher_search')) {
+            document.getElementById('edit_stu_teacher_search').value = s.teacher_name || (s.teacher_id ? ('معلم #' + s.teacher_id) : '');
+        }
         if (document.getElementById('edit_stu_guardian_name')) document.getElementById('edit_stu_guardian_name').value = s.guardian_name || '';
         if (document.getElementById('edit_stu_guardian_rel')) document.getElementById('edit_stu_guardian_rel').value = s.guardian_relationship || 'أب';
 
@@ -496,6 +493,65 @@ function handleStudentPhotoSelected(input) {
     };
 
     window.editSmStudentFromStats = window.editSmStudent;
+
+    // Homeroom Teacher Autocomplete Event Listener
+    const tSearchInput = document.getElementById('edit_stu_teacher_search');
+    const tResultsDiv = document.getElementById('edit_stu_teacher_results');
+    let tSearchTimer = null;
+
+    if (tSearchInput && tResultsDiv) {
+        tSearchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (tSearchTimer) clearTimeout(tSearchTimer);
+
+            if (query.length < 3) {
+                tResultsDiv.style.display = 'none';
+                tResultsDiv.innerHTML = '';
+                return;
+            }
+
+            tSearchTimer = setTimeout(() => {
+                tResultsDiv.style.display = 'block';
+                tResultsDiv.innerHTML = '<div style="padding: 10px; font-size: 11.5px; color: #64748b; text-align: center;">جاري البحث عن المعلم... ⏳</div>';
+
+                const formData = new FormData();
+                formData.append('action', 'eess_search_teachers_autocomplete');
+                formData.append('query', query);
+
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success && res.data && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(t => {
+                            html += `<div onclick="eessSelectHomeroomTeacher(${t.id}, '${t.name.replace(/'/g, "\\'")}')" style="padding: 9px 12px; font-size: 12px; font-weight: 700; color: #0f172a; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">` +
+                                    `<div>${t.name}</div>` +
+                                    `<div style="font-size: 10.5px; color: #64748b; font-weight: 600;">رقم المعلم: ${t.employee_number || t.id}</div>` +
+                                    `</div>`;
+                        });
+                        tResultsDiv.innerHTML = html;
+                    } else {
+                        tResultsDiv.innerHTML = '<div style="padding: 10px; font-size: 11.5px; color: #94a3b8; text-align: center;">لم يتم العثور على معلم مطابق للبحث.</div>';
+                    }
+                })
+                .catch(() => {
+                    tResultsDiv.style.display = 'none';
+                });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!tSearchInput.contains(e.target) && !tResultsDiv.contains(e.target)) {
+                tResultsDiv.style.display = 'none';
+            }
+        });
+    }
+
+    window.eessSelectHomeroomTeacher = function(tId, tName) {
+        document.getElementById('edit_stu_teacher_id').value = tId;
+        document.getElementById('edit_stu_teacher_search').value = tName;
+        document.getElementById('edit_stu_teacher_results').style.display = 'none';
+    };
 
     const editForm = document.getElementById('edit-student-form');
     if (editForm && !editForm.dataset.listenerAttached) {

@@ -111,3 +111,58 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php endif; endif; ?>
+
+<?php
+// Student Unread Messages Modal on Login
+if ($current_user_id):
+    global $wpdb;
+    $unread_messages = $wpdb->get_results($wpdb->prepare(
+        "SELECT m.*, u.display_name as sender_name FROM {$wpdb->prefix}sm_messages m LEFT JOIN {$wpdb->users} u ON m.sender_id = u.ID WHERE m.receiver_id = %d AND m.status = 'unread' ORDER BY m.created_at ASC",
+        $current_user_id
+    ));
+    if (!empty($unread_messages)):
+        $first_msg = $unread_messages[0];
+?>
+<div id="eess-student-message-login-modal" class="sm-modal-overlay" style="display: flex; z-index: 999999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);">
+    <div class="sm-modal-content" style="max-width: 520px; width: 92vw; border-radius: 20px; padding: 28px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); font-family: 'Cairo', sans-serif; text-align: right;" dir="rtl">
+        <div style="text-align: center; margin-bottom: 18px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #f0fdf4; color: #16a34a; border: 2px solid #bbf7d0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 26px;">
+                📩
+            </div>
+            <h3 style="margin: 0 0 6px 0; font-size: 17px; font-weight: 900; color: #0f172a;">لديك رسالة رسمية جديدة من إدارة المدرسة</h3>
+            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 700;">من: <?php echo esc_html($first_msg->sender_name ?: 'إدارة الشؤون الطلابية'); ?> | التاريخ: <?php echo esc_html(date('Y-m-d H:i', strtotime($first_msg->created_at))); ?></p>
+        </div>
+
+        <div style="background: #f8fafc; padding: 18px; border-radius: 14px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 13.5px; color: #1e293b; font-weight: 700; line-height: 1.7; white-space: pre-wrap;">
+            <?php echo esc_html($first_msg->message); ?>
+        </div>
+
+        <button type="button" onclick="eessMarkStudentMessageRead(<?php echo $first_msg->id; ?>)" id="eess_msg_read_btn" class="sm-btn" style="width: 100%; background: #16a34a; color: #ffffff; height: 42px; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);">
+            تحديد كـ "تمت القراءة" والمتابعة
+        </button>
+    </div>
+</div>
+
+<script>
+function eessMarkStudentMessageRead(msgId) {
+    const btn = document.getElementById('eess_msg_read_btn');
+    if (btn) { btn.disabled = true; btn.innerText = 'جاري التوثيق...'; }
+
+    const formData = new FormData();
+    formData.append('action', 'eess_mark_message_read');
+    formData.append('message_id', msgId);
+
+    fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(res => {
+        const modal = document.getElementById('eess-student-message-login-modal');
+        if (modal) modal.style.display = 'none';
+        location.reload();
+    })
+    .catch(() => {
+        const modal = document.getElementById('eess-student-message-login-modal');
+        if (modal) modal.style.display = 'none';
+    });
+}
+</script>
+<?php endif; endif; ?>
