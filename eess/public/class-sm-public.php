@@ -596,22 +596,43 @@ class SM_Public {
                     </form>
                 </div>
 
-                <?php if (in_array('sm_principal', $user_roles) || in_array('administrator', $user_roles)):
-                    // Principal Administrative Statistics
+                <?php
+                $is_principal = in_array('sm_principal', $user_roles) || in_array('administrator', $user_roles);
+                $is_act_supervisor = in_array('sm_activities_supervisor', $user_roles);
+
+                if ($is_principal || $is_act_supervisor):
                     $user_school_id = get_user_meta($user->ID, 'eess_school_id', true) ?: get_user_meta($user->ID, 'sm_school_id', true);
 
-                    // Teachers in principal's school
-                    $all_school_teachers = get_users(array(
-                        'role' => 'sm_teacher',
-                        'meta_key' => 'eess_school_id',
-                        'meta_value' => $user_school_id
-                    ));
-                    if (empty($all_school_teachers)) {
-                        $all_school_teachers = get_users(array('role' => 'sm_teacher', 'number' => 50));
+                    // Filter teachers based on scope
+                    if ($is_act_supervisor) {
+                        // Scope to Physical & Health Education teachers only
+                        $all_school_teachers = get_users(array(
+                            'role' => 'sm_teacher',
+                            'number' => 100
+                        ));
+                        $scoped_teachers = array();
+                        foreach ($all_school_teachers as $st) {
+                            $spec = get_user_meta($st->ID, 'sm_specialization', true) ?: (get_user_meta($st->ID, 'specialization', true) ?: get_user_meta($st->ID, 'eess_department', true));
+                            if (strpos($spec, 'بدنية') !== false || strpos($spec, 'صحية') !== false || strpos($spec, 'أنشطة') !== false) {
+                                $scoped_teachers[] = $st;
+                            }
+                        }
+                        $all_school_teachers = $scoped_teachers;
+                    } else {
+                        // Principal scope
+                        $all_school_teachers = get_users(array(
+                            'role' => 'sm_teacher',
+                            'meta_key' => 'eess_school_id',
+                            'meta_value' => $user_school_id
+                        ));
+                        if (empty($all_school_teachers)) {
+                            $all_school_teachers = get_users(array('role' => 'sm_teacher', 'number' => 50));
+                        }
                     }
+
                     $teacher_count = count($all_school_teachers);
 
-                    // Submitted lesson preps this week
+                    // Submitted lesson preps
                     global $wpdb;
                     $submitted_teacher_ids = $wpdb->get_col("SELECT DISTINCT teacher_id FROM {$wpdb->prefix}sm_lesson_preps WHERE status = 'submitted' OR status = 'approved'");
 
@@ -626,9 +647,9 @@ class SM_Public {
                         }
                     }
                 ?>
-                <!-- School Principal Administrative Statistics -->
+                <!-- Administrative Statistics Panel -->
                 <div style="background: #ffffff; border-radius: 16px; padding: 16px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
-                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">📊 إحصائيات متابعة التحضير اليومية بالمدرسة</h4>
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">📊 إحصائيات متابعة التحضير اليومية (<?php echo $is_act_supervisor ? 'التربية البدنية والصحية' : 'إحصائيات المدرسة'; ?>)</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px; text-align: center;">
                             <div style="font-size: 18px; font-weight: 900; color: #16a34a;"><?php echo count($submitted_teachers); ?> / <?php echo $teacher_count; ?></div>
@@ -722,17 +743,33 @@ class SM_Public {
             }
 
             let mViolScannerInstance = null;
+            let lastViolScannedCode = '';
+            let lastViolScanTime = 0;
+
             function eessStartMobileViolCamera() {
                 var reader = document.getElementById('m-viol-camera-reader');
                 reader.style.display = 'block';
 
                 if (typeof Html5Qrcode !== 'undefined') {
                     mViolScannerInstance = new Html5Qrcode("m-viol-camera-reader");
-                    mViolScannerInstance.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, function(decodedText) {
+                    mViolScannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, function(decodedText) {
+                        const code = decodedText.trim();
+                        const now = Date.now();
+
+                        if (now - lastViolScanTime < 1000) return;
+                        lastViolScanTime = now;
+
+                        if (code === lastViolScannedCode) {
+                            eessShowMobileToast('تم إدخال الطالب بالفعل', 'warning');
+                            return;
+                        }
+
+                        lastViolScannedCode = code;
+
                         mViolScannerInstance.stop().then(function() {
                             reader.style.display = 'none';
-                            eessResolveMobileViolStudent(decodedText.trim());
-                        });
+                            eessResolveMobileViolStudent(code);
+                        }).catch(function() { reader.style.display = 'none'; });
                     }).catch(function(err) {
                         alert('تعذر فتح الكاميرا: ' + err);
                         reader.style.display = 'none';
@@ -822,16 +859,6 @@ class SM_Public {
             <?php if ($is_supervisor && !$is_admin_supervisor): ?>
             <!-- MOBILE SUPERVISOR MONITORING & REVIEW DASHBOARD -->
             <div id="m-supervisor-app" style="display: block;">
-                <!-- Header Card -->
-                <div style="background: #0f172a; color: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">لوحة مراجعة ومتابعة المشرف</h3>
-                            <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #94a3b8;">متابعة خطة وتحضيرات المدرسين المسندين</p>
-                        </div>
-                        <span class="dashicons dashicons-shield" style="font-size: 24px; color: #38bdf8;"></span>
-                    </div>
-                </div>
 
                 <!-- Sub-Tabs: Plans vs. Lesson Preps -->
                 <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -967,19 +994,25 @@ class SM_Public {
                 $m_login_sys_logo = !empty($m_school_info['school_logo']) ? $m_school_info['school_logo'] : (!empty($m_school_info['logo_url']) ? $m_school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
             ?>
             <!-- Compact Single-Viewport Mobile Login Container -->
-            <div style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px; box-sizing: border-box; overflow: hidden; font-family: 'Cairo', sans-serif;">
+            <div style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 12px 16px; box-sizing: border-box; overflow: hidden; font-family: 'Cairo', sans-serif;">
 
                 <!-- System Branding & Logo Area -->
-                <div style="text-align: center; margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                    <div style="width: 54px; height: 54px; border-radius: 12px; background: #ffffff; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
-                        <img src="<?php echo esc_url($m_login_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" alt="EESS Logo">
+                <div style="text-align: center; margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <div style="width: 62px; height: 62px; border-radius: 14px; background: #ffffff; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+                        <img src="<?php echo esc_url($m_login_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px;" alt="EESS Logo">
                     </div>
-                    <h1 style="margin: 0; font-size: 17px; font-weight: 900; color: #0f172a; line-height: 1.2;">نظام الإدارة المدرسية</h1>
+                    <h1 style="margin: 0; font-size: 19px; font-weight: 900; color: #0f172a; line-height: 1.2;">نظام الإدارة المدرسية</h1>
                     <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 600;">المنظومة التعليمية الرقمية الموحدة والمعتمدة</p>
                 </div>
 
                 <!-- Centered Authentication Box -->
-                <div id="m-step-verify" style="background: #ffffff; border-radius: 18px; padding: 18px 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 380px; box-sizing: border-box; margin: 10px 0;">
+                <div id="m-step-verify" style="background: #ffffff; border-radius: 18px; padding: 16px 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 380px; box-sizing: border-box; margin: 4px 0;">
+
+                    <!-- Centered Welcome Header -->
+                    <div style="text-align: center; margin-bottom: 12px;">
+                        <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 2px;">أهلاً.. بعودتك!</div>
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">يرجى تسجيل دخولك لإدارة حسابك</div>
+                    </div>
 
                     <div style="margin-bottom: 12px; position: relative;">
                         <div class="eess-float-container" style="position: relative; width: 100%;">
@@ -1054,7 +1087,12 @@ class SM_Public {
             $has_no_photo = empty($m_custom_avatar);
             $m_avatar_src = $m_custom_avatar ?: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTMiIHN0eWxlPSJiYWNrZ3JvdW5kOiNmMWY1Zjk7IGJvcmRlci1yYWRpdXM6NTAlOyI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA4LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
             ?>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
+                <!-- Subtle Monochrome Wavy Watermark Pattern Background -->
+                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.04; pointer-events: none; z-index: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                    <path fill="#0f172a" d="M0,192L48,176C96,160,192,144,288,160C384,176,480,224,576,218.7C672,213,768,155,864,138.7C960,122,1056,149,1152,165.3C1248,182,1344,187,1392,184L1440,180L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                    <path fill="#0f172a" d="M0,64L48,90.7C96,117,192,171,288,181.3C384,192,480,160,576,133.3C672,107,768,85,864,101.3C960,117,1056,171,1152,186.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                </svg>
                 <!-- Interactive Profile Avatar Click to Change -->
                 <div onclick="document.getElementById('m_profile_photo_file').click()" style="position: relative; width: 68px; height: 68px; margin: 0 auto 8px auto; cursor: pointer;" title="انقر لتغيير الصورة الشخصية">
                     <img id="m_header_avatar_img" src="<?php echo esc_url($m_avatar_src); ?>" style="width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2.5px solid #cbd5e1; background: #f1f5f9; display: block;" alt="Profile Avatar">
