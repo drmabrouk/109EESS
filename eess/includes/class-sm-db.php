@@ -1138,12 +1138,12 @@ class SM_DB {
         // Clean phone digits for phone search
         $clean_phone = preg_replace('/[^0-9]/', '', $identifier);
 
-        // 1. Check user meta for employee IDs or registered phone numbers
+        // 1. Priority check: National ID, Employee ID, or Phone in user meta
         if (!empty($clean_phone) && strlen($clean_phone) >= 7) {
             $meta_user = $wpdb->get_row($wpdb->prepare(
                 "SELECT u.* FROM {$wpdb->prefix}users u
                  INNER JOIN {$wpdb->prefix}usermeta um ON u.ID = um.user_id
-                 WHERE (um.meta_key IN ('sm_employee_id', 'eess_employee_number', 'sm_employee_code', 'employee_id', 'job_number') AND um.meta_value = %s)
+                 WHERE (um.meta_key IN ('eess_civil_id', 'civil_id', 'national_id', 'eess_national_id', 'sm_employee_id', 'eess_employee_number', 'sm_employee_code', 'employee_id', 'job_number') AND um.meta_value = %s)
                  OR (um.meta_key IN ('sm_phone', 'phone_number', 'mobile_number', 'guardian_phone') AND (um.meta_value = %s OR um.meta_value LIKE %s OR REPLACE(REPLACE(um.meta_value, '+', ''), ' ', '') LIKE %s))
                  LIMIT 1",
                 $identifier,
@@ -1155,7 +1155,7 @@ class SM_DB {
             $meta_user = $wpdb->get_row($wpdb->prepare(
                 "SELECT u.* FROM {$wpdb->prefix}users u
                  INNER JOIN {$wpdb->prefix}usermeta um ON u.ID = um.user_id
-                 WHERE um.meta_key IN ('sm_employee_id', 'eess_employee_number', 'sm_employee_code', 'employee_id', 'job_number') AND um.meta_value = %s
+                 WHERE um.meta_key IN ('eess_civil_id', 'civil_id', 'national_id', 'eess_national_id', 'sm_employee_id', 'eess_employee_number', 'sm_employee_code', 'employee_id', 'job_number') AND um.meta_value = %s
                  LIMIT 1",
                 $identifier
             ));
