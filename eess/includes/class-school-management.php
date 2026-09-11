@@ -208,6 +208,11 @@ class School_Management {
         $this->loader->add_action('wp_ajax_sm_submit_exit_card_request', $plugin_public, 'ajax_submit_exit_card_request');
         $this->loader->add_action('wp_ajax_nopriv_sm_submit_exit_card_request', $plugin_public, 'ajax_submit_exit_card_request');
         $this->loader->add_action('wp_ajax_sm_update_exit_card_request_status', $plugin_public, 'ajax_update_exit_card_request_status');
+
+        // Organizational Sub-Tab AJAX Actions
+        $this->loader->add_action('wp_ajax_eess_save_department', $plugin_public, 'ajax_eess_save_department');
+        $this->loader->add_action('wp_ajax_eess_save_subject', $plugin_public, 'ajax_eess_save_subject');
+        $this->loader->add_action('wp_ajax_eess_save_grade', $plugin_public, 'ajax_eess_save_grade');
     }
 
     public function run() {
