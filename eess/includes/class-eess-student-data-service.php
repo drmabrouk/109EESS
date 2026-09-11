@@ -124,6 +124,33 @@ class EESS_Student_Data_Service {
         $section    = self::normalize_section($data['section'] ?? '');
         $national_id= sanitize_text_field($data['national_id'] ?? '');
 
+        // Server-Side Role and Institution Scope Validation
+        $curr_user_id = get_current_user_id();
+        if ($curr_user_id > 0) {
+            $user_roles = (array) wp_get_current_user()->roles;
+            $can_edit_student = current_user_can('manage_options') || current_user_can('إدارة_الطلاب') || in_array('administrator', $user_roles) || in_array('sm_system_admin', $user_roles) || in_array('sm_principal', $user_roles) || in_array('sm_supervisor', $user_roles) || in_array('sm_discipline_supervisor', $user_roles);
+
+            if (!$can_edit_student) {
+                return new WP_Error('unauthorized', 'عفواً، لا تمتلك الصلاحية الكافية لإضافة أو تعديل بيانات الطلاب.');
+            }
+
+            if (class_exists('EESS_Org_Helper')) {
+                $user_scope = EESS_Org_Helper::get_user_scope($curr_user_id);
+                if (!$user_scope['unrestricted']) {
+                    $allowed_insts = array_map('intval', array_merge((array)($user_scope['institutions'] ?? array()), (array)($user_scope['schools'] ?? array())));
+                    if ($student_id > 0) {
+                        $existing_stu = $wpdb->get_row($wpdb->prepare("SELECT institution_id, school_id FROM {$wpdb->prefix}sm_students WHERE id = %d", $student_id));
+                        if ($existing_stu) {
+                            $st_inst = intval($existing_stu->institution_id ?: $existing_stu->school_id);
+                            if ($st_inst > 0 && !empty($allowed_insts) && !in_array($st_inst, $allowed_insts, true)) {
+                                return new WP_Error('access_denied', 'عفواً، لا تملك صلاحية تعديل طالب ينتمي لمؤسسة أخرى.');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (empty($name)) {
             return new WP_Error('missing_name', 'اسم الطالب حقل إجباري.');
         }
