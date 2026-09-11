@@ -128,6 +128,25 @@ class EESS_Student_Data_Service {
             return new WP_Error('missing_name', 'اسم الطالب حقل إجباري.');
         }
 
+        // Enforce Strict Uniqueness on National ID
+        if (!empty($national_id)) {
+            $existing_nat_stu = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}sm_students WHERE national_id = %s AND id != %d",
+                $national_id, $student_id
+            ));
+            if ($existing_nat_stu) {
+                return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
+            }
+
+            $existing_nat_user = username_exists($national_id);
+            if ($existing_nat_user) {
+                $linked_stu_id = get_user_meta($existing_nat_user, 'eess_student_id', true);
+                if ($linked_stu_id && intval($linked_stu_id) !== $student_id) {
+                    return new WP_Error('duplicate_national_id', 'رقم الهوية الوطنية مكرر — لم يتم قبول التسجيل.');
+                }
+            }
+        }
+
         // De-duplication check during CSV Import / Creation
         $stu_code = sanitize_text_field($data['code'] ?? ($data['student_id_code'] ?? ($data['student_code'] ?? '')));
         if ($student_id == 0) {
@@ -271,38 +290,44 @@ class EESS_Student_Data_Service {
                 ));
             }
 
-            // Technical WP Account & Role Synchronization for Student
+            // Technical WP Account & Role Synchronization for Student (National ID as Authoritative Login Username)
             $student_rec = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE id = %d", $final_id));
-            if ($student_rec && !empty($student_rec->student_code)) {
+            if ($student_rec) {
                 $st_code = $student_rec->student_code;
-                $user_id = username_exists($st_code);
+                $login_username = !empty($student_rec->national_id) ? $student_rec->national_id : $st_code;
 
-                $default_pass = $st_code . $st_code;
+                if (!empty($login_username)) {
+                    $user_id = username_exists($login_username);
+                    $default_pass = $login_username;
+                    $is_new_account = false;
 
-                if (!$user_id) {
-                    $st_email = !empty($student_rec->parent_email) ? $student_rec->parent_email : ($st_code . '@eess.local');
-                    $user_id = wp_create_user($st_code, $default_pass, $st_email);
-                }
-
-                if ($user_id && !is_wp_error($user_id)) {
-                    $u = new WP_User($user_id);
-                    $u->set_role('sm_student');
-                    wp_update_user(array(
-                        'ID'           => $user_id,
-                        'display_name' => $student_rec->name
-                    ));
-
-                    $existing_temp_pass = get_user_meta($user_id, 'sm_temp_pass', true);
-                    if (empty($existing_temp_pass)) {
-                        update_user_meta($user_id, 'sm_temp_pass', $default_pass);
+                    if (!$user_id) {
+                        $st_email = !empty($student_rec->parent_email) ? $student_rec->parent_email : ($login_username . '@eess.local');
+                        $user_id = wp_create_user($login_username, $default_pass, $st_email);
+                        $is_new_account = true;
                     }
 
-                    update_user_meta($user_id, 'eess_student_id', $final_id);
-                    update_user_meta($user_id, 'eess_student_code', $st_code);
-                    update_user_meta($user_id, 'eess_school_id', $student_rec->school_id);
-                    update_user_meta($user_id, 'eess_user_type', 'student');
-                    update_user_meta($user_id, 'sm_account_status', 'active');
-                    update_user_meta($user_id, 'eess_account_status', 'active');
+                    if ($user_id && !is_wp_error($user_id)) {
+                        $u = new WP_User($user_id);
+                        $u->set_role('sm_student');
+                        wp_update_user(array(
+                            'ID'           => $user_id,
+                            'display_name' => $student_rec->name
+                        ));
+
+                        if ($is_new_account) {
+                            update_user_meta($user_id, 'eess_must_change_password', '1');
+                            update_user_meta($user_id, 'sm_temp_pass', $default_pass);
+                        }
+
+                        update_user_meta($user_id, 'eess_student_id', $final_id);
+                        update_user_meta($user_id, 'eess_student_code', $st_code);
+                        update_user_meta($user_id, 'eess_national_id', $student_rec->national_id);
+                        update_user_meta($user_id, 'eess_school_id', $student_rec->school_id);
+                        update_user_meta($user_id, 'eess_user_type', 'student');
+                        update_user_meta($user_id, 'sm_account_status', 'active');
+                        update_user_meta($user_id, 'eess_account_status', 'active');
+                    }
                 }
             }
         }

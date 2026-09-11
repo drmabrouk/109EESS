@@ -407,3 +407,4 @@ function eessSubmitQuickParentNote() {
     });
 }
 </script>
+<?php include SM_PLUGIN_DIR . 'templates/partials/student-first-login-modal.php'; ?>

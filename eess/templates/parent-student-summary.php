@@ -261,3 +261,4 @@ function uploadStudentPhoto(input, studentId) {
     });
 }
 </script>
+<?php include SM_PLUGIN_DIR . 'templates/partials/student-first-login-modal.php'; ?>

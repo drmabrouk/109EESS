@@ -108,6 +108,7 @@ class School_Management {
         $this->loader->add_action('wp_ajax_sm_get_subjects', $plugin_public, 'ajax_get_subjects');
         $this->loader->add_action('wp_ajax_sm_save_class_grades', $plugin_public, 'ajax_save_class_grades');
         $this->loader->add_action('wp_ajax_sm_export_grades_csv', $plugin_public, 'ajax_export_grades_csv');
+        $this->loader->add_action('wp_ajax_eess_student_change_password', $plugin_public, 'ajax_eess_student_change_password');
         $this->loader->add_action('wp_ajax_sm_import_grades_csv', $plugin_public, 'ajax_import_grades_csv');
         $this->loader->add_action('wp_ajax_sm_bulk_delete_students_ajax', $plugin_public, 'ajax_bulk_delete_students');
         $this->loader->add_action('wp_ajax_sm_download_plans_zip', $plugin_public, 'ajax_download_plans_zip');
