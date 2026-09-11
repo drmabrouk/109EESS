@@ -910,9 +910,7 @@ $to_num = min($offset + $limit, $total_students_count);
             });
         }
 
-        window.editSmStudent = function(s) {
-            openUnifiedProfileModal(s);
-        };
+        // Do not override window.editSmStudent here; it is provided by student-profile-edit-modal.php
 
         window.toggleAllStudents = function(master) {
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = master.checked);
