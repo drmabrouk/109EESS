@@ -198,24 +198,21 @@ class EESS_Student_Data_Service {
         }
 
         // Automatic Institution & School Scope Resolution
-        $school_id = intval($data['school_id'] ?? 0);
-        $institution_id = null;
+        $raw_input_org = intval($data['school_id'] ?? ($data['institution_id'] ?? 0));
+        $school_id = $raw_input_org;
+        $institution_id = $raw_input_org;
 
-        if ($school_id > 0) {
-            $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE id = %d OR code = %d", $school_id, $school_id));
+        if ($raw_input_org > 0) {
+            $inst_row = $wpdb->get_row($wpdb->prepare("SELECT id, code FROM {$wpdb->prefix}eess_institutions WHERE id = %d OR code = %d", $raw_input_org, $raw_input_org));
             if ($inst_row) {
                 $institution_id = $inst_row->id;
                 $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d OR school_code = %d", $inst_row->id, $inst_row->code));
-                if ($sch_row) {
-                    $school_id = $sch_row->id;
-                } else {
-                    $school_id = $inst_row->id;
-                }
+                $school_id = $sch_row ? $sch_row->id : $inst_row->id;
             } else {
-                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id, institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id));
+                $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id, institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $raw_input_org));
                 if ($sch_row) {
                     $school_id = $sch_row->id;
-                    $institution_id = $sch_row->institution_id;
+                    $institution_id = $sch_row->institution_id ?: $sch_row->id;
                 }
             }
         }
