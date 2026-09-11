@@ -1,7 +1,7 @@
 <?php if (!defined('ABSPATH')) exit; ?>
 <!-- REUSABLE UNIFIED 30-FIELD 5-STEP STUDENT PROFILE WIZARD MODAL -->
 <div id="edit-student-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
-    <div class="sm-modal-content" style="max-width: 960px; width: 95vw; border-radius: 20px; padding: 24px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: 'Cairo', sans-serif;">
+    <div class="sm-modal-content" style="max-width: 960px; width: 95vw; border-radius: 20px; padding: 28px 32px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: 'Cairo', sans-serif;">
         <div class="sm-modal-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
             <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
                 <span class="dashicons dashicons-admin-users" style="color: #881337; font-size: 22px; width: 22px; height: 22px;"></span>
@@ -71,14 +71,14 @@
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الجنسية المعترف بها:</label>
                             <select name="nationality" id="edit_stu_nationality" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                                <option value="الإمارات العربية المتحدة">الإمارات العربية المتحدة</option>
-                                <option value="المملكة العربية السعودية">المملكة العربية السعودية</option>
-                                <option value="جمهورية مصر العربية">جمهورية مصر العربية</option>
+                                <option value="الإمارات">الإمارات</option>
+                                <option value="السعودية">السعودية</option>
+                                <option value="مصر">مصر</option>
                                 <option value="الأردن">الأردن</option>
                                 <option value="سوريا">سوريا</option>
+                                <option value="عُمان">عُمان</option>
                                 <option value="اليمن">اليمن</option>
                                 <option value="السودان">السودان</option>
-                                <option value="سلطنة عمان">سلطنة عمان</option>
                                 <option value="الكويت">الكويت</option>
                                 <option value="البحرين">البحرين</option>
                                 <option value="قطر">قطر</option>
@@ -143,6 +143,18 @@
                                 <option value="ج">ج</option>
                                 <option value="د">د</option>
                                 <option value="هـ">هـ</option>
+                            </select>
+                        </div>
+                        <div class="sm-form-group" style="grid-column: span 2;">
+                            <label class="sm-label" style="font-size: 12px; font-weight: 700;">المعلم المربّي / المشرف الأكاديمي (Homeroom Teacher):</label>
+                            <select name="teacher_id" id="edit_stu_teacher_id" class="sm-select" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
+                                <option value="">-- اختر المعلم المربّي --</option>
+                                <?php
+                                $all_teachers = get_users(array('role' => 'sm_teacher', 'orderby' => 'display_name', 'order' => 'ASC'));
+                                foreach ($all_teachers as $t):
+                                ?>
+                                    <option value="<?php echo $t->ID; ?>"><?php echo esc_html($t->display_name); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="sm-form-group">
@@ -423,12 +435,17 @@ function handleStudentPhotoSelected(input) {
         document.getElementById('edit_stu_class').value = s.class_name || s.class || 'الصف الأول';
         document.getElementById('edit_stu_section').value = s.section || 'أ';
         document.getElementById('edit_stu_email').value = s.parent_email || '';
-        document.getElementById('edit_stu_nationality').value = s.nationality || 'الإمارات العربية المتحدة';
+        document.getElementById('edit_stu_nationality').value = s.nationality || 'الإمارات';
         document.getElementById('edit_stu_code').value = s.student_code || s.student_id || '';
         if (document.getElementById('edit_stu_national_id')) document.getElementById('edit_stu_national_id').value = s.national_id || '';
         if (document.getElementById('edit_stu_dob')) document.getElementById('edit_stu_dob').value = s.dob || '';
         if (document.getElementById('edit_stu_gender')) document.getElementById('edit_stu_gender').value = s.gender || 'ذكر';
-        if (document.getElementById('edit_stu_school_id') && s.school_id) document.getElementById('edit_stu_school_id').value = s.school_id;
+        if (document.getElementById('edit_stu_school_id')) {
+            document.getElementById('edit_stu_school_id').value = s.institution_id || s.school_id || '';
+        }
+        if (document.getElementById('edit_stu_teacher_id')) {
+            document.getElementById('edit_stu_teacher_id').value = s.teacher_id || '';
+        }
         if (document.getElementById('edit_stu_guardian_name')) document.getElementById('edit_stu_guardian_name').value = s.guardian_name || '';
         if (document.getElementById('edit_stu_guardian_rel')) document.getElementById('edit_stu_guardian_rel').value = s.guardian_relationship || 'أب';
 
