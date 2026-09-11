@@ -6687,6 +6687,50 @@ class SM_Public {
         ));
     }
 
+    public function ajax_eess_student_change_password() {
+        if (!is_user_logged_in()) {
+            wp_send_json_error('عفواً، يتطلب هذا الإجراء تسجيل الدخول أولاً.');
+        }
+
+        $user_id = get_current_user_id();
+        $user = get_userdata($user_id);
+        $roles = (array) $user->roles;
+
+        if (!in_array('sm_student', $roles) && !in_array('sm_parent', $roles) && !in_array('administrator', $roles)) {
+            wp_send_json_error('هذا الإجراء مخصص لحسابات الطلاب وأولياء الأمور فقط.');
+        }
+
+        if (!wp_verify_nonce($_POST['eess_student_password_nonce'] ?? ($_POST['nonce'] ?? ''), 'eess_student_password_action')) {
+            wp_send_json_error('فشل التحقق من أمان الجلسة.');
+        }
+
+        $new_pass = trim($_POST['new_password'] ?? '');
+        $confirm_pass = trim($_POST['confirm_password'] ?? '');
+
+        if (empty($new_pass) || empty($confirm_pass)) {
+            wp_send_json_error('يرجى إدخال كلمة المرور الجديدة وتأكيدها.');
+        }
+
+        if ($new_pass !== $confirm_pass) {
+            wp_send_json_error('كلمتا المرور غير متطابقتين.');
+        }
+
+        // Validate password complexity: Min 8, Max 30, at least 1 uppercase, 1 lowercase, 1 number
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,30}$/', $new_pass)) {
+            wp_send_json_error('كلمة المرور يجب أن تحتوي على 8-30 حرفاً، وتشمل حرفاً كبيراً واحداً (A-Z)، وحرفاً صغيراً (a-z)، ورقماً على الأقل (0-9).');
+        }
+
+        wp_set_password($new_pass, $user_id);
+        delete_user_meta($user_id, 'eess_must_change_password');
+        update_user_meta($user_id, 'sm_temp_pass', $new_pass);
+
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id, true);
+
+        SM_Logger::log('تغيير كلمة مرور الطالب', "قام المستخدم ({$user->display_name}) بتعيين كلمة مرور جديدة بنجاح.");
+        wp_send_json_success('تم تعيين كلمة المرور الجديدة بنجاح.');
+    }
+
     // Custom mail sender filters
     public function custom_wp_mail_from($original_email_address) {
         return 'info@eess.online';
