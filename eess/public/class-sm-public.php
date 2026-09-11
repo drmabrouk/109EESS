@@ -428,9 +428,8 @@ class SM_Public {
                     <span class="dashicons dashicons-welcome-learn-more" style="color: #38bdf8; font-size: 18px; width: 18px; height: 18px;"></span>
                     <span style="font-size: 14px; font-weight: 800; color: #ffffff;">نظام الإدارة المدرسية</span>
                 </div>
-                <a href="<?php echo wp_logout_url(home_url('/sm-login')); ?>" class="sm-btn" style="height: 30px; padding: 0 12px; font-size: 11px; background: #dc2626; color: #ffffff !important; border-radius: 9999px !important; text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                    <span class="dashicons dashicons-logout" style="font-size: 13px; width: 13px; height: 13px;"></span>
-                    <span>خروج</span>
+                <a href="<?php echo wp_logout_url(home_url('/sm-login')); ?>" title="تسجيل الخروج" style="width: 32px; height: 32px; background: #dc2626; color: #ffffff !important; border-radius: 50%; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                    <span class="dashicons dashicons-logout" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                 </a>
             </div>
             <?php else: ?>
@@ -443,7 +442,321 @@ class SM_Public {
             </div>
             <?php endif; ?>
 
-            <?php if ($is_supervisor): ?>
+            <?php
+            $is_admin_supervisor = is_user_logged_in() && (
+                in_array('administrator', $user_roles) ||
+                in_array('sm_system_admin', $user_roles) ||
+                in_array('sm_principal', $user_roles) ||
+                in_array('sm_supervisor', $user_roles) ||
+                in_array('sm_discipline_supervisor', $user_roles)
+            );
+            if ($is_admin_supervisor):
+            ?>
+            <!-- MOBILE ADMIN / PRINCIPAL / SUPERVISOR / DISCIPLINE DASHBOARD (EXACTLY 2 PRIMARY BOXES) -->
+            <div id="m-admin-dashboard" style="margin-bottom: 20px;">
+                <!-- Header Title Card -->
+                <div style="background: #0f172a; color: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">لوحة التحكم والإدارة المدرسية</h3>
+                            <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #94a3b8;">الوصول السريع لبيانات الطلاب ورصد المخالفات السلوكية</p>
+                        </div>
+                        <span class="dashicons dashicons-shield" style="font-size: 24px; color: #38bdf8;"></span>
+                    </div>
+                </div>
+
+                <!-- Exactly 2 Primary Action Boxes -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <!-- BOX 1: STUDENT INFORMATION (SCAN & PROFILE) -->
+                    <button type="button" onclick="eessOpenAdminMobileBox('student_info')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                        <div style="width: 46px; height: 46px; background: #eff6ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; margin-bottom: 10px;">
+                            <span class="dashicons dashicons-id" style="font-size: 24px; width: 24px; height: 24px;"></span>
+                        </div>
+                        <span style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 4px;">بيانات الطالب</span>
+                        <span style="font-size: 10.5px; color: #64748b;">مسح البطاقة أو كود الطالب</span>
+                    </button>
+
+                    <!-- BOX 2: RECORD VIOLATION (3 IDENTIFICATION METHODS) -->
+                    <button type="button" onclick="eessOpenAdminMobileBox('record_violation')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                        <div style="width: 46px; height: 46px; background: #fef2f2; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #dc2626; margin-bottom: 10px;">
+                            <span class="dashicons dashicons-warning" style="font-size: 24px; width: 24px; height: 24px;"></span>
+                        </div>
+                        <span style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 4px;">رصد مخالفة سلوكية</span>
+                        <span style="font-size: 10.5px; color: #64748b;">كاميرا / اسم / كود الطالب</span>
+                    </button>
+                </div>
+
+                <!-- BOX 1 CONTAINER: STUDENT INFORMATION PROFILE -->
+                <div id="m-box-student-info" style="display: none; background: #ffffff; border-radius: 16px; padding: 18px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 14.5px; font-weight: 800; color: #1e40af;">الاستعلام عن بيانات الطالب الشاملة</h4>
+                        <button type="button" onclick="eessCloseAdminMobileBox()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 4px 12px; border-radius: 9999px; font-size: 11.5px; font-weight: 800; cursor: pointer;">➔ إغلاق</button>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <button type="button" onclick="eessStartMobileInfoCamera()" style="width: 100%; height: 40px; background: #1e40af; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span class="dashicons dashicons-camera" style="font-size: 16px;"></span>
+                            <span>مسح باركود بطاقة الطالب بالكاميرا</span>
+                        </button>
+                        <div id="m-info-camera-reader" style="display: none; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 2px solid #2563eb;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 12px; position: relative;">
+                        <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">أو ادخل الهوية الوطنية / كود الطالب مباشرة:</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="m_info_search_code" placeholder="أدخل الهوية الوطنية أو كود الطالب..." style="flex: 1; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px;">
+                            <button type="button" onclick="eessSearchStudentInfoByCode()" style="height: 40px; padding: 0 16px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">بحث</button>
+                        </div>
+                    </div>
+
+                    <div id="m-student-info-result" style="display: none; margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;"></div>
+                </div>
+
+                <!-- BOX 2 CONTAINER: VIOLATION RECORDING -->
+                <div id="m-box-record-violation" style="display: none; background: #ffffff; border-radius: 16px; padding: 18px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 14.5px; font-weight: 800; color: #991b1b;">رصد وتسجيل مخالفة سلوكية جديدة</h4>
+                        <button type="button" onclick="eessCloseAdminMobileBox()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 4px 12px; border-radius: 9999px; font-size: 11.5px; font-weight: 800; cursor: pointer;">➔ إغلاق</button>
+                    </div>
+
+                    <!-- Identification Method Sub-Tabs -->
+                    <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+                        <button type="button" onclick="eessSwitchMobileIdentMethod('camera', this)" class="m-ident-tab active" style="flex: 1; height: 34px; border-radius: 8px; border: none; background: #dc2626; color: white; font-weight: 800; font-size: 11px; cursor: pointer;">📷 مسح الباركود</button>
+                        <button type="button" onclick="eessSwitchMobileIdentMethod('name', this)" class="m-ident-tab" style="flex: 1; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 800; font-size: 11px; cursor: pointer;">🔍 باسم الطالب</button>
+                        <button type="button" onclick="eessSwitchMobileIdentMethod('code', this)" class="m-ident-tab" style="flex: 1; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 800; font-size: 11px; cursor: pointer;">🔢 بكود الطالب</button>
+                    </div>
+
+                    <!-- Method 1: Camera Scanner -->
+                    <div id="m-ident-panel-camera" style="display: block; margin-bottom: 14px;">
+                        <button type="button" onclick="eessStartMobileViolCamera()" style="width: 100%; height: 40px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 12.5px; cursor: pointer;">تشغيل كاميرا الماسح الضوئي</button>
+                        <div id="m-viol-camera-reader" style="display: none; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 2px solid #dc2626;"></div>
+                    </div>
+
+                    <!-- Method 2: Name Search -->
+                    <div id="m-ident-panel-name" style="display: none; margin-bottom: 14px; position: relative;">
+                        <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">ابحث باسم الطالب:</label>
+                        <input type="text" id="m_viol_name_input" onkeyup="eessMobileSearchStudentByName()" placeholder="أدخل اسم الطالب..." style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; box-sizing: border-box;">
+                        <div id="m_viol_name_results" style="display: none; position: absolute; top: 100%; right: 0; left: 0; z-index: 9999; background: white; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 160px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+                    </div>
+
+                    <!-- Method 3: Code Search -->
+                    <div id="m-ident-panel-code" style="display: none; margin-bottom: 14px;">
+                        <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">ادخل الهوية الوطنية / كود الطالب:</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="m_viol_code_input" placeholder="أدخل الهوية أو كود الطالب..." style="flex: 1; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px;">
+                            <button type="button" onclick="eessMobileSearchStudentByCode()" style="height: 40px; padding: 0 16px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">تأكيد</button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Student Card Indicator -->
+                    <div id="m-selected-student-box" style="display: none; background: #dcfce7; border: 1px solid #86efac; border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+                        <div style="font-weight: 800; font-size: 13px; color: #15803d; margin-bottom: 2px;" id="m_sel_stu_name"></div>
+                        <div style="font-size: 11px; color: #166534;" id="m_sel_stu_meta"></div>
+                    </div>
+
+                    <!-- Violation Details Form -->
+                    <form id="eess_mobile_violation_form" onsubmit="eessSubmitMobileViolation(event)" style="display: none;">
+                        <input type="hidden" id="m_viol_student_id" name="student_ids">
+                        <input type="hidden" name="sm_nonce" value="<?php echo wp_create_nonce('sm_record_action'); ?>">
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">عنوان / نوع المخالفة السلوكية <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="type" required placeholder="مثال: التأخر عن الحصة / عدم إحضار الأدوات..." style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12px; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">درجة المخالفة <span style="color:#ef4444;">*</span></label>
+                            <select name="degree" required style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12px; box-sizing: border-box;">
+                                <option value="1">الدرجة الأولى (مخالفة بسيطة)</option>
+                                <option value="2">الدرجة الثانية (مخالفة متوسطة)</option>
+                                <option value="3">الدرجة الثالثة (مخالفة جسيمة)</option>
+                                <option value="4">الدرجة الرابعة (شديدة الخطورة)</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">تفاصيل وملاحظات المخالفة</label>
+                            <textarea name="details" rows="3" placeholder="أدخل تفاصيل ومجريات المخالفة السلوكية..." style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size: 12px; box-sizing: border-box; resize: vertical;"></textarea>
+                        </div>
+
+                        <button type="submit" id="m_viol_submit_btn" style="width: 100%; height: 44px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer;">
+                            حفظ ورصد المخالفة السلوكية
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+            function eessOpenAdminMobileBox(boxKey) {
+                document.getElementById('m-box-student-info').style.display = (boxKey === 'student_info') ? 'block' : 'none';
+                document.getElementById('m-box-record-violation').style.display = (boxKey === 'record_violation') ? 'block' : 'none';
+                var target = document.getElementById(boxKey === 'student_info' ? 'm-box-student-info' : 'm-box-record-violation');
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function eessCloseAdminMobileBox() {
+                document.getElementById('m-box-student-info').style.display = 'none';
+                document.getElementById('m-box-record-violation').style.display = 'none';
+            }
+
+            function eessSearchStudentInfoByCode() {
+                var code = document.getElementById('m_info_search_code').value.trim();
+                if (!code) return;
+
+                var resBox = document.getElementById('m-student-info-result');
+                resBox.style.display = 'block';
+                resBox.innerHTML = '<div style="text-align:center; padding:15px; color:#64748b; font-weight:700;">جاري جلب ملف الطالب... ⏳</div>';
+
+                jQuery.post('<?php echo $ajax_url; ?>', {
+                    action: 'sm_get_student',
+                    code: code
+                }, function(res) {
+                    if (res.success && res.data) {
+                        var st = res.data;
+                        resBox.innerHTML = '<div style="font-weight:900; font-size:15px; color:#0f172a; margin-bottom:6px;">' + st.name + '</div>' +
+                                           '<div style="font-size:12px; color:#475569; line-height:1.6;">' +
+                                           '<strong>كود الطالب:</strong> ' + (st.student_code || st.id) + '<br>' +
+                                           '<strong>الهوية الوطنية:</strong> ' + (st.national_id || 'غير مدخلة') + '<br>' +
+                                           '<strong>الصف والفرع:</strong> ' + (st.class_name || '') + ' (' + (st.section || 'أ') + ')<br>' +
+                                           '<strong>ولي الأمر:</strong> ' + (st.guardian_name || 'غير مدخل') + '<br>' +
+                                           '<strong>رقم التواصل:</strong> ' + (st.guardian_phone || 'غير مدخل') +
+                                           '</div>';
+                    } else {
+                        resBox.innerHTML = '<div style="color:#dc2626; font-weight:800; text-align:center;">لم يتم العثور على طالب مطابق للكود المدخل.</div>';
+                    }
+                });
+            }
+
+            let mInfoScannerInstance = null;
+            function eessStartMobileInfoCamera() {
+                var reader = document.getElementById('m-info-camera-reader');
+                reader.style.display = 'block';
+
+                if (typeof Html5Qrcode !== 'undefined') {
+                    mInfoScannerInstance = new Html5Qrcode("m-info-camera-reader");
+                    mInfoScannerInstance.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, function(decodedText) {
+                        mInfoScannerInstance.stop().then(function() {
+                            reader.style.display = 'none';
+                            document.getElementById('m_info_search_code').value = decodedText.trim();
+                            eessSearchStudentInfoByCode();
+                        });
+                    }).catch(function(err) {
+                        alert('تعذر فتح الكاميرا: ' + err);
+                        reader.style.display = 'none';
+                    });
+                }
+            }
+
+            function eessSwitchMobileIdentMethod(method, btn) {
+                document.querySelectorAll('.m-ident-tab').forEach(b => {
+                    b.style.background = 'white'; b.style.color = '#475569'; b.style.border = '1px solid #cbd5e1';
+                });
+                btn.style.background = '#dc2626'; btn.style.color = 'white'; btn.style.border = 'none';
+
+                document.getElementById('m-ident-panel-camera').style.display = (method === 'camera') ? 'block' : 'none';
+                document.getElementById('m-ident-panel-name').style.display = (method === 'name') ? 'block' : 'none';
+                document.getElementById('m-ident-panel-code').style.display = (method === 'code') ? 'block' : 'none';
+            }
+
+            let mViolScannerInstance = null;
+            function eessStartMobileViolCamera() {
+                var reader = document.getElementById('m-viol-camera-reader');
+                reader.style.display = 'block';
+
+                if (typeof Html5Qrcode !== 'undefined') {
+                    mViolScannerInstance = new Html5Qrcode("m-viol-camera-reader");
+                    mViolScannerInstance.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, function(decodedText) {
+                        mViolScannerInstance.stop().then(function() {
+                            reader.style.display = 'none';
+                            eessResolveMobileViolStudent(decodedText.trim());
+                        });
+                    }).catch(function(err) {
+                        alert('تعذر فتح الكاميرا: ' + err);
+                        reader.style.display = 'none';
+                    });
+                }
+            }
+
+            function eessMobileSearchStudentByName() {
+                var q = document.getElementById('m_viol_name_input').value.trim();
+                var resDiv = document.getElementById('m_viol_name_results');
+                if (q.length < 2) { resDiv.style.display = 'none'; return; }
+
+                jQuery.post('<?php echo $ajax_url; ?>', {
+                    action: 'sm_search_students',
+                    query: q
+                }, function(res) {
+                    if (res.success && res.data && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(st => {
+                            html += '<div onclick="eessSelectMobileViolStudent(' + st.id + ', \'' + st.name.replace(/'/g, "\\'") + '\', \'' + (st.class_name || '') + '\')" style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 12px; font-weight: 700; cursor: pointer;">' + st.name + ' (' + (st.class_name || '') + ')</div>';
+                        });
+                        resDiv.innerHTML = html;
+                        resDiv.style.display = 'block';
+                    } else {
+                        resDiv.style.display = 'none';
+                    }
+                });
+            }
+
+            function eessMobileSearchStudentByCode() {
+                var code = document.getElementById('m_viol_code_input').value.trim();
+                if (code) eessResolveMobileViolStudent(code);
+            }
+
+            function eessResolveMobileViolStudent(code) {
+                jQuery.post('<?php echo $ajax_url; ?>', {
+                    action: 'sm_get_student',
+                    code: code
+                }, function(res) {
+                    if (res.success && res.data) {
+                        eessSelectMobileViolStudent(res.data.id, res.data.name, res.data.class_name);
+                    } else {
+                        alert('عذراً، لم يتم العثور على طالب مطابق للكود: ' + code);
+                    }
+                });
+            }
+
+            function eessSelectMobileViolStudent(id, name, className) {
+                document.getElementById('m_viol_student_id').value = id;
+                document.getElementById('m_sel_stu_name').innerText = '✓ تم اختيار الطالب: ' + name;
+                document.getElementById('m_sel_stu_meta').innerText = 'الصف: ' + (className || 'غير محدد');
+                document.getElementById('m-selected-student-box').style.display = 'block';
+                document.getElementById('eess_mobile_violation_form').style.display = 'block';
+                document.getElementById('m_viol_name_results').style.display = 'none';
+            }
+
+            let mViolSubmitting = false;
+            function eessSubmitMobileViolation(e) {
+                e.preventDefault();
+                if (mViolSubmitting) return;
+
+                var btn = document.getElementById('m_viol_submit_btn');
+                mViolSubmitting = true;
+                btn.disabled = true;
+                btn.innerText = 'جاري حفظ ورصد المخالفة... ⏳';
+
+                var formData = jQuery('#eess_mobile_violation_form').serialize() + '&action=sm_save_record_ajax';
+
+                jQuery.post('<?php echo $ajax_url; ?>', formData, function(res) {
+                    mViolSubmitting = false;
+                    btn.disabled = false;
+                    btn.innerText = 'حفظ ورصد المخالفة السلوكية';
+
+                    if (res.success) {
+                        eessShowMobileToast('✓ تم حفظ ورصد المخالفة السلوكية بنجاح!');
+                        document.getElementById('eess_mobile_violation_form').reset();
+                        document.getElementById('m-selected-student-box').style.display = 'none';
+                        document.getElementById('eess_mobile_violation_form').style.display = 'none';
+                    } else {
+                        alert('حدث خطأ أثناء حفظ المخالفة: ' + (res.data || 'فشل حفظ السجل'));
+                    }
+                });
+            }
+            </script>
+            <?php endif; ?>
+
+            <?php if ($is_supervisor && !$is_admin_supervisor): ?>
             <!-- MOBILE SUPERVISOR MONITORING & REVIEW DASHBOARD -->
             <div id="m-supervisor-app" style="display: block;">
                 <!-- Header Card -->
@@ -587,38 +900,43 @@ class SM_Public {
             <?php endif; ?>
 
             <?php if (!is_user_logged_in()): ?>
-            <div id="m-step-verify" style="background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <h3 style="margin: 0 0 15px 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    <span style="background: #2563eb; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;">1</span>
-                    تسجيل الدخول الآمن للموبايل
-                </h3>
-                <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">أدخل الرقم الوظيفي / رقم الجوال وكلمة المرور للوصول الآمن لحسابك المعلم أو المشرف:</p>
+            <div style="min-height: 75vh; display: flex; align-items: center; justify-content: center;">
+                <div id="m-step-verify" style="background: #ffffff; border-radius: 20px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 420px; box-sizing: border-box;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        <span style="background: #0f172a; color: white; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">1</span>
+                        تسجيل الدخول الآمن للموبايل
+                    </h3>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">أدخل الهوية الوطنية / الرقم الوظيفي / رقم الجوال وكلمة المرور للوصول الآمن لحسابك:</p>
 
-                <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">اسم المستخدم / الرقم الوظيفي / رقم الجوال <span style="color: #ef4444;">*</span></label>
-                    <input type="text" id="m_emp_id_input" placeholder="مثال: 10245 أو 0501234567" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13.5px; font-weight: 700; box-sizing: border-box; outline: none;">
-                </div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">الهوية الوطنية / الرقم الوظيفي / رقم الجوال <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="m_emp_id_input" placeholder="مثال: 784-1990-1234567-1 أو 10245" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13.5px; font-weight: 700; box-sizing: border-box; outline: none;">
+                    </div>
 
-                <div style="margin-bottom: 15px; position: relative;">
-                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">كلمة المرور <span style="color: #ef4444;">*</span></label>
-                    <div style="position: relative;">
-                        <input type="password" id="m_password_input" placeholder="••••••••" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 40px 0 12px; font-size: 14px; box-sizing: border-box; outline: none;">
-                        <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer;">👁️</button>
+                    <div style="margin-bottom: 15px; position: relative;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">كلمة المرور <span style="color: #ef4444;">*</span></label>
+                        <div style="position: relative;">
+                            <input type="password" id="m_password_input" placeholder="••••••••" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 40px 0 12px; font-size: 14px; box-sizing: border-box; outline: none;">
+                            <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer;">👁️</button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12px; color: #475569;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="m_remember_me" checked style="width: 16px; height: 16px; border-radius: 4px;">
+                            <span>تذكرني وإبقاء الجلسة نشطة</span>
+                        </label>
+                    </div>
+
+                    <div id="m_verify_msg" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700;"></div>
+
+                    <div style="display: flex; justify-content: flex-start; margin-top: 10px;">
+                        <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="height: 44px; padding: 0 28px; background: #000000; color: #ffffff !important; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span>تسجيل الدخول</span>
+                        </button>
                     </div>
                 </div>
-
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-size: 12px; color: #475569;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="checkbox" id="m_remember_me" checked style="width: 16px; height: 16px; border-radius: 4px;">
-                        <span>تذكرني وإبقاء الجلسة نشطة</span>
-                    </label>
-                </div>
-
-                <div id="m_verify_msg" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700;"></div>
-
-                <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="width: 100%; height: 44px; background: #2563eb; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span>تسجيل الدخول والتحقق</span>
-                </button>
+            </div>
 
                 <!-- Subtle Soft Pastel Red Informational Notice Below Login Form -->
                 <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px 12px; margin-top: 14px; display: flex; align-items: flex-start; gap: 8px;">
@@ -632,51 +950,45 @@ class SM_Public {
 
             <!-- DEDICATED 4-BUTTON MOBILE MAIN DASHBOARD -->
             <?php if (is_user_logged_in() && in_array('sm_teacher', (array)$user->roles)): ?>
-            <!-- Clean Centered Welcome Area -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <!-- Clean Centered Welcome Area with Dynamic Role & Subject Capsules -->
+            <?php
+            $m_role_label = 'معلم';
+            $m_user_subject = get_user_meta($user->ID, 'sm_specialization', true) ?: (get_user_meta($user->ID, 'specialization', true) ?: 'التربية البدنية والصحية');
+            ?>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div style="width: 52px; height: 52px; background: #f1f5f9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #0f172a; margin-bottom: 10px; border: 1px solid #cbd5e1;">
                     <span class="dashicons dashicons-admin-users" style="font-size: 26px; width: 26px; height: 26px;"></span>
                 </div>
-                <h2 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 800; color: #0f172a;">أهلاً بك أ. <?php echo esc_html($user->display_name); ?></h2>
-                <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600; line-height: 1.5;">البوابة الذكية لإعداد وتوثيق تحضير الدروس والخطط الفصلية أسبوعياً</p>
+                <h2 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">أهلاً بك أ. <?php echo esc_html($user->display_name); ?></h2>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
+                        👤 الصفة: <?php echo esc_html($m_role_label); ?>
+                    </span>
+                    <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
+                        📚 المادة: <?php echo esc_html($m_user_subject); ?>
+                    </span>
+                </div>
+                <p style="margin: 0; font-size: 11.5px; color: #64748b; font-weight: 600; line-height: 1.5;">البوابة الذكية لإدارة وتوثيق تحضير الدروس والخطط الفصلية</p>
             </div>
 
             <div id="m-teacher-dashboard-overview" style="margin-bottom: 16px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                    <!-- ACTION 1: CREATE LESSON PREP -->
-                    <button type="button" onclick="eessOpenMobileScreen('create_prep')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
-                        <div style="width: 46px; height: 46px; background: #fef2f2; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #881337; margin-bottom: 10px;">
-                            <span class="dashicons dashicons-welcome-write-blog" style="font-size: 22px; width: 22px; height: 22px;"></span>
-                        </div>
-                        <span style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 4px;">إعداد تحضير درس</span>
-                        <span style="font-size: 10.5px; color: #64748b;">إدخال عناصر الدرس تفصيلياً</span>
-                    </button>
-
-                    <!-- ACTION 2: UPLOAD LESSON PREP -->
+                    <!-- ACTION 1: UPLOAD LESSON PREP (RIGHT) -->
                     <button type="button" onclick="eessOpenMobileScreen('upload_prep')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                         <div style="width: 46px; height: 46px; background: #0f172a; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ffffff; margin-bottom: 10px;">
                             <span class="dashicons dashicons-upload" style="font-size: 22px; width: 22px; height: 22px;"></span>
                         </div>
                         <span style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 4px;">رفع تحضير درس</span>
-                        <span style="font-size: 10.5px; color: #64748b;">رفع وثيقة جاهزة (PDF/Word)</span>
+                        <span style="font-size: 10.5px; color: #64748b;">رفع وثيقة جاهزة (PDF)</span>
                     </button>
 
-                    <!-- ACTION 3: SUBMIT SEMESTER PLAN -->
+                    <!-- ACTION 2: SUBMIT SEMESTER PLAN (LEFT) -->
                     <button type="button" onclick="eessOpenMobileScreen('submit_plan')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                         <div style="width: 46px; height: 46px; background: #e0f2fe; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #0284c7; margin-bottom: 10px;">
                             <span class="dashicons dashicons-calendar-alt" style="font-size: 22px; width: 22px; height: 22px;"></span>
                         </div>
                         <span style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 4px;">تقديم خطة فصلية</span>
                         <span style="font-size: 10.5px; color: #64748b;">رفع خطة الفصل الدراسي</span>
-                    </button>
-
-                    <!-- ACTION 4: VIEW SEMESTER PLAN -->
-                    <button type="button" onclick="eessOpenMobileScreen('view_plans')" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
-                        <div style="width: 46px; height: 46px; background: #dcfce7; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #15803d; margin-bottom: 10px;">
-                            <span class="dashicons dashicons-visibility" style="font-size: 22px; width: 22px; height: 22px;"></span>
-                        </div>
-                        <span style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 4px;">عرض الخطة الفصلية</span>
-                        <span style="font-size: 10.5px; color: #64748b;">استعراض الخطط المسجلة</span>
                     </button>
                 </div>
 
@@ -897,10 +1209,7 @@ class SM_Public {
                             </div>
                             <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                 <span><span class="dashicons dashicons-book" style="font-size: 13px; width: 13px; height: 13px; color: #881337; vertical-align: middle;"></span> <?php echo esc_html($top->subject); ?> (<?php echo esc_html($top->grade_level); ?>)</span>
-                                <div style="display: flex; gap: 6px; align-items: center;">
-                                    <a href="<?php echo esc_url(add_query_arg(array('sm_action' => 'print', 'print_type' => 'lesson_prep', 'prep_id' => $top->id), home_url('/'))); ?>" target="_blank" onclick="event.stopPropagation();" style="color: #0284c7; text-decoration: none; font-weight: 800; font-size: 11px; background: #e0f2fe; padding: 2px 8px; border-radius: 9999px;">📄 PDF / مشاركة</a>
-                                    <span style="font-family: monospace; font-size: 10.5px;"><?php echo esc_html($top->lesson_date); ?></span>
-                                </div>
+                                <span style="font-family: monospace; font-size: 10.5px; font-weight: 700; color: #475569;"><?php echo esc_html($top->lesson_date); ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
