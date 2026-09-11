@@ -1088,10 +1088,17 @@ class SM_Public {
             $m_avatar_src = $m_custom_avatar ?: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTMiIHN0eWxlPSJiYWNrZ3JvdW5kOiNmMWY1Zjk7IGJvcmRlci1yYWRpdXM6NTAlOyI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA4LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
             ?>
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
-                <!-- Subtle Monochrome Wavy Watermark Pattern Background -->
-                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.04; pointer-events: none; z-index: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
-                    <path fill="#0f172a" d="M0,192L48,176C96,160,192,144,288,160C384,176,480,224,576,218.7C672,213,768,155,864,138.7C960,122,1056,149,1152,165.3C1248,182,1344,187,1392,184L1440,180L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-                    <path fill="#0f172a" d="M0,64L48,90.7C96,117,192,171,288,181.3C384,192,480,160,576,133.3C672,107,768,85,864,101.3C960,117,1056,171,1152,186.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                <!-- Elegant Multi-Tone Gray Gradient Wavy Watermark Background -->
+                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.06; pointer-events: none; z-index: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="eessWatermarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0f172a" stop-opacity="0.8"/>
+                            <stop offset="50%" stop-color="#475569" stop-opacity="0.5"/>
+                            <stop offset="100%" stop-color="#94a3b8" stop-opacity="0.2"/>
+                        </linearGradient>
+                    </defs>
+                    <path fill="url(#eessWatermarkGrad)" d="M0,192L48,176C96,160,192,144,288,160C384,176,480,224,576,218.7C672,213,768,155,864,138.7C960,122,1056,149,1152,165.3C1248,182,1344,187,1392,184L1440,180L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                    <path fill="url(#eessWatermarkGrad)" d="M0,64L48,90.7C96,117,192,171,288,181.3C384,192,480,160,576,133.3C672,107,768,85,864,101.3C960,117,1056,171,1152,186.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
                 </svg>
                 <!-- Interactive Profile Avatar Click to Change -->
                 <div onclick="document.getElementById('m_profile_photo_file').click()" style="position: relative; width: 68px; height: 68px; margin: 0 auto 8px auto; cursor: pointer;" title="انقر لتغيير الصورة الشخصية">
