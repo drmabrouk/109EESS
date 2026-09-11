@@ -475,16 +475,6 @@ class SM_Public {
             ?>
             <!-- MOBILE ADMIN / PRINCIPAL / SUPERVISOR / DISCIPLINE DASHBOARD (EXACTLY 2 PRIMARY BOXES) -->
             <div id="m-admin-dashboard" style="margin-bottom: 20px;">
-                <!-- Header Title Card -->
-                <div style="background: #0f172a; color: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">لوحة التحكم والإدارة المدرسية</h3>
-                            <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #94a3b8;">الوصول السريع لبيانات الطلاب ورصد المخالفات السلوكية</p>
-                        </div>
-                        <span class="dashicons dashicons-shield" style="font-size: 24px; color: #38bdf8;"></span>
-                    </div>
-                </div>
 
                 <!-- Exactly 2 Primary Action Boxes -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
@@ -605,6 +595,58 @@ class SM_Public {
                         </button>
                     </form>
                 </div>
+
+                <?php if (in_array('sm_principal', $user_roles) || in_array('administrator', $user_roles)):
+                    // Principal Administrative Statistics
+                    $user_school_id = get_user_meta($user->ID, 'eess_school_id', true) ?: get_user_meta($user->ID, 'sm_school_id', true);
+
+                    // Teachers in principal's school
+                    $all_school_teachers = get_users(array(
+                        'role' => 'sm_teacher',
+                        'meta_key' => 'eess_school_id',
+                        'meta_value' => $user_school_id
+                    ));
+                    if (empty($all_school_teachers)) {
+                        $all_school_teachers = get_users(array('role' => 'sm_teacher', 'number' => 50));
+                    }
+                    $teacher_count = count($all_school_teachers);
+
+                    // Submitted lesson preps this week
+                    global $wpdb;
+                    $submitted_teacher_ids = $wpdb->get_col("SELECT DISTINCT teacher_id FROM {$wpdb->prefix}sm_lesson_preps WHERE status = 'submitted' OR status = 'approved'");
+
+                    $submitted_teachers = array();
+                    $pending_teachers = array();
+
+                    foreach ($all_school_teachers as $st) {
+                        if (in_array($st->ID, $submitted_teacher_ids)) {
+                            $submitted_teachers[] = $st->display_name;
+                        } else {
+                            $pending_teachers[] = $st->display_name;
+                        }
+                    }
+                ?>
+                <!-- School Principal Administrative Statistics -->
+                <div style="background: #ffffff; border-radius: 16px; padding: 16px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">📊 إحصائيات متابعة التحضير اليومية بالمدرسة</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 900; color: #16a34a;"><?php echo count($submitted_teachers); ?> / <?php echo $teacher_count; ?></div>
+                            <div style="font-size: 10.5px; font-weight: 700; color: #15803d; margin-top: 2px;">قاموا بالرفع والتسليم</div>
+                        </div>
+                        <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 900; color: #dc2626;"><?php echo count($pending_teachers); ?></div>
+                            <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; margin-top: 2px;">لم يقوموا برفع التحضير</div>
+                        </div>
+                    </div>
+                    <?php if (!empty($pending_teachers)): ?>
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #475569;">
+                            <strong style="color: #991b1b; display: block; margin-bottom: 4px;">قائمة المعلمين المتبقين دون رفع تحضير:</strong>
+                            <?php echo esc_html(implode(' ، ', array_slice($pending_teachers, 0, 10))); ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
 
             <script>
@@ -920,26 +962,36 @@ class SM_Public {
             </script>
             <?php endif; ?>
 
-            <?php if (!is_user_logged_in()): ?>
-            <div style="min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                <div id="m-step-verify" style="background: #ffffff; border-radius: 20px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 420px; box-sizing: border-box;">
-                    <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                        <span style="background: #0f172a; color: white; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">1</span>
-                        تسجيل الدخول الآمن للموبايل
-                    </h3>
-                    <p style="font-size: 12px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">أدخل الهوية الوطنية / الرقم الوظيفي / رقم الجوال وكلمة المرور للوصول الآمن لحسابك:</p>
+            <?php if (!is_user_logged_in()):
+                $m_school_info = SM_Settings::get_school_info();
+                $m_login_sys_logo = !empty($m_school_info['school_logo']) ? $m_school_info['school_logo'] : (!empty($m_school_info['logo_url']) ? $m_school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
+            ?>
+            <!-- Compact Single-Viewport Mobile Login Container -->
+            <div style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px; box-sizing: border-box; overflow: hidden; font-family: 'Cairo', sans-serif;">
 
-                    <div style="margin-bottom: 16px; position: relative;">
+                <!-- System Branding & Logo Area -->
+                <div style="text-align: center; margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                    <div style="width: 54px; height: 54px; border-radius: 12px; background: #ffffff; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+                        <img src="<?php echo esc_url($m_login_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" alt="EESS Logo">
+                    </div>
+                    <h1 style="margin: 0; font-size: 17px; font-weight: 900; color: #0f172a; line-height: 1.2;">نظام الإدارة المدرسية</h1>
+                    <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 600;">المنظومة التعليمية الرقمية الموحدة والمعتمدة</p>
+                </div>
+
+                <!-- Centered Authentication Box -->
+                <div id="m-step-verify" style="background: #ffffff; border-radius: 18px; padding: 18px 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 380px; box-sizing: border-box; margin: 10px 0;">
+
+                    <div style="margin-bottom: 12px; position: relative;">
                         <div class="eess-float-container" style="position: relative; width: 100%;">
-                            <input type="text" id="m_emp_id_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 44px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
-                            <label for="m_emp_id_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">الهوية الوطنية / الرقم الوظيفي / رقم الجوال *</label>
+                            <input type="text" id="m_emp_id_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
+                            <label for="m_emp_id_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">الهوية الوطنية / الرقم الوظيفي / الكود *</label>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 16px; position: relative;">
+                    <div style="margin-bottom: 12px; position: relative;">
                         <div class="eess-float-container eess-password-wrapper" style="position: relative; width: 100%;">
-                            <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 44px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 40px 0 12px; font-size: 14px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
-                            <label for="m_password_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">كلمة المرور *</label>
+                            <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 38px 0 12px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
+                            <label for="m_password_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">كلمة المرور *</label>
                             <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" title="إظهار / إخفاء كلمة المرور" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -949,49 +1001,65 @@ class SM_Public {
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12px; color: #475569;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 11.5px; color: #475569;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="checkbox" id="m_remember_me" checked style="width: 16px; height: 16px; border-radius: 4px;">
+                            <input type="checkbox" id="m_remember_me" checked style="width: 15px; height: 15px; border-radius: 4px;">
                             <span>تذكرني وإبقاء الجلسة نشطة</span>
                         </label>
                     </div>
 
-                    <div id="m_verify_msg" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700;"></div>
+                    <div id="m_verify_msg" style="display: none; margin-bottom: 12px; padding: 8px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700;"></div>
 
-                    <div style="display: flex; justify-content: flex-start; margin-top: 10px;">
-                        <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="height: 44px; padding: 0 28px; background: #000000; color: #ffffff !important; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    <div style="display: flex; justify-content: flex-start;">
+                        <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="height: 40px; padding: 0 24px; background: #000000; color: #ffffff !important; border: none; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s ease;">
                             <span>تسجيل الدخول</span>
                         </button>
                     </div>
                 </div>
-            </div>
 
-                <!-- Subtle Soft Pastel Red Informational Notice Below Login Form -->
-                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px 12px; margin-top: 6px; width: 100%; max-width: 420px; box-sizing: border-box; display: flex; align-items: flex-start; gap: 8px;">
-                    <span class="dashicons dashicons-info" style="color: #991b1b; font-size: 16px; width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0;"></span>
-                    <div style="font-size: 11.5px; color: #991b1b; line-height: 1.5; font-weight: 600;">
+                <!-- Computer Access Notice with Tight Margin -->
+                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 8px 12px; width: 100%; max-width: 380px; box-sizing: border-box; display: flex; align-items: flex-start; gap: 8px; margin-top: 2px;">
+                    <span class="dashicons dashicons-info" style="color: #991b1b; font-size: 15px; width: 15px; height: 15px; margin-top: 1px; flex-shrink: 0;"></span>
+                    <div style="font-size: 11px; color: #991b1b; line-height: 1.4; font-weight: 600;">
                         لإدارة حسابك الكامل، واستعراض التحضيرات السابقة، ومتابعة التقارير، يُرجى تسجيل الدخول من جهاز الكمبيوتر أو المحمول.
                     </div>
                 </div>
+
+                <!-- Footer Branding -->
+                <div style="font-size: 10px; color: #94a3b8; text-align: center; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.3px;">
+                    Powered by Educational Systems Solutions (EESS)
+                </div>
+
             </div>
             <?php endif; ?>
 
             <!-- DEDICATED 4-BUTTON MOBILE MAIN DASHBOARD -->
-            <?php if (is_user_logged_in() && in_array('sm_teacher', (array)$user->roles)): ?>
+            <?php if (is_user_logged_in()): ?>
             <!-- Clean Centered Welcome Area with Dynamic Role & Subject Capsules and Interactive Profile Photo -->
             <?php
-            $m_role_label = 'معلم';
-            $m_user_subject = get_user_meta($user->ID, 'sm_specialization', true) ?: (get_user_meta($user->ID, 'specialization', true) ?: 'التربية البدنية والصحية');
+            $role_map = array(
+                'administrator' => 'مدير النظام المطور',
+                'sm_system_admin' => 'مدير النظام المطور',
+                'sm_principal' => 'مدير المدرسة',
+                'sm_supervisor' => 'مشرف تربوي',
+                'sm_coordinator' => 'منسق مادة',
+                'sm_teacher' => 'معلم',
+                'sm_discipline_supervisor' => 'مشرف سلوك',
+                'sm_activities_supervisor' => 'مشرف أنشطة'
+            );
+            $primary_role = reset($user_roles) ?: 'sm_teacher';
+            $m_role_label = $role_map[$primary_role] ?? 'معلم';
+            $m_user_subject = get_user_meta($user->ID, 'sm_specialization', true) ?: (get_user_meta($user->ID, 'specialization', true) ?: (get_user_meta($user->ID, 'eess_department', true) ?: 'التربية البدنية والصحية'));
             $m_custom_avatar = get_user_meta($user->ID, 'sm_profile_photo_url', true) ?: get_user_meta($user->ID, 'eess_profile_photo', true);
             $has_no_photo = empty($m_custom_avatar);
             $m_avatar_src = $m_custom_avatar ?: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTMiIHN0eWxlPSJiYWNrZ3JvdW5kOiNmMWY1Zjk7IGJvcmRlci1yYWRpdXM6NTAlOyI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA4LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
             ?>
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
                 <!-- Interactive Profile Avatar Click to Change -->
-                <div onclick="document.getElementById('m_profile_photo_file').click()" style="position: relative; width: 64px; height: 64px; margin: 0 auto 8px auto; cursor: pointer;" title="انقر لتغيير الصورة الشخصية">
-                    <img id="m_header_avatar_img" src="<?php echo esc_url($m_avatar_src); ?>" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #cbd5e1; background: #f1f5f9; display: block;" alt="Profile Avatar">
-                    <div style="position: absolute; bottom: 0; left: 0; background: #0f172a; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff;">
-                        <span class="dashicons dashicons-camera" style="font-size: 11px; width: 11px; height: 11px;"></span>
+                <div onclick="document.getElementById('m_profile_photo_file').click()" style="position: relative; width: 68px; height: 68px; margin: 0 auto 8px auto; cursor: pointer;" title="انقر لتغيير الصورة الشخصية">
+                    <img id="m_header_avatar_img" src="<?php echo esc_url($m_avatar_src); ?>" style="width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2.5px solid #cbd5e1; background: #f1f5f9; display: block;" alt="Profile Avatar">
+                    <div style="position: absolute; bottom: 0; left: 0; background: #0f172a; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff;">
+                        <span class="dashicons dashicons-camera" style="font-size: 12px; width: 12px; height: 12px;"></span>
                     </div>
                 </div>
                 <input type="file" id="m_profile_photo_file" accept="image/*" style="display: none;" onchange="eessUploadMobileAvatar(this)">
@@ -1022,8 +1090,10 @@ class SM_Public {
                         <?php echo esc_html($m_user_subject); ?>
                     </span>
                 </div>
-                <p style="margin: 0; font-size: 11.5px; color: #64748b; font-weight: 600; line-height: 1.5;">البوابة الذكية لإدارة وتوثيق تحضير الدروس والخطط الفصلية</p>
             </div>
+            <?php endif; ?>
+
+            <?php if (is_user_logged_in() && in_array('sm_teacher', (array)$user->roles)): ?>
 
             <script>
             function eessUploadMobileAvatar(input) {
