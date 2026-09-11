@@ -6192,34 +6192,74 @@ class SM_Public {
         $output = fopen('php://output', 'w');
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM for Excel
 
-        // 11 Official Columns: A to K
+        // Complete 30 Comprehensive Columns (A to AE) matching Export & Data Model
         fputcsv($output, array(
             'كود الطالب (Student Code)',
+            'الرقم التسلسلي (Serial Number)',
             'الاسم الكامل (Full Name)',
+            'الجنس (Gender)',
+            'تاريخ الميلاد (Date of Birth)',
+            'الجنسية (Nationality)',
             'رقم الهوية الوطنية (National ID)',
             'الصف الدراسي (Grade)',
             'الشعبة / الفصل (Section)',
-            'الجنسية (Nationality)',
-            'تاريخ التسجيل (Registration Date)',
+            'العام الدراسي (Academic Year)',
+            'معرف المدرسة (School ID)',
+            'اسم ولي الأمر (Guardian Name)',
+            'صلة القرابة (Guardian Relationship)',
             'البريد الإلكتروني لولي الأمر (Guardian Email)',
             'رقم هاتف ولي الأمر (Guardian Phone)',
+            'حالة الطالب (Student Status)',
+            'حالة التسجيل (Enrollment Status)',
+            'تاريخ التسجيل (Enrollment Date)',
+            'الإمارة (Emirate)',
+            'العنوان (Address)',
+            'ملاحظة سلوكية (Student Behavior)',
+            'المستوى الأكاديمي (Academic Level)',
+            'أصحاب الهمم / احتياجات خاصة (Special Needs)',
+            'الحالة الصحية (Health Status)',
+            'الحساسية والتنبيهات الطبية (Allergies)',
             'رابط الصورة الشخصية (Photo URL)',
-            'معرف المدرسة (School ID)'
+            'حالة الرسوم (Fee Status)',
+            'إجمالي الرسوم (Total Tuition Fees)',
+            'المبلغ المدفوع (Amount Paid)',
+            'المبلغ المتبقي (Outstanding Balance)',
+            'حالة الشيك / الدفع (Payment Status)'
         ));
 
-        // Sample Row
+        // Sample Row matching 30 Fields
         fputcsv($output, array(
             'STU-1001',
-            'علي أحمد عبدالله',
-            '784199012345678',
-            'الصف 5',
-            'أ',
-            'إماراتي',
-            date('Y-m-d'),
-            'parent@example.com',
-            '0501234567',
             '',
-            '1'
+            'علي أحمد عبدالله',
+            'ذكر',
+            '2015-05-12',
+            'الإمارات العربية المتحدة',
+            '784199012345678',
+            'الصف الخامس',
+            'أ',
+            '2026-2027',
+            '1',
+            'أحمد عبدالله علي',
+            'أب',
+            'parent@example.com',
+            '+971 501234567',
+            'Active',
+            'Enrolled',
+            date('Y-m-d'),
+            'أبوظبي',
+            'الرياض، الشارع الخامس',
+            'طالب متفوق ومواظب',
+            'ممتاز',
+            'لا',
+            'سليم',
+            'لا توجد حساسية',
+            '',
+            'Paid',
+            '15000.00',
+            '15000.00',
+            '0.00',
+            'Paid'
         ));
 
         fclose($output);
