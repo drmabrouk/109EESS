@@ -181,6 +181,8 @@ class EESS_Student_Data_Service {
                 $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}eess_schools WHERE institution_id = %d OR school_code = %d", $inst_row->id, $inst_row->code));
                 if ($sch_row) {
                     $school_id = $sch_row->id;
+                } else {
+                    $school_id = $inst_row->id;
                 }
             } else {
                 $sch_row = $wpdb->get_row($wpdb->prepare("SELECT id, institution_id FROM {$wpdb->prefix}eess_schools WHERE id = %d", $school_id));
@@ -236,9 +238,7 @@ class EESS_Student_Data_Service {
         if (!empty($data['parent_user_id'])) {
             $fields['parent_user_id'] = intval($data['parent_user_id']);
         }
-        if (!empty($data['teacher_id'])) {
-            $fields['teacher_id'] = intval($data['teacher_id']);
-        }
+        $fields['teacher_id'] = !empty($data['teacher_id']) ? intval($data['teacher_id']) : null;
 
         if ($student_id > 0) {
             $updated = $wpdb->update("{$wpdb->prefix}sm_students", $fields, array('id' => $student_id));

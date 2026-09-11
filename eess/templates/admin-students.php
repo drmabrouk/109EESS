@@ -626,7 +626,7 @@ $to_num = min($offset + $limit, $total_students_count);
 
     <!-- DELETE STUDENT MODAL (CLEAN WHITE DESIGN) -->
     <div id="delete-student-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
-        <div class="sm-modal-content" style="max-width: 500px; border-radius: 20px; padding: 28px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;">
+        <div class="sm-modal-content" style="max-width: 500px; border-radius: 20px; padding: 32px 36px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;">
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="width: 54px; height: 54px; border-radius: 50%; background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
                     <span class="dashicons dashicons-trash" style="font-size: 26px; width: 26px; height: 26px;"></span>

@@ -8679,6 +8679,35 @@ class SM_Public {
                 wp_die('لم يتم العثور على طلاب للطباعة.');
             }
 
+            // Fetch all student records first for bulk photo filtering
+            $all_students = array();
+            foreach ($stu_ids as $sid) {
+                $st = SM_DB::get_student_by_id($sid);
+                if ($st) {
+                    $all_students[] = $st;
+                }
+            }
+
+            $excluded_students = array();
+            $printable_students = array();
+
+            if (count($all_students) > 1) {
+                foreach ($all_students as $st) {
+                    if (empty($st->photo_url)) {
+                        $excluded_students[] = $st;
+                    } else {
+                        $printable_students[] = $st;
+                    }
+                }
+                // If all selected students lack photos, fallback to printing all with notice placeholders
+                if (empty($printable_students)) {
+                    $printable_students = $all_students;
+                    $excluded_students = array();
+                }
+            } else {
+                $printable_students = $all_students;
+            }
+
             $school_info = SM_Settings::get_school_info();
             $system_logo = !empty($school_info['school_logo']) ? $school_info['school_logo'] : (!empty($school_info['logo_url']) ? $school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
             $acad_struct = SM_Settings::get_academic_structure();
@@ -8743,41 +8772,73 @@ class SM_Public {
                     .card-sys-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; }
 
                     .card-header-titles { line-height: 1.15; }
-                    .card-title-main { font-size: 12px; font-weight: 900; color: #ffffff; letter-spacing: -0.2px; }
+                    .card-title-main { font-size: 11.5px; font-weight: 900; color: #ffffff; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 48mm; }
                     .card-school-name { font-size: 8.5px; font-weight: 700; color: #fecdd3; }
-                    .card-acad-year-text { font-size: 10.5px; color: #ffffff; font-weight: 900; text-align: left; letter-spacing: 0.5px; }
+                    .card-acad-year-text { font-size: 10px; color: #ffffff; font-weight: 900; text-align: left; letter-spacing: 0.5px; }
 
                     .card-body {
                         display: flex;
-                        gap: 8px;
+                        gap: 6px;
                         align-items: center;
-                        padding: 4px 8px;
+                        padding: 4px 7px;
                         flex: 1;
                         position: relative;
-                        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 150' preserveAspectRatio='none'><path d='M0,40 C150,140 350,-40 500,40 L500,150 L0,150 Z' fill='%23f1f5f9' opacity='0.35'/><path d='M0,80 C200,20 300,120 500,60 L500,150 L0,150 Z' fill='%23fee2e2' opacity='0.2'/></svg>");
+                        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 150' preserveAspectRatio='none'><path d='M0,40 C150,140 350,-40 500,40 L500,150 L0,150 Z' fill='%23f1f5f9' opacity='0.15'/><path d='M0,80 C200,20 300,120 500,60 L500,150 L0,150 Z' fill='%23fee2e2' opacity='0.08'/></svg>");
                         background-repeat: no-repeat;
                         background-size: cover;
                         background-position: bottom;
                     }
 
-                    /* Student Photo Centered Vertically */
-                    .card-photo {
+                    /* Photo Wrapper & Blurred Missing Photo Placeholder */
+                    .card-photo-box {
                         width: 22mm;
                         height: 28mm;
                         border-radius: 4px;
-                        object-fit: cover;
                         border: 1.5px solid #0f172a;
                         background: #f1f5f9;
                         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                         flex-shrink: 0;
+                        overflow: hidden;
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .card-photo {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .card-photo-missing {
+                        width: 100%;
+                        height: 100%;
+                        background: #cbd5e1;
+                        filter: blur(0.5px);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                        padding: 2px;
+                        color: #475569;
+                    }
+                    .card-photo-missing-text {
+                        font-size: 6.5px;
+                        font-weight: 800;
+                        line-height: 1.15;
+                        color: #1e293b;
+                        background: rgba(255, 255, 255, 0.85);
+                        padding: 3px 2px;
+                        border-radius: 3px;
+                        border: 1px solid #94a3b8;
                     }
 
                     /* Student Info Layout — Tight, Balanced & Professional Typography */
                     .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding-right: 2px; }
-                    .card-stu-name { font-size: 12px; font-weight: 900; color: #0f172a; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-                    .card-field { font-size: 8.5px; color: #334155; font-weight: 700; margin-bottom: 1.5px; display: flex; align-items: center; gap: 4px; }
-                    .card-field-label { color: #64748b; font-weight: 700; width: 55px; min-width: 55px; flex-shrink: 0; }
-                    .card-field-val { color: #0f172a; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .card-stu-name { font-weight: 900; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+                    .card-field { font-size: 8.5px; color: #334155; font-weight: 700; margin-bottom: 1px; display: flex; align-items: center; gap: 2px; }
+                    .card-field-label { color: #64748b; font-weight: 700; width: 42px; min-width: 42px; flex-shrink: 0; }
+                    .card-field-val { color: #0f172a; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 2px; }
 
                     /* Barcode / Serial Stack Vertically Centered */
                     .card-qr-stack { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 21mm; flex-shrink: 0; text-align: center; }
@@ -8810,18 +8871,31 @@ class SM_Public {
                 </style>
             </head>
             <body>
-                <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+                <div class="no-print" style="text-align: center; margin-bottom: 15px;">
                     <button onclick="window.print()" style="background: #881337; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo'; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">🖨️ طباعة بطاقات الخروج الرسمية (ID Card / A4)</button>
                 </div>
+
+                <?php if (!empty($excluded_students)): ?>
+                <div class="no-print" style="max-width: 800px; margin: 0 auto 15px auto; background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 10px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: right; line-height: 1.5;">
+                    ⚠️ تنبيه: تم استبعاد (<?php echo count($excluded_students); ?>) طالب من عملية الطباعة الجماعية لعدم رفع صورة شخصية لهم:
+                    <strong><?php echo esc_html(implode('، ', array_map(function($s) { return $s->name; }, $excluded_students))); ?></strong>.
+                </div>
+                <?php endif; ?>
+
                 <div class="cards-container">
-                    <?php foreach ($stu_ids as $sid):
-                        $st = SM_DB::get_student_by_id($sid);
-                        if (!$st) continue;
+                    <?php foreach ($printable_students as $st):
                         $sch_obj = $st->school_id ? EESS_Org_Helper::get_school_by_id($st->school_id) : null;
                         $s_name = $sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة EESS التعليمية');
+                        $s_logo = ($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo;
+
                         $serial = $st->student_code ?: ('STU-' . $st->id);
                         $qr_svg = $this->eess_generate_qr_code_svg($serial);
-                        $photo = !empty($st->photo_url) ? esc_url($st->photo_url) : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="58" viewBox="0 0 24 24" fill="%23cbd5e1"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                        $has_photo = !empty($st->photo_url);
+                        $photo_src = $has_photo ? esc_url($st->photo_url) : '';
+
+                        // Dynamic single-line font scaling for student name
+                        $name_len = mb_strlen($st->name);
+                        $name_font_size = $name_len > 28 ? '8.5px' : ($name_len > 22 ? '9.5px' : '11px');
 
                         // Clean non-duplicated values (Strip duplicated 'الصف' or 'شعبة' labels)
                         $clean_class = trim(preg_replace('/^(الصف|صف|Grade|grade)\s*:?\s*/u', '', $st->class_name ?: ''));
@@ -8831,10 +8905,10 @@ class SM_Public {
                         <div class="card-header">
                             <div class="card-header-right">
                                 <div class="card-logo-box">
-                                    <img src="<?php echo esc_url($system_logo); ?>" class="card-sys-logo" alt="Logo" onerror="this.style.display='none'">
+                                    <img src="<?php echo esc_url($s_logo); ?>" class="card-sys-logo" alt="Logo" onerror="this.style.display='none'">
                                 </div>
                                 <div class="card-header-titles">
-                                    <div class="card-title-main"><?php echo esc_html($s_name); ?></div>
+                                    <div class="card-title-main" title="<?php echo esc_attr($s_name); ?>"><?php echo esc_html($s_name); ?></div>
                                     <div class="card-school-name">بطاقة خروج طالب نهاية الدوام</div>
                                 </div>
                             </div>
@@ -8844,9 +8918,18 @@ class SM_Public {
                         </div>
 
                         <div class="card-body">
-                            <img src="<?php echo $photo; ?>" class="card-photo" alt="Student Photo">
+                            <div class="card-photo-box">
+                                <?php if ($has_photo): ?>
+                                    <img src="<?php echo $photo_src; ?>" class="card-photo" alt="Student Photo">
+                                <?php else: ?>
+                                    <div class="card-photo-missing">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#64748b" style="margin-bottom: 2px;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                        <div class="card-photo-missing-text">الصورة الشخصية<br>غير مرفوعة</div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                             <div class="card-info">
-                                <div class="card-stu-name" title="<?php echo esc_attr($st->name); ?>"><?php echo esc_html($st->name); ?></div>
+                                <div class="card-stu-name" style="font-size: <?php echo $name_font_size; ?>;" title="<?php echo esc_attr($st->name); ?>"><?php echo esc_html($st->name); ?></div>
                                 <div class="card-field">
                                     <span class="card-field-label">الصف:</span>
                                     <span class="card-field-val"><?php echo esc_html($clean_class ?: 'الأول'); ?></span>
