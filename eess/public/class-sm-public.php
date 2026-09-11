@@ -12094,4 +12094,99 @@ class SM_Public {
         }
         exit;
     }
+
+    public function ajax_eess_save_department() {
+        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+            wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
+        }
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $dept_id = intval($_POST['dept_id'] ?? 0);
+        $inst_id = intval($_POST['inst_id'] ?? 1);
+        $name    = sanitize_text_field($_POST['name'] ?? '');
+        if (empty($name)) {
+            wp_send_json_error('اسم القسم مطلوب');
+        }
+
+        $data = array(
+            'name'         => $name,
+            'code'         => sanitize_text_field($_POST['code'] ?? ''),
+            'head_user_id' => !empty($_POST['head_user_id']) ? intval($_POST['head_user_id']) : null,
+            'description'  => sanitize_textarea_field($_POST['description'] ?? '')
+        );
+
+        if ($dept_id > 0) {
+            $res = EESS_Org_Helper::update_department($dept_id, $data);
+        } else {
+            $res = EESS_Org_Helper::add_department($inst_id, $data);
+        }
+
+        if (is_wp_error($res)) {
+            wp_send_json_error($res->get_error_message());
+        }
+
+        wp_send_json_success(array('message' => 'تم حفظ بيانات القسم الإداري بنجاح'));
+    }
+
+    public function ajax_eess_save_subject() {
+        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+            wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
+        }
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $inst_id = intval($_POST['inst_id'] ?? 1);
+        $sub_id  = intval($_POST['sub_id'] ?? 0);
+        $name    = sanitize_text_field($_POST['name'] ?? '');
+
+        if (empty($name)) {
+            wp_send_json_error('اسم المادة الدراسية مطلوب');
+        }
+
+        $data = array(
+            'id'                  => $sub_id,
+            'name'                => $name,
+            'code'                => sanitize_text_field($_POST['code'] ?? ''),
+            'department_id'       => !empty($_POST['department_id']) ? intval($_POST['department_id']) : null,
+            'hod_user_id'         => !empty($_POST['hod_user_id']) ? intval($_POST['hod_user_id']) : null,
+            'coordinator_user_id' => !empty($_POST['coordinator_user_id']) ? intval($_POST['coordinator_user_id']) : null,
+            'status'              => sanitize_text_field($_POST['status'] ?? 'active'),
+            'grade_ids'           => !empty($_POST['grade_ids']) ? array_map('intval', (array)$_POST['grade_ids']) : array(),
+            'school_ids'          => !empty($_POST['school_ids']) ? array_map('intval', (array)$_POST['school_ids']) : array()
+        );
+
+        $res = EESS_Org_Helper::save_subject($inst_id, $data);
+
+        if (is_wp_error($res)) {
+            wp_send_json_error($res->get_error_message());
+        }
+
+        wp_send_json_success(array('message' => 'تم حفظ المادة الدراسية بنجاح'));
+    }
+
+    public function ajax_eess_save_grade() {
+        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+            wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
+        }
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $grade_id  = intval($_POST['grade_id'] ?? 0);
+        $school_id = intval($_POST['school_id'] ?? 1);
+        $name      = sanitize_text_field($_POST['name'] ?? '');
+
+        if (empty($name)) {
+            wp_send_json_error('اسم الصف الدراسي مطلوب');
+        }
+
+        if ($grade_id > 0) {
+            $res = EESS_Org_Helper::update_grade($grade_id, $name, $school_id);
+        } else {
+            $res = EESS_Org_Helper::add_grade($school_id, $name);
+        }
+
+        if (is_wp_error($res)) {
+            wp_send_json_error($res->get_error_message());
+        }
+
+        wp_send_json_success(array('message' => 'تم حفظ الصف الدراسي بنجاح'));
+    }
 }
