@@ -421,24 +421,45 @@ class SM_Public {
             }
             </script>
 
-            <?php if (is_user_logged_in()): ?>
-            <!-- Fixed Sticky Mobile Header Banner -->
-            <div style="position: sticky; top: 0; z-index: 9999; background: #0f172a; color: #ffffff; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 14px rgba(15,23,42,0.18);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="dashicons dashicons-welcome-learn-more" style="color: #38bdf8; font-size: 18px; width: 18px; height: 18px;"></span>
-                    <span style="font-size: 14px; font-weight: 800; color: #ffffff;">نظام الإدارة المدرسية</span>
+            <?php if (is_user_logged_in()):
+                $m_school_info = SM_Settings::get_school_info();
+                $m_sys_logo = !empty($m_school_info['school_logo']) ? $m_school_info['school_logo'] : (!empty($m_school_info['logo_url']) ? $m_school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
+                $m_inst_name = get_user_meta($user->ID, 'eess_school_name', true) ?: ($m_school_info['name'] ?? 'مؤسسة EESS التعليمية');
+
+                $role_labels = array(
+                    'administrator' => 'مدير النظام المطور',
+                    'sm_system_admin' => 'مدير النظام المطور',
+                    'sm_principal' => 'مدير المدرسة',
+                    'sm_supervisor' => 'مشرف تربوي',
+                    'sm_coordinator' => 'منسق مادة',
+                    'sm_teacher' => 'معلم',
+                    'sm_discipline_supervisor' => 'مشرف سلوك / انضباط',
+                    'sm_activities_supervisor' => 'مشرف أنشطة',
+                    'sm_clinic' => 'العيادة المدرسية',
+                    'sm_hr' => 'الموارد البشرية (HR)'
+                );
+                $primary_role_key = reset($user_roles) ?: 'sm_teacher';
+                $m_role_display = $role_labels[$primary_role_key] ?? 'معلم';
+                $m_dept_display = get_user_meta($user->ID, 'eess_department', true) ?: (get_user_meta($user->ID, 'department', true) ?: 'قسم التربية البدنية والصحية');
+            ?>
+            <!-- Solid Black Mobile Header Banner (Rendered ONLY after login) -->
+            <div style="position: sticky; top: 0; z-index: 9999; background: #000000; color: #ffffff; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                    <div style="width: 32px; height: 32px; border-radius: 6px; background: #ffffff; padding: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2);">
+                        <img src="<?php echo esc_url($m_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" alt="Logo">
+                    </div>
+                    <div style="min-width: 0; flex: 1; text-align: right;">
+                        <div style="font-size: 13.5px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25;"><?php echo esc_html($m_inst_name); ?></div>
+                        <div style="font-size: 10.5px; color: #cbd5e1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;"><?php echo esc_html($m_role_display . ' · ' . $m_dept_display); ?></div>
+                    </div>
                 </div>
-                <a href="<?php echo wp_logout_url(home_url('/sm-login')); ?>" title="تسجيل الخروج" style="width: 32px; height: 32px; background: #dc2626; color: #ffffff !important; border-radius: 50%; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                    <span class="dashicons dashicons-logout" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
+                <a href="<?php echo wp_logout_url(home_url('/sm-login')); ?>" title="تسجيل الخروج" style="width: 34px; height: 34px; background: rgba(255, 255, 255, 0.15); color: #ffffff !important; border-radius: 50%; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 10px; border: 1px solid rgba(255,255,255,0.25); transition: background 0.2s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
                 </a>
-            </div>
-            <?php else: ?>
-            <!-- Fixed Top Banner for Login Screen -->
-            <div style="position: sticky; top: 0; z-index: 9999; background: #0f172a; color: #ffffff; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 14px rgba(15,23,42,0.18);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="dashicons dashicons-welcome-learn-more" style="color: #38bdf8; font-size: 18px; width: 18px; height: 18px;"></span>
-                    <span style="font-size: 14px; font-weight: 800; color: #ffffff;">نظام الإدارة المدرسية</span>
-                </div>
             </div>
             <?php endif; ?>
 
@@ -900,7 +921,7 @@ class SM_Public {
             <?php endif; ?>
 
             <?php if (!is_user_logged_in()): ?>
-            <div style="min-height: 75vh; display: flex; align-items: center; justify-content: center;">
+            <div style="min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
                 <div id="m-step-verify" style="background: #ffffff; border-radius: 20px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 420px; box-sizing: border-box;">
                     <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
                         <span style="background: #0f172a; color: white; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">1</span>
@@ -908,16 +929,23 @@ class SM_Public {
                     </h3>
                     <p style="font-size: 12px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">أدخل الهوية الوطنية / الرقم الوظيفي / رقم الجوال وكلمة المرور للوصول الآمن لحسابك:</p>
 
-                    <div style="margin-bottom: 14px;">
-                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">الهوية الوطنية / الرقم الوظيفي / رقم الجوال <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="m_emp_id_input" placeholder="مثال: 784-1990-1234567-1 أو 10245" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13.5px; font-weight: 700; box-sizing: border-box; outline: none;">
+                    <div style="margin-bottom: 16px; position: relative;">
+                        <div class="eess-float-container" style="position: relative; width: 100%;">
+                            <input type="text" id="m_emp_id_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 44px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
+                            <label for="m_emp_id_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">الهوية الوطنية / الرقم الوظيفي / رقم الجوال *</label>
+                        </div>
                     </div>
 
-                    <div style="margin-bottom: 15px; position: relative;">
-                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">كلمة المرور <span style="color: #ef4444;">*</span></label>
-                        <div style="position: relative;">
-                            <input type="password" id="m_password_input" placeholder="••••••••" style="width: 100%; height: 44px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 40px 0 12px; font-size: 14px; box-sizing: border-box; outline: none;">
-                            <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer;">👁️</button>
+                    <div style="margin-bottom: 16px; position: relative;">
+                        <div class="eess-float-container eess-password-wrapper" style="position: relative; width: 100%;">
+                            <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 44px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 40px 0 12px; font-size: 14px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
+                            <label for="m_password_input" class="eess-float-label" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #64748b; pointer-events: none; transition: all 0.2s ease; background: transparent; padding: 0 4px;">كلمة المرور *</label>
+                            <button type="button" onclick="const p = document.getElementById('m_password_input'); p.type = p.type === 'password' ? 'text' : 'password';" title="إظهار / إخفاء كلمة المرور" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -939,7 +967,7 @@ class SM_Public {
             </div>
 
                 <!-- Subtle Soft Pastel Red Informational Notice Below Login Form -->
-                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px 12px; margin-top: 14px; display: flex; align-items: flex-start; gap: 8px;">
+                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px 12px; margin-top: 6px; width: 100%; max-width: 420px; box-sizing: border-box; display: flex; align-items: flex-start; gap: 8px;">
                     <span class="dashicons dashicons-info" style="color: #991b1b; font-size: 16px; width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0;"></span>
                     <div style="font-size: 11.5px; color: #991b1b; line-height: 1.5; font-weight: 600;">
                         لإدارة حسابك الكامل، واستعراض التحضيرات السابقة، ومتابعة التقارير، يُرجى تسجيل الدخول من جهاز الكمبيوتر أو المحمول.
@@ -950,26 +978,87 @@ class SM_Public {
 
             <!-- DEDICATED 4-BUTTON MOBILE MAIN DASHBOARD -->
             <?php if (is_user_logged_in() && in_array('sm_teacher', (array)$user->roles)): ?>
-            <!-- Clean Centered Welcome Area with Dynamic Role & Subject Capsules -->
+            <!-- Clean Centered Welcome Area with Dynamic Role & Subject Capsules and Interactive Profile Photo -->
             <?php
             $m_role_label = 'معلم';
             $m_user_subject = get_user_meta($user->ID, 'sm_specialization', true) ?: (get_user_meta($user->ID, 'specialization', true) ?: 'التربية البدنية والصحية');
+            $m_custom_avatar = get_user_meta($user->ID, 'sm_profile_photo_url', true) ?: get_user_meta($user->ID, 'eess_profile_photo', true);
+            $has_no_photo = empty($m_custom_avatar);
+            $m_avatar_src = $m_custom_avatar ?: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTMiIHN0eWxlPSJiYWNrZ3JvdW5kOiNmMWY1Zjk7IGJvcmRlci1yYWRpdXM6NTAlOyI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA4LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
             ?>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                <div style="width: 52px; height: 52px; background: #f1f5f9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #0f172a; margin-bottom: 10px; border: 1px solid #cbd5e1;">
-                    <span class="dashicons dashicons-admin-users" style="font-size: 26px; width: 26px; height: 26px;"></span>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
+                <!-- Interactive Profile Avatar Click to Change -->
+                <div onclick="document.getElementById('m_profile_photo_file').click()" style="position: relative; width: 64px; height: 64px; margin: 0 auto 8px auto; cursor: pointer;" title="انقر لتغيير الصورة الشخصية">
+                    <img id="m_header_avatar_img" src="<?php echo esc_url($m_avatar_src); ?>" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #cbd5e1; background: #f1f5f9; display: block;" alt="Profile Avatar">
+                    <div style="position: absolute; bottom: 0; left: 0; background: #0f172a; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff;">
+                        <span class="dashicons dashicons-camera" style="font-size: 11px; width: 11px; height: 11px;"></span>
+                    </div>
                 </div>
-                <h2 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">أهلاً بك أ. <?php echo esc_html($user->display_name); ?></h2>
+                <input type="file" id="m_profile_photo_file" accept="image/*" style="display: none;" onchange="eessUploadMobileAvatar(this)">
+
+                <?php if ($has_no_photo): ?>
+                <!-- 10-Second Guidance Pastel Capsule -->
+                <div id="m_photo_guidance_capsule" style="background: #fef3c7; border: 1px solid #fde68a; color: #92400e; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 9999px; display: inline-block; margin-bottom: 8px; transition: opacity 0.5s ease;">
+                    يمكنك الضغط على الصورة وتغييرها الآن بصورة شخصية لك
+                </div>
+                <script>
+                setTimeout(function() {
+                    var cap = document.getElementById('m_photo_guidance_capsule');
+                    if (cap) {
+                        cap.style.opacity = '0';
+                        setTimeout(function() { cap.style.display = 'none'; }, 500);
+                    }
+                }, 10000);
+                </script>
+                <?php endif; ?>
+
+                <h2 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: #0f172a;">أهلاً بك أ. <?php echo esc_html($user->display_name); ?></h2>
+                <!-- Dynamic Role & Subject Capsules (Values Only, Without Prefixes or Icons) -->
                 <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
-                        👤 الصفة: <?php echo esc_html($m_role_label); ?>
+                    <span style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
+                        <?php echo esc_html($m_role_label); ?>
                     </span>
-                    <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
-                        📚 المادة: <?php echo esc_html($m_user_subject); ?>
+                    <span style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px;">
+                        <?php echo esc_html($m_user_subject); ?>
                     </span>
                 </div>
                 <p style="margin: 0; font-size: 11.5px; color: #64748b; font-weight: 600; line-height: 1.5;">البوابة الذكية لإدارة وتوثيق تحضير الدروس والخطط الفصلية</p>
             </div>
+
+            <script>
+            function eessUploadMobileAvatar(input) {
+                if (!input.files || !input.files[0]) return;
+                var file = input.files[0];
+                var formData = new FormData();
+                formData.append('action', 'eess_upload_mobile_profile_photo');
+                formData.append('profile_photo', file);
+                formData.append('nonce', '<?php echo wp_create_nonce("sm_user_action"); ?>');
+
+                eessShowMobileToast('جاري رفع وتحديث الصورة الشخصية... ⏳');
+
+                jQuery.ajax({
+                    url: '<?php echo esc_url(admin_url("admin-ajax.php")); ?>',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success && res.data && res.data.photo_url) {
+                            var cacheBusted = res.data.photo_url + '?v=' + new Date().getTime();
+                            document.getElementById('m_header_avatar_img').src = cacheBusted;
+                            eessShowMobileToast('✓ تم تحديث الصورة الشخصية بنجاح!');
+                            var cap = document.getElementById('m_photo_guidance_capsule');
+                            if (cap) cap.style.display = 'none';
+                        } else {
+                            alert('فشل رفع الصورة: ' + (res.data || 'حدث خطأ غير معروف'));
+                        }
+                    },
+                    error: function() {
+                        alert('حدث خطأ في الاتصال بالخادم أثناء رفع الصورة.');
+                    }
+                });
+            }
+            </script>
 
             <div id="m-teacher-dashboard-overview" style="margin-bottom: 16px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
@@ -4061,6 +4150,34 @@ class SM_Public {
         }
 
         wp_send_json_success($user_id);
+    }
+
+    public function ajax_upload_mobile_profile_photo() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+
+        $user_id = get_current_user_id();
+
+        if (empty($_FILES['profile_photo']['name'])) {
+            wp_send_json_error('لم يتم إرفاق ملف صورة.');
+        }
+
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        $attachment_id = media_handle_upload('profile_photo', 0);
+        if (is_wp_error($attachment_id)) {
+            wp_send_json_error('فشل رفع الصورة: ' . $attachment_id->get_error_message());
+        }
+
+        $photo_url = wp_get_attachment_url($attachment_id);
+        update_user_meta($user_id, 'sm_profile_photo_id', $attachment_id);
+        update_user_meta($user_id, 'sm_profile_photo_url', $photo_url);
+        update_user_meta($user_id, 'eess_profile_photo', $photo_url);
+
+        SM_Logger::log('تحديث الصورة الشخصية للموبايل', "قام المستخدم ID: $user_id بتحديث صورته الشخصية بنجاح.");
+
+        wp_send_json_success(array('photo_url' => $photo_url));
     }
 
     public function ajax_update_profile() {
