@@ -565,36 +565,53 @@ function renderSelectedStudents() {
             function startScannerInstance() {
                 if (typeof Html5Qrcode !== 'undefined') {
                     const html5QrCode = new Html5Qrcode("reader");
-                    html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, onScanSuccess)
+                    let lastScannedCode = '';
+                    let lastScanTime = 0;
+                    let scanLock = false;
+
+                    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
                     .catch(err => {
                         alert('تعذر الوصول للكاميرا: ' + err);
                         reader.style.display = 'none';
                     });
 
-                    let scanLock = false;
                     function onScanSuccess(decodedText) {
-                        if (scanLock) return;
+                        const code = decodedText.trim();
+                        const now = Date.now();
+
+                        // 1-second continuous cycle & duplicate check
+                        if (now - lastScanTime < 1000 || scanLock) return;
                         scanLock = true;
+                        lastScanTime = now;
 
-                        html5QrCode.stop().then(() => {
-                            reader.style.display = 'none';
+                        if (code === lastScannedCode) {
+                            if (typeof eessShowMobileToast === 'function') {
+                                eessShowMobileToast('تم إدخال الطالب بالفعل', 'warning');
+                            } else if (typeof smShowNotification === 'function') {
+                                smShowNotification('تم إدخال الطالب بالفعل');
+                            }
+                            scanLock = false;
+                            return;
+                        }
 
-                            const formData = new FormData();
-                            formData.append('action', 'sm_get_student');
-                            formData.append('code', decodedText.trim());
+                        lastScannedCode = code;
 
-                            fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
-                            .then(r => r.json())
-                            .then(res => {
-                                scanLock = false;
-                                if (res.success && res.data) {
-                                    selectStudent(res.data);
-                                } else {
-                                    alert('عذراً، الهوية الرقمية أو كود الطالب غير مسجل في النظام: ' + decodedText);
-                                }
-                            })
-                            .catch(() => { scanLock = false; });
-                        }).catch(() => { scanLock = false; reader.style.display = 'none'; });
+                        const formData = new FormData();
+                        formData.append('action', 'sm_get_student');
+                        formData.append('code', code);
+
+                        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+                        .then(r => r.json())
+                        .then(res => {
+                            scanLock = false;
+                            if (res.success && res.data) {
+                                selectStudent(res.data);
+                                html5QrCode.stop().then(() => { reader.style.display = 'none'; }).catch(() => {});
+                            } else {
+                                alert('عذراً، الهوية الرقمية أو كود الطالب غير مسجل في النظام: ' + code);
+                            }
+                        })
+                        .catch(() => { scanLock = false; });
                     }
                 } else {
                     alert('جاري تحميل مكتبة الماسح الضوئي... يرجى المحاولة بعد ثوانٍ.');

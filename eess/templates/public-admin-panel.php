@@ -982,16 +982,16 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <!-- 4 Primary Sub-Tabs Navigation for Organizational Structure -->
                             <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; overflow-x: auto;">
                                 <button type="button" onclick="eessSwitchOrgTab('institutions', this)" class="eess-org-tab-btn active" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: none; background: #881337; color: #ffffff; font-weight: 800; font-size: 13px; cursor: pointer;">
-                                    المؤسسات (Institutions)
+                                    المؤسسات
                                 </button>
                                 <button type="button" onclick="eessSwitchOrgTab('departments', this)" class="eess-org-tab-btn" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-weight: 800; font-size: 13px; cursor: pointer;">
-                                    الأقسام الإدارية (Departments)
+                                    الأقسام
                                 </button>
                                 <button type="button" onclick="eessSwitchOrgTab('subjects', this)" class="eess-org-tab-btn" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-weight: 800; font-size: 13px; cursor: pointer;">
-                                    المواد الدراسية (Subjects)
+                                    المواد الدراسية
                                 </button>
                                 <button type="button" onclick="eessSwitchOrgTab('grades', this)" class="eess-org-tab-btn" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-weight: 800; font-size: 13px; cursor: pointer;">
-                                    الصفوف الدراسية (Grades)
+                                    الصفوف الدراسية
                                 </button>
                             </div>
 
@@ -1276,8 +1276,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                                 <div style="background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 6px;">
                                                     <div><strong>المؤسسة:</strong> <?php echo esc_html($subj->inst_name); ?></div>
                                                     <div><strong>القسم التابع:</strong> <?php echo esc_html($subj->department_name ?: 'الأقسام الأكاديمية'); ?></div>
-                                                    <div><strong>رئيس القسم (HOD):</strong> <?php echo esc_html($subj->hod_display_name ?: 'غير محدد'); ?></div>
-                                                    <div><strong>المنسق (Coordinator):</strong> <?php echo esc_html($subj->coordinator_display_name ?: 'غير محدد'); ?></div>
+                                                    <div><strong>المنسق:</strong> <?php echo esc_html($subj->coordinator_display_name ?: 'غير محدد'); ?></div>
                                                 </div>
                                             </div>
                                             <div style="display: flex; justify-content: flex-end;">
@@ -1600,25 +1599,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                             </div>
                                         </div>
 
-                                        <!-- Integrated Staff & Position Assignments Section -->
-                                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
-                                            <h4 style="margin: 0 0 8px 0; font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                                                <span class="dashicons dashicons-groups" style="color: #881337;"></span>
-                                                <span>تكليف وتعيين الكادر الوظيفي للمؤسسة (Staff Assignments)</span>
-                                            </h4>
-                                            <p style="margin: 0 0 12px 0; font-size: 11.5px; color: #64748b; line-height: 1.5;">اختر الكوادر، المعلمين والموجهين التابعين لهذه المؤسسة للربط المباشر مع صلاحياتهم:</p>
-
-                                            <div style="max-height: 140px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-                                                <?php foreach ($all_users as $u):
-                                                    $u_role = !empty($u->roles) ? $u->roles[0] : '';
-                                                ?>
-                                                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #1e293b; cursor: pointer; padding: 4px; border-radius: 6px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                                    <input type="checkbox" name="assigned_staff_ids[]" value="<?php echo $u->ID; ?>" class="inst-staff-checkbox">
-                                                    <span><strong><?php echo esc_html($u->display_name); ?></strong> <small style="color: #64748b;">(<?php echo esc_html($role_map[$u_role] ?? $u_role); ?>)</small></span>
-                                                </label>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
 
                                     </div>
 
