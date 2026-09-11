@@ -161,94 +161,76 @@ $to_num = min($offset + $limit, $total_students_count);
         </div>
     </div>
 
-    <!-- 2. Search & Filtering Card -->
-    <div style="background: #ffffff; padding: 20px 24px; border: 1px solid #e2e8f0; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
-        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end;">
+    <!-- 2. Search & Filtering Card (Clean Inline Placeholders, No External Labels) -->
+    <div style="background: #ffffff; padding: 18px 24px; border: 1px solid #e2e8f0; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: center;">
             <input type="hidden" name="page" value="<?php echo esc_attr($_GET['page'] ?? 'sm-dashboard'); ?>">
             <input type="hidden" name="sm_tab" value="students">
             <input type="hidden" name="paged" value="1">
             <input type="hidden" name="limit" value="<?php echo esc_attr($limit); ?>">
 
             <!-- Student Search -->
-            <div>
-                <label style="display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; color: #334155;">
-                    اسم الطالب / الكود / الهوية
-                </label>
-                <div style="position: relative;">
-                    <input type="text" name="student_search" value="<?php echo esc_attr($search); ?>" placeholder="بحث بالاسم، الكود، الهوية..." style="width: 100%; height: 42px; padding: 0 38px 0 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 13px; outline: none; background: #f8fafc; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
-                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
-                        <span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                    </span>
-                </div>
+            <div style="position: relative;">
+                <input type="text" name="student_search" value="<?php echo esc_attr($search); ?>" placeholder="بحث باسم الطالب، الكود، الهوية..." style="width: 100%; height: 42px; padding: 0 38px 0 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 12.5px; outline: none; background: #f8fafc; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
+                    <span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                </span>
             </div>
 
             <!-- Grade Filter -->
-            <div>
-                <label style="display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; color: #334155;">
-                    الصف الدراسي
-                </label>
-                <div style="position: relative;">
-                    <select name="class_filter" style="width: 100%; height: 42px; padding: 0 38px 0 26px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 13px; outline: none; background: #f8fafc; appearance: none; -webkit-appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
-                        <option value="">جميع الصفوف</option>
-                        <?php
-                        $academic = SM_Settings::get_academic_structure();
-                        foreach ($academic['active_grades'] as $grade_num) {
-                            $grade_label = 'الصف ' . $grade_num;
-                            echo '<option value="' . esc_attr($grade_label) . '" ' . selected($class_filter == $grade_label, true, false) . '>' . esc_html($grade_label) . '</option>';
-                        }
-                        ?>
-                    </select>
-                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
-                        <span class="dashicons dashicons-welcome-learn-more" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                    </span>
-                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 9px;">▼</span>
-                </div>
+            <div style="position: relative;">
+                <select name="class_filter" style="width: 100%; height: 42px; padding: 0 38px 0 26px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 12.5px; outline: none; background: #f8fafc; appearance: none; -webkit-appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                    <option value="">جميع الصفوف الدراسية</option>
+                    <?php
+                    $academic = SM_Settings::get_academic_structure();
+                    foreach ($academic['active_grades'] as $grade_num) {
+                        $grade_label = 'الصف ' . $grade_num;
+                        echo '<option value="' . esc_attr($grade_label) . '" ' . selected($class_filter == $grade_label, true, false) . '>' . esc_html($grade_label) . '</option>';
+                    }
+                    ?>
+                </select>
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
+                    <span class="dashicons dashicons-welcome-learn-more" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                </span>
+                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 9px;">▼</span>
             </div>
 
             <!-- Section Filter -->
-            <div>
-                <label style="display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; color: #334155;">
-                    الشعبة / الفصل
-                </label>
-                <div style="position: relative;">
-                    <input type="text" name="section_filter" value="<?php echo esc_attr($section_filter); ?>" placeholder="مثال: أ" list="existing-sections" style="width: 100%; height: 42px; padding: 0 38px 0 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 13px; outline: none; background: #f8fafc; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
-                    <datalist id="existing-sections">
-                        <?php
-                        $sections = $wpdb->get_col("SELECT DISTINCT section FROM {$wpdb->prefix}sm_students WHERE section != '' ORDER BY section ASC");
-                        foreach ($sections as $sec) echo "<option value='".esc_attr($sec)."'>";
-                        ?>
-                    </datalist>
-                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
-                        <span class="dashicons dashicons-category" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                    </span>
-                </div>
+            <div style="position: relative;">
+                <select name="section_filter" style="width: 100%; height: 42px; padding: 0 38px 0 26px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 12.5px; outline: none; background: #f8fafc; appearance: none; -webkit-appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                    <option value="">جميع الشعب (أ، ب، ج...)</option>
+                    <option value="أ" <?php selected($section_filter, 'أ'); ?>>شعبة أ</option>
+                    <option value="ب" <?php selected($section_filter, 'ب'); ?>>شعبة ب</option>
+                    <option value="ج" <?php selected($section_filter, 'ج'); ?>>شعبة ج</option>
+                    <option value="د" <?php selected($section_filter, 'د'); ?>>شعبة د</option>
+                    <option value="هـ" <?php selected($section_filter, 'هـ'); ?>>شعبة هـ</option>
+                </select>
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
+                    <span class="dashicons dashicons-category" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                </span>
+                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 9px;">▼</span>
             </div>
 
             <!-- Teacher Filter -->
-            <div>
-                <label style="display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; color: #334155;">
-                    المعلم المربّي
-                </label>
-                <div style="position: relative;">
-                    <select name="teacher_filter" style="width: 100%; height: 42px; padding: 0 38px 0 26px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 13px; outline: none; background: #f8fafc; appearance: none; -webkit-appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
-                        <option value="">جميع المعلمين</option>
-                        <?php
-                        $teachers = get_users(array('role' => 'sm_teacher'));
-                        foreach ($teachers as $t) {
-                            echo '<option value="' . $t->ID . '" ' . selected($teacher_filter == $t->ID, true, false) . '>' . esc_html($t->display_name) . '</option>';
-                        }
-                        ?>
-                    </select>
-                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
-                        <span class="dashicons dashicons-admin-users" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                    </span>
-                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 9px;">▼</span>
-                </div>
+            <div style="position: relative;">
+                <select name="teacher_filter" style="width: 100%; height: 42px; padding: 0 38px 0 26px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 12.5px; outline: none; background: #f8fafc; appearance: none; -webkit-appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#881337'; this.style.background='#fff';" onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                    <option value="">جميع المعلمين والمربين</option>
+                    <?php
+                    $teachers = get_users(array('role' => 'sm_teacher'));
+                    foreach ($teachers as $t) {
+                        echo '<option value="' . $t->ID . '" ' . selected($teacher_filter == $t->ID, true, false) . '>' . esc_html($t->display_name) . '</option>';
+                    }
+                    ?>
+                </select>
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
+                    <span class="dashicons dashicons-admin-users" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                </span>
+                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 9px;">▼</span>
             </div>
 
             <!-- Apply Filters Button -->
             <div>
-                <button type="submit" class="sm-btn" style="background: #881337; color: #ffffff; border: none; border-radius: 12px; height: 42px; padding: 0 22px; font-weight: 800; font-size: 13.5px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(136, 19, 55, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#700c2a'" onmouseout="this.style.background='#881337'">
+                <button type="submit" class="sm-btn" style="background: #881337; color: #ffffff; border: none; border-radius: 12px; height: 42px; padding: 0 22px; font-weight: 800; font-size: 13px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(136, 19, 55, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#700c2a'" onmouseout="this.style.background='#881337'">
                     <span class="dashicons dashicons-filter" style="font-size: 16px; width: 16px; height: 16px; color: #fff;"></span>
                     <span>تطبيق الفلترة</span>
                 </button>
@@ -272,8 +254,8 @@ $to_num = min($offset + $limit, $total_students_count);
 
         <!-- Official Column Structure Documentation Card -->
         <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-            <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">📋 دليل ترتيب أعمدة نموذج الاستيراد الرسمي (الأعمدة من A إلى K):</div>
-            <div style="max-height: 180px; overflow-y: auto;">
+            <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">📋 دليل ترتيب أعمدة نموذج الاستيراد الشامل (الأعمدة الـ 30 من A إلى AE):</div>
+            <div style="max-height: 220px; overflow-y: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: right;">
                     <thead>
                         <tr style="background: #f1f5f9; position: sticky; top: 0; color: #334155;">
@@ -286,16 +268,19 @@ $to_num = min($offset + $limit, $total_students_count);
                     </thead>
                     <tbody style="color: #475569;">
                         <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">A</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">كود الطالب (Student Code)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #881337; font-weight:700;">اختياري (تلقائي)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">نصي / رقمي</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">STU-1001</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">B</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الاسم الكامل (Full Name)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626; font-weight:700;">إجباري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">نص ثلاثي أو رباعي</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">علي أحمد عبدالله</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">C</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الهوية الوطنية (National ID)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #881337; font-weight:700;">اختياري (فريد)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أرقام فقط</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">784199012345678</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">D</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف الدراسي (Grade)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626; font-weight:700;">إجباري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف 1 إلى 12</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف 5</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">E</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الشعبة / الفصل (Section)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">حرف أو رقم</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أ</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">F</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الجنسية (Nationality)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">اسم الدولة</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">إماراتي</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">G</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">تاريخ التسجيل (Reg Date)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">YYYY-MM-DD</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">2024-09-01</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">H</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">بريد ولي الأمر (Email)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">بريد إلكتروني صالح</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">parent@domain.com</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">I</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">هاتف ولي الأمر (Phone)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أرقام الهاتف</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">0501234567</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">J</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">رابط الصورة (Photo URL)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">رابط URL مباشر</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">https://site.com/p.jpg</td></tr>
-                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">K</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">معرف المدرسة (School ID)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">رقم المعرف</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">1</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">B</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الرقم التسلسلي (Serial)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">رقم ID النظام</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">105</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">C</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الاسم الكامل (Full Name)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626; font-weight:700;">إجباري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">نص ثلاثي أو رباعي</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">علي أحمد عبدالله</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">D</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الجنس (Gender)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">ذكر / أنثى</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">ذكر</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">E</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">تاريخ الميلاد (DOB)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">YYYY-MM-DD</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">2015-05-12</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">F</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الجنسية (Nationality)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">اسم الدولة</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الإمارات العربية المتحدة</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">G</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الهوية الوطنية (National ID)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #881337; font-weight:700;">اختياري (فريد)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أرقام فقط</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">784199012345678</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">H</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف الدراسي (Grade)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #dc2626; font-weight:700;">إجباري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف 1 إلى 12</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الصف الخامس</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">I</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الشعبة / الفصل (Section)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أ / ب / ج</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أ</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">J</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">العام الدراسي (Academic Year)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">2026-2027</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">2026-2027</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">K</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">معرف المدرسة (School ID)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">كود المدرسة (Code 1 - 6)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">1</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">L-O</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">بيانات ولي الأمر (اسم، صلة قرابة، بريد، هاتف)</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">نص / هاتف دولي</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">أحمد / أب / +971 501234567</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">P-T</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">الحالات، تاريخ التسجيل، الإمارة والعنوان</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">Active/Enrolled/YYYY-MM-DD</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">Active / أبوظبي</td></tr>
+                        <tr><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-weight:700;">U-AD</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">السلوك، الرسوم المالية، الصحة والحساسية والصورة</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">اختياري</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">نص / أرقام مالية</td><td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9;">15000.00 / سليم / صورة</td></tr>
                     </tbody>
                 </table>
             </div>
