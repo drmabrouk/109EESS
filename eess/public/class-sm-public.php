@@ -12217,30 +12217,52 @@ class SM_Public {
         check_ajax_referer('sm_admin_action', 'nonce');
 
         $dept_id = intval($_POST['dept_id'] ?? 0);
-        $inst_id = intval($_POST['inst_id'] ?? 1);
         $name    = sanitize_text_field($_POST['name'] ?? '');
+        $code    = trim(sanitize_text_field($_POST['code'] ?? ''));
+
         if (empty($name)) {
             wp_send_json_error('اسم القسم مطلوب');
         }
 
+        if (!ctype_digit($code)) {
+            wp_send_json_error('يجب أن يتكون كود القسم من أرقام فقط بدون أحرف أو رموز.');
+        }
+
         $data = array(
-            'name'         => $name,
-            'code'         => sanitize_text_field($_POST['code'] ?? ''),
-            'head_user_id' => !empty($_POST['head_user_id']) ? intval($_POST['head_user_id']) : null,
-            'description'  => sanitize_textarea_field($_POST['description'] ?? '')
+            'name' => $name,
+            'code' => $code
         );
 
         if ($dept_id > 0) {
             $res = EESS_Org_Helper::update_department($dept_id, $data);
         } else {
-            $res = EESS_Org_Helper::add_department($inst_id, $data);
+            $res = EESS_Org_Helper::add_department(1, $data);
         }
 
         if (is_wp_error($res)) {
             wp_send_json_error($res->get_error_message());
         }
 
-        wp_send_json_success(array('message' => 'تم حفظ بيانات القسم الإداري بنجاح'));
+        wp_send_json_success(array('message' => 'تم حفظ بيانات القسم المركزي بنجاح'));
+    }
+
+    public function ajax_eess_delete_department() {
+        if (!is_user_logged_in() || !current_user_can('إدارة_النظام')) {
+            wp_send_json_error('غير مصرح لك بإجراء هذا التعديل');
+        }
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $dept_id = intval($_POST['dept_id'] ?? 0);
+        if ($dept_id <= 0) {
+            wp_send_json_error('معرف القسم غير صحيح');
+        }
+
+        $res = EESS_Org_Helper::delete_department($dept_id);
+        if (is_wp_error($res)) {
+            wp_send_json_error($res->get_error_message());
+        }
+
+        wp_send_json_success(array('message' => 'تم حذف القسم بنجاح'));
     }
 
     public function ajax_eess_save_subject() {
