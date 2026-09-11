@@ -432,8 +432,9 @@ $to_num = min($offset + $limit, $total_students_count);
                                         <span><?php echo $parent_user ? esc_html($parent_user->display_name) : (!empty($student->parent_email) ? esc_html($student->parent_email) : '<span style="color:#cbd5e1; font-style:italic;">غير مدخل</span>'); ?></span>
                                     </div>
                                     <?php if (!empty($student->guardian_phone)): ?>
-                                        <div style="font-size: 10.5px; color: #64748b; font-family: monospace; font-weight: 700; margin-top: 2px;">
-                                            📞 <?php echo esc_html($student->guardian_phone); ?>
+                                        <div style="font-size: 11px; color: #475569; font-weight: 700; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                                            <span style="color:#64748b; font-size:11px;">هاتف ولي الأمر (Parent Phone):</span>
+                                            <span style="font-family: monospace; font-weight: 800; color: #0f172a;"><?php echo esc_html($student->guardian_phone); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -451,19 +452,35 @@ $to_num = min($offset + $limit, $total_students_count);
                                             <span class="dashicons dashicons-printer" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                                         </a>
 
-                                        <!-- Behavioral Profile Drawer -->
-                                        <button type="button" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="viewSmStudent(this)" title="الملف السلوكي والتحليلي" class="sm-action-btn sm-action-btn-warning">
-                                            <span class="dashicons dashicons-clipboard"></span>
-                                        </button>
+                                        <!-- Student Account Actions Dropdown -->
+                                        <div style="position: relative; display: inline-block;">
+                                            <button type="button" onclick="eessToggleStudentAccountDropdown(event, <?php echo $student->id; ?>)" title="إجراءات حساب الطالب (Student Account Actions)" class="sm-action-btn" style="background: #f1f5f9; color: #334155; width: 36px; height: 36px; border-radius: 50% !important; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                                <span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                            </button>
+                                            <div id="eess-stu-account-menu-<?php echo $student->id; ?>" class="eess-stu-account-menu" style="display: none; position: absolute; left: 0; top: 100%; z-index: 999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; box-shadow: 0 10px 25px -3px rgba(0,0,0,0.15); width: 230px; padding: 6px 0; text-align: right; margin-top: 4px;">
+                                                <button type="button" onclick="eessRestrictStudentAccount(<?php echo $student->id; ?>)" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                                    <span class="dashicons dashicons-lock" style="font-size: 15px; width: 15px; height: 15px;"></span>
+                                                    <span>تقييد / تعطيل حساب الطالب</span>
+                                                </button>
+                                                <button type="button" onclick="eessSendPasswordChangeRequest(<?php echo $student->id; ?>)" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #2563eb; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                                    <span class="dashicons dashicons-key" style="font-size: 15px; width: 15px; height: 15px;"></span>
+                                                    <span>إرسال طلب تغيير كلمة المرور</span>
+                                                </button>
+                                                <button type="button" onclick="eessOpenSendMessageModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #16a34a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                                    <span class="dashicons dashicons-email-alt" style="font-size: 15px; width: 15px; height: 15px;"></span>
+                                                    <span>إرسال رسالة للطالب</span>
+                                                </button>
+                                            </div>
+                                        </div>
 
                                         <?php if ($is_admin): ?>
                                             <!-- Edit Student Button -->
-                                            <button type="button" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="openUnifiedProfileModal(this)" title="تعديل الطالب" class="sm-action-btn sm-action-btn-warning">
+                                            <button type="button" data-student="<?php echo esc_attr(json_encode($student)); ?>" onclick="openUnifiedProfileModal(this)" title="تعديل الطالب" class="sm-action-btn sm-action-btn-warning" style="width: 36px; height: 36px; border-radius: 50% !important;">
                                                 <span class="dashicons dashicons-edit"></span>
                                             </button>
 
                                             <!-- Delete Student Button -->
-                                            <button type="button" onclick="confirmDeleteStudent(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" title="حذف الطالب نهائياً" class="sm-action-btn sm-action-btn-danger">
+                                            <button type="button" onclick="confirmDeleteStudent(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" title="حذف الطالب نهائياً" class="sm-action-btn sm-action-btn-danger" style="width: 36px; height: 36px; border-radius: 50% !important;">
                                                 <span class="dashicons dashicons-trash"></span>
                                             </button>
                                         <?php endif; ?>
@@ -939,6 +956,72 @@ $to_num = min($offset + $limit, $total_students_count);
                 if (res.success) {
                     smShowNotification(`تم حذف ${selected.length} طالب بنجاح`);
                     setTimeout(() => location.reload(), 500);
+                }
+            });
+        };
+
+        window.eessToggleStudentAccountDropdown = function(e, stuId) {
+            e.stopPropagation();
+            document.querySelectorAll('.eess-stu-account-menu').forEach(m => {
+                if (m.id !== 'eess-stu-account-menu-' + stuId) m.style.display = 'none';
+            });
+            const menu = document.getElementById('eess-stu-account-menu-' + stuId);
+            if (menu) {
+                menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
+            }
+        };
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.eess-stu-account-menu').forEach(m => m.style.display = 'none');
+        });
+
+        window.eessRestrictStudentAccount = function(stuId) {
+            if (!confirm('هل أنت متأكد من تقييد / تعطيل حساب هذا الطالب؟')) return;
+            jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
+                action: 'eess_restrict_student_account',
+                student_id: stuId,
+                nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
+            }, function(res) {
+                if (res.success) {
+                    if (typeof smShowNotification === 'function') smShowNotification('تم تقييد / تعطيل حساب الطالب بنجاح');
+                    else alert('تم تقييد / تعطيل حساب الطالب بنجاح');
+                } else {
+                    alert('خطأ: ' + (res.data || 'فشل تقييد الحساب'));
+                }
+            });
+        };
+
+        window.eessSendPasswordChangeRequest = function(stuId) {
+            if (!confirm('هل تريد إرسال طلب إجباري لتغيير كلمة المرور عند تسجيل دخول الطالب القادم؟')) return;
+            jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
+                action: 'eess_request_student_password_change',
+                student_id: stuId,
+                nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
+            }, function(res) {
+                if (res.success) {
+                    if (typeof smShowNotification === 'function') smShowNotification('تم إصدار وإرسال طلب تغيير كلمة المرور بنجاح');
+                    else alert('تم إصدار وإرسال طلب تغيير كلمة المرور بنجاح');
+                } else {
+                    alert('خطأ: ' + (res.data || 'فشل إرسال الطلب'));
+                }
+            });
+        };
+
+        window.eessOpenSendMessageModal = function(stuId, stuName) {
+            const msg = prompt(`أدخل نص الرسالة الموجهة للطالب "${stuName}":`);
+            if (!msg || !msg.trim()) return;
+
+            jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
+                action: 'eess_send_message_to_student',
+                student_id: stuId,
+                message: msg.trim(),
+                nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
+            }, function(res) {
+                if (res.success) {
+                    if (typeof smShowNotification === 'function') smShowNotification('تم إرسال الرسالة للطالب بنجاح وتوثيقها بصفحة دخوله');
+                    else alert('تم إرسال الرسالة للطالب بنجاح');
+                } else {
+                    alert('خطأ: ' + (res.data || 'فشل إرسال الرسالة'));
                 }
             });
         };

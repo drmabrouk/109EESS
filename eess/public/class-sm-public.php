@@ -3824,6 +3824,132 @@ class SM_Public {
         wp_send_json_success('تم مسح البيانات بنجاح');
     }
 
+    public function ajax_eess_restrict_student_account() {
+        if (!is_user_logged_in() || (!current_user_can('إدارة_الطلاب') && !current_user_can('manage_options') && !current_user_can('manage_students'))) {
+            wp_send_json_error('عفواً، لا تمتلك الصلاحية لتقييد حساب الطالب.');
+        }
+
+        $nonce = $_POST['nonce'] ?? ($_POST['sm_nonce'] ?? '');
+        if (!wp_verify_nonce($nonce, 'sm_admin_action') && !wp_verify_nonce($nonce, 'eess_admin_action')) {
+            wp_send_json_error('فشل التوثيق الأمني.');
+        }
+
+        $student_id = intval($_POST['student_id'] ?? 0);
+        if (!$student_id) wp_send_json_error('معرف الطالب غير صحيح.');
+
+        $student = SM_DB::get_student_by_id($student_id);
+        if (!$student) wp_send_json_error('الطالب غير موجود.');
+
+        global $wpdb;
+        $wpdb->update("{$wpdb->prefix}sm_students", array('status' => 'inactive'), array('id' => $student_id));
+
+        // Sync WP user meta status if linked account exists
+        $national_id = $student->national_id;
+        $student_code = $student->student_code;
+        $user_id = 0;
+        if (!empty($national_id)) $user_id = username_exists($national_id);
+        if (!$user_id && !empty($student_code)) $user_id = username_exists($student_code);
+
+        if ($user_id) {
+            update_user_meta($user_id, 'sm_account_status', 'restricted');
+            update_user_meta($user_id, 'eess_account_status', 'restricted');
+        }
+
+        SM_Logger::log('تقييد حساب طالب', "تم تقييد/تعطيل حساب الطالب: {$student->name} (ID: $student_id)");
+        wp_send_json_success(array('message' => 'تم تقييد / تعطيل حساب الطالب بنجاح.'));
+    }
+
+    public function ajax_eess_request_student_password_change() {
+        if (!is_user_logged_in() || (!current_user_can('إدارة_الطلاب') && !current_user_can('manage_options') && !current_user_can('manage_students'))) {
+            wp_send_json_error('عفواً، لا تمتلك الصلاحية لإرسال طلب تغيير كلمة المرور.');
+        }
+
+        $nonce = $_POST['nonce'] ?? ($_POST['sm_nonce'] ?? '');
+        if (!wp_verify_nonce($nonce, 'sm_admin_action') && !wp_verify_nonce($nonce, 'eess_admin_action')) {
+            wp_send_json_error('فشل التوثيق الأمني.');
+        }
+
+        $student_id = intval($_POST['student_id'] ?? 0);
+        if (!$student_id) wp_send_json_error('معرف الطالب غير صحيح.');
+
+        $student = SM_DB::get_student_by_id($student_id);
+        if (!$student) wp_send_json_error('الطالب غير موجود.');
+
+        $national_id = $student->national_id;
+        $student_code = $student->student_code;
+        $user_id = 0;
+        if (!empty($national_id)) $user_id = username_exists($national_id);
+        if (!$user_id && !empty($student_code)) $user_id = username_exists($student_code);
+
+        if ($user_id) {
+            update_user_meta($user_id, 'eess_must_change_password', '1');
+            SM_Logger::log('إصدار طلب تغيير كلمة مرور', "تم إصدار طلب إجباري لتغيير كلمة المرور للحساب المرتبط بالطالب: {$student->name}");
+            wp_send_json_success(array('message' => 'تم إرسال وتفعيل طلب تغيير كلمة المرور الإجباري للطالب عند تسجيل الدخول القادم.'));
+        } else {
+            wp_send_json_error('لم يتم العثور على حساب مستخدم مخصص لهذا الطالب.');
+        }
+    }
+
+    public function ajax_eess_send_message_to_student() {
+        if (!is_user_logged_in() || (!current_user_can('إدارة_الطلاب') && !current_user_can('manage_options') && !current_user_can('manage_students'))) {
+            wp_send_json_error('عفواً، لا تمتلك الصلاحية لإرسال رسائل للطلاب.');
+        }
+
+        $nonce = $_POST['nonce'] ?? ($_POST['sm_nonce'] ?? '');
+        if (!wp_verify_nonce($nonce, 'sm_admin_action') && !wp_verify_nonce($nonce, 'eess_admin_action')) {
+            wp_send_json_error('فشل التوثيق الأمني.');
+        }
+
+        $student_id = intval($_POST['student_id'] ?? 0);
+        $message = sanitize_textarea_field($_POST['message'] ?? '');
+
+        if (!$student_id || empty($message)) {
+            wp_send_json_error('يرجى تحديد الطالب وإدخال نص الرسالة.');
+        }
+
+        $student = SM_DB::get_student_by_id($student_id);
+        if (!$student) wp_send_json_error('الطالب غير موجود.');
+
+        $national_id = $student->national_id;
+        $student_code = $student->student_code;
+        $receiver_id = 0;
+        if (!empty($national_id)) $receiver_id = username_exists($national_id);
+        if (!$receiver_id && !empty($student_code)) $receiver_id = username_exists($student_code);
+
+        global $wpdb;
+        $inserted = $wpdb->insert("{$wpdb->prefix}sm_messages", array(
+            'sender_id'   => get_current_user_id(),
+            'receiver_id' => $receiver_id ?: 0,
+            'student_id'  => $student_id,
+            'message'     => $message,
+            'status'      => 'unread',
+            'created_at'  => current_time('mysql')
+        ));
+
+        if ($inserted) {
+            SM_Logger::log('إرسال رسالة رسمية لطالب', "تم إرسال رسالة للطالب: {$student->name} (ID: $student_id)");
+            wp_send_json_success(array('message' => 'تم إرسال الرسالة للطالب بنجاح وتوثيقها بصفحة دخوله.'));
+        } else {
+            wp_send_json_error('فشل حفظ الرسالة في قاعدة البيانات.');
+        }
+    }
+
+    public function ajax_eess_mark_message_read() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+
+        $msg_id = intval($_POST['message_id'] ?? 0);
+        if (!$msg_id) wp_send_json_error('معرف الرسالة غير صحيح.');
+
+        global $wpdb;
+        $wpdb->update(
+            "{$wpdb->prefix}sm_messages",
+            array('status' => 'read'),
+            array('id' => $msg_id, 'receiver_id' => get_current_user_id())
+        );
+
+        wp_send_json_success();
+    }
+
     public function ajax_get_students_attendance() {
         $class_name = sanitize_text_field($_POST['class_name'] ?? '');
         $section = sanitize_text_field($_POST['section'] ?? '');
@@ -9006,6 +9132,40 @@ class SM_Public {
         }
 
         wp_send_json_success(array('exists' => false));
+    }
+
+    public function ajax_search_teachers_autocomplete() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+
+        $query = sanitize_text_field($_POST['query'] ?? '');
+        if (mb_strlen($query) < 3) {
+            wp_send_json_success(array());
+        }
+
+        $all_teachers = get_users(array(
+            'role'    => 'sm_teacher',
+            'number'  => 30,
+            'orderby' => 'display_name',
+            'order'   => 'ASC'
+        ));
+
+        $results = array();
+        $q_lower = mb_strtolower($query);
+
+        foreach ($all_teachers as $u) {
+            $emp_num = get_user_meta($u->ID, 'eess_employee_number', true) ?: (get_user_meta($u->ID, 'sm_employee_id', true) ?: $u->user_login);
+            $name = $u->display_name;
+
+            if (mb_strpos(mb_strtolower($name), $q_lower) !== false || mb_strpos(mb_strtolower($emp_num), $q_lower) !== false) {
+                $results[] = array(
+                    'id'              => $u->ID,
+                    'name'            => $name,
+                    'employee_number' => $emp_num
+                );
+            }
+        }
+
+        wp_send_json_success($results);
     }
 
     public function ajax_search_employees_for_eval() {
