@@ -571,7 +571,11 @@ function renderSelectedStudents() {
                         reader.style.display = 'none';
                     });
 
+                    let scanLock = false;
                     function onScanSuccess(decodedText) {
+                        if (scanLock) return;
+                        scanLock = true;
+
                         html5QrCode.stop().then(() => {
                             reader.style.display = 'none';
 
@@ -582,13 +586,15 @@ function renderSelectedStudents() {
                             fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
                             .then(r => r.json())
                             .then(res => {
+                                scanLock = false;
                                 if (res.success && res.data) {
                                     selectStudent(res.data);
                                 } else {
-                                    alert('عذراً، الرقم التسلسلي غير معروف أو الطالب غير مسجل: ' + decodedText);
+                                    alert('عذراً، الهوية الرقمية أو كود الطالب غير مسجل في النظام: ' + decodedText);
                                 }
-                            });
-                        }).catch(() => { reader.style.display = 'none'; });
+                            })
+                            .catch(() => { scanLock = false; });
+                        }).catch(() => { scanLock = false; reader.style.display = 'none'; });
                     }
                 } else {
                     alert('جاري تحميل مكتبة الماسح الضوئي... يرجى المحاولة بعد ثوانٍ.');

@@ -9014,8 +9014,9 @@ class SM_Public {
                         $s_name = $sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة EESS التعليمية');
                         $s_logo = ($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo;
 
+                        $barcode_identity = !empty($st->national_id) ? $st->national_id : ($st->student_code ?: ('STU-' . $st->id));
                         $serial = $st->student_code ?: ('STU-' . $st->id);
-                        $qr_svg = $this->eess_generate_qr_code_svg($serial);
+                        $qr_svg = $this->eess_generate_qr_code_svg($barcode_identity);
                         $has_photo = !empty($st->photo_url);
                         $photo_src = $has_photo ? esc_url($st->photo_url) : '';
 
@@ -9065,12 +9066,12 @@ class SM_Public {
                                     <span class="card-field-val"><?php echo esc_html($clean_section ?: 'أ'); ?></span>
                                 </div>
                                 <div class="card-field">
-                                    <span class="card-field-label">رقم الطالب:</span>
-                                    <span class="card-field-val" style="color: #881337;"><?php echo esc_html($serial); ?></span>
+                                    <span class="card-field-label">كود الطالب:</span>
+                                    <span class="card-field-val" style="color: #881337; margin-right: 6px;"><?php echo esc_html($serial); ?></span>
                                 </div>
                             </div>
                             <div class="card-qr-stack">
-                                <div class="card-qr-box" title="<?php echo esc_attr($serial); ?>"><?php echo $qr_svg; ?></div>
+                                <div class="card-qr-box" title="<?php echo esc_attr($barcode_identity); ?>"><?php echo $qr_svg; ?></div>
                                 <div class="card-serial-text"><?php echo esc_html($serial); ?></div>
                             </div>
                         </div>

@@ -533,7 +533,18 @@ class SM_DB {
 
     public static function get_student_by_code($code) {
         global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE student_code = %s", $code));
+        // Priority 1: Match National ID. Priority 2: Match Student Code. Priority 3: Match ID.
+        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE national_id = %s", $code));
+        if ($student) return $student;
+
+        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE student_code = %s", $code));
+        if ($student) return $student;
+
+        if (is_numeric($code)) {
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE id = %d", intval($code)));
+        }
+
+        return null;
     }
 
     public static function get_backup_data() {

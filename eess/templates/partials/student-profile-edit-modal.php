@@ -10,20 +10,28 @@
             <button type="button" class="sm-modal-close" onclick="closeUnifiedEditStudentModal()" style="background: none; border: none; font-size: 26px; color: #0f172a; cursor: pointer; line-height: 1;">&times;</button>
         </div>
 
-        <!-- Wizard Step Progress Indicator (5 Steps) -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; position: relative;">
-            <div style="position: absolute; top: 50%; left: 8%; right: 8%; height: 2px; background: #e2e8f0; z-index: 1;"></div>
+        <!-- Compact & Professional Wizard Step Progress Indicator (5 Steps) -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 18px; margin-bottom: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+                <div style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background: #cbd5e1; z-index: 1;"></div>
 
-            <!-- Step 1 Node: Identity & Personal -->
-            <div id="eess-wiz-node-1" onclick="goUnifiedEditStep(1)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #881337; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid #881337; transition: all 0.25s;" title="1. الهوية والبيانات الشخصية">1</div>
-            <!-- Step 2 Node: Academic & Org Placement -->
-            <div id="eess-wiz-node-2" onclick="goUnifiedEditStep(2)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="2. التنسيق الأكاديمي والتنظيمي">2</div>
-            <!-- Step 3 Node: Guardian & Location -->
-            <div id="eess-wiz-node-3" onclick="goUnifiedEditStep(3)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="3. ولي الأمر والتواصل والموقع">3</div>
-            <!-- Step 4 Node: Financials -->
-            <div id="eess-wiz-node-4" onclick="goUnifiedEditStep(4)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="4. السجل المالي والرسوم">4</div>
-            <!-- Step 5 Node: Health, Behavior & Account -->
-            <div id="eess-wiz-node-5" onclick="goUnifiedEditStep(5)" style="position: relative; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.25s;" title="5. السجل الصحي والحساب">5</div>
+                <!-- Step 1 Node -->
+                <div id="eess-wiz-node-1" onclick="goUnifiedEditStep(1)" style="position: relative; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: #881337; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12.5px; cursor: pointer; border: 2px solid #881337; transition: all 0.25s;" title="1. الهوية والبيانات الشخصية">1</div>
+                <!-- Step 2 Node -->
+                <div id="eess-wiz-node-2" onclick="goUnifiedEditStep(2)" style="position: relative; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12.5px; cursor: pointer; transition: all 0.25s;" title="2. التنسيق الأكاديمي والتنظيمي">2</div>
+                <!-- Step 3 Node -->
+                <div id="eess-wiz-node-3" onclick="goUnifiedEditStep(3)" style="position: relative; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12.5px; cursor: pointer; transition: all 0.25s;" title="3. ولي الأمر والتواصل والموقع">3</div>
+                <!-- Step 4 Node -->
+                <div id="eess-wiz-node-4" onclick="goUnifiedEditStep(4)" style="position: relative; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12.5px; cursor: pointer; transition: all 0.25s;" title="4. السجل المالي والرسوم">4</div>
+                <!-- Step 5 Node -->
+                <div id="eess-wiz-node-5" onclick="goUnifiedEditStep(5)" style="position: relative; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #64748b; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12.5px; cursor: pointer; transition: all 0.25s;" title="5. السجل الصحي والحساب">5</div>
+            </div>
+
+            <!-- Step Progress Text Description Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 11px; font-weight: 800; color: #475569;">
+                <span id="eess-wiz-step-title-text" style="color: #881337;">الخطوة 1 من 5: هويّة الطالب والبيانات الشّخصيّة</span>
+                <span id="eess-wiz-step-status-text" style="background: #e0f2fe; color: #0369a1; padding: 2px 10px; border-radius: 12px; border: 1px solid #bae6fd;">الخطوة الحالية: 1 (متبقي 4 خطوات)</span>
+            </div>
         </div>
 
         <form id="edit-student-form">
@@ -355,6 +363,26 @@ function goUnifiedEditStep(step) {
 
     document.querySelectorAll('.eess-wiz-panel').forEach(p => p.style.display = 'none');
     document.getElementById('eess-wiz-step-' + step).style.display = 'block';
+
+    const stepTitles = {
+        1: 'الخطوة 1 من 5: هويّة الطالب والبيانات الشّخصيّة والصورة',
+        2: 'الخطوة 2 من 5: التنسيق الأكاديمي والتنظيمي (الكود 1 إلى الكود 6)',
+        3: 'الخطوة 3 من 5: بيانات ولي الأمر والتواصل والموقع الجغرافي',
+        4: 'الخطوة 4 من 5: السجل المالي والرسوم والمستحقات',
+        5: 'الخطوة 5 من 5: السجل الصحي والحساب والأمان الرقمي'
+    };
+
+    const titleEl = document.getElementById('eess-wiz-step-title-text');
+    if (titleEl && stepTitles[step]) {
+        titleEl.innerText = stepTitles[step];
+    }
+
+    const statusEl = document.getElementById('eess-wiz-step-status-text');
+    if (statusEl) {
+        let completedCount = step - 1;
+        let remainingCount = 5 - step;
+        statusEl.innerText = `الخطوة الحالية: ${step} (المكتملة: ${completedCount} | المتبقية: ${remainingCount})`;
+    }
 
     for (let i = 1; i <= 5; i++) {
         const node = document.getElementById('eess-wiz-node-' + i);
