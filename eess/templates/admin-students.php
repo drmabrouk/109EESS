@@ -452,24 +452,51 @@ $to_num = min($offset + $limit, $total_students_count);
                                             <span class="dashicons dashicons-printer" style="font-size: 16px; width: 16px; height: 16px; margin: 0;"></span>
                                         </a>
 
-                                        <!-- Student Account Actions Dropdown -->
+                                        <!-- Student Account Actions Popover Panel -->
                                         <div style="position: relative; display: inline-block;">
-                                            <button type="button" onclick="eessToggleStudentAccountDropdown(event, <?php echo $student->id; ?>)" title="إجراءات حساب الطالب (Student Account Actions)" class="sm-action-btn" style="background: #f1f5f9; color: #334155; width: 36px; height: 36px; border-radius: 50% !important; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                            <button type="button" onclick="eessToggleStudentAccountDropdown(event, <?php echo $student->id; ?>)" title="إجراءات وسجل حساب الطالب الرقمي" class="sm-action-btn" style="background: #f8fafc; color: #334155; width: 36px; height: 36px; border-radius: 50% !important; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
                                                 <span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px;"></span>
                                             </button>
-                                            <div id="eess-stu-account-menu-<?php echo $student->id; ?>" class="eess-stu-account-menu" style="display: none; position: absolute; left: 0; top: 100%; z-index: 999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; box-shadow: 0 10px 25px -3px rgba(0,0,0,0.15); width: 230px; padding: 6px 0; text-align: right; margin-top: 4px;">
-                                                <button type="button" onclick="eessRestrictStudentAccount(<?php echo $student->id; ?>)" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                                    <span class="dashicons dashicons-lock" style="font-size: 15px; width: 15px; height: 15px;"></span>
-                                                    <span>تقييد / تعطيل حساب الطالب</span>
-                                                </button>
-                                                <button type="button" onclick="eessSendPasswordChangeRequest(<?php echo $student->id; ?>)" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #2563eb; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                                    <span class="dashicons dashicons-key" style="font-size: 15px; width: 15px; height: 15px;"></span>
-                                                    <span>إرسال طلب تغيير كلمة المرور</span>
-                                                </button>
-                                                <button type="button" onclick="eessOpenSendMessageModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="width: 100%; padding: 9px 14px; background: none; border: none; text-align: right; font-size: 12px; font-weight: 700; color: #16a34a; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                                    <span class="dashicons dashicons-email-alt" style="font-size: 15px; width: 15px; height: 15px;"></span>
-                                                    <span>إرسال رسالة للطالب</span>
-                                                </button>
+                                            <div id="eess-stu-account-menu-<?php echo $student->id; ?>" class="eess-stu-account-menu" style="display: none; position: absolute; left: 0; top: 100%; z-index: 9999; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.18); width: 280px; padding: 12px; text-align: right; margin-top: 6px;">
+                                                <div style="padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-weight: 800; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
+                                                    <span>إجراءات الحساب الرقمي</span>
+                                                    <span style="padding: 2px 8px; border-radius: 10px; font-size: 10px; background: <?php echo ($student->student_status === 'Active' || $student->student_status === 'نشط') ? '#dcfce7' : '#fee2e2'; ?>; color: <?php echo ($student->student_status === 'Active' || $student->student_status === 'نشط') ? '#15803d' : '#b91c1c'; ?>;">
+                                                        <?php echo esc_html($student->student_status ?: 'نشط'); ?>
+                                                    </span>
+                                                </div>
+
+                                                <!-- Action 1: Restrict / Disable Account -->
+                                                <div onclick="eessOpenRestrictModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>', '<?php echo esc_js($student->student_status ?: 'Active'); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                        <span class="dashicons dashicons-lock" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                                    </div>
+                                                    <div>
+                                                        <div style="font-size: 12px; font-weight: 800; color: #991b1b;">تقييد / تعطيل حساب الطالب</div>
+                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">إيقاف صلاحيات الدخول للمنظومة مؤقتاً</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action 2: Password Change Request -->
+                                                <div onclick="eessOpenPasswordRequestModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                        <span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                                    </div>
+                                                    <div>
+                                                        <div style="font-size: 12px; font-weight: 800; color: #1e40af;">إرسال طلب تغيير كلمة المرور</div>
+                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">إلزام الطالب بتعيين كلمة مرور عند الدخول</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action 3: Send Message to Student -->
+                                                <div onclick="eessOpenSendMessageModal(<?php echo $student->id; ?>, '<?php echo esc_js($student->name); ?>')" style="padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; display: flex; align-items: flex-start; gap: 10px; text-align: right;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='transparent'">
+                                                    <div style="width: 30px; height: 32px; border-radius: 8px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                        <span class="dashicons dashicons-email-alt" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                                    </div>
+                                                    <div>
+                                                        <div style="font-size: 12px; font-weight: 800; color: #166534;">إرسال رسالة رسمية للطالب</div>
+                                                        <div style="font-size: 10.5px; color: #64748b; margin-top: 1px; line-height: 1.35;">عرض إشعار إجباري بصفحة الدخول للقراءة</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -638,6 +665,68 @@ $to_num = min($offset + $limit, $total_students_count);
             <div class="sm-modal-body" id="stu_details_content" style="max-height: 70vh; overflow-y: auto;">
                 <!-- Loaded via AJAX -->
             </div>
+        </div>
+    </div>
+
+    <!-- RESTRICT STUDENT ACCOUNT CONFIRMATION MODAL -->
+    <div id="eess-restrict-account-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
+        <div class="sm-modal-content" style="max-width: 480px; border-radius: 20px; padding: 28px 32px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;" dir="rtl">
+            <div style="text-align: center; margin-bottom: 18px;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #fee2e2; color: #dc2626; border: 1px solid #fecdd3; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                    <span class="dashicons dashicons-lock" style="font-size: 24px; width: 24px; height: 24px;"></span>
+                </div>
+                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">تأكيد تقييد / تعطيل حساب الطالب</h3>
+                <p id="eess-restrict-modal-msg" style="margin: 0; font-size: 13px; color: #475569; font-weight: 700; line-height: 1.6;"></p>
+            </div>
+            <input type="hidden" id="eess_restrict_stu_id">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button type="button" onclick="eessConfirmRestrictAccountSubmit()" class="sm-btn" style="background: #dc2626; color: #ffffff; height: 38px; padding: 0 22px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer;">تأكيد تقييد الحساب</button>
+                <button type="button" onclick="document.getElementById('eess-restrict-account-modal').style.display='none'" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REQUEST PASSWORD CHANGE CONFIRMATION MODAL -->
+    <div id="eess-password-request-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
+        <div class="sm-modal-content" style="max-width: 480px; border-radius: 20px; padding: 28px 32px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;" dir="rtl">
+            <div style="text-align: center; margin-bottom: 18px;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                    <span class="dashicons dashicons-key" style="font-size: 24px; width: 24px; height: 24px;"></span>
+                </div>
+                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">إرسال طلب تغيير كلمة المرور</h3>
+                <p id="eess-pass-req-modal-msg" style="margin: 0; font-size: 13px; color: #475569; font-weight: 700; line-height: 1.6;"></p>
+            </div>
+            <input type="hidden" id="eess_pass_req_stu_id">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button type="button" onclick="eessConfirmPasswordRequestSubmit()" class="sm-btn" style="background: #2563eb; color: #ffffff; height: 38px; padding: 0 22px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer;">إرسال الطلب</button>
+                <button type="button" onclick="document.getElementById('eess-password-request-modal').style.display='none'" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEND MESSAGE TO STUDENT MODAL -->
+    <div id="eess-send-message-modal" class="sm-modal-overlay" style="display: none; z-index: 999999;">
+        <div class="sm-modal-content" style="max-width: 520px; border-radius: 20px; padding: 28px 32px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); font-family: 'Cairo', sans-serif;" dir="rtl">
+            <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <span class="dashicons dashicons-email-alt" style="color: #16a34a;"></span>
+                    <span id="eess-send-msg-modal-title">إرسال رسالة رسمية للطالب</span>
+                </h3>
+                <button type="button" onclick="document.getElementById('eess-send-message-modal').style.display='none'" style="background: none; border: none; font-size: 22px; color: #64748b; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="eess-student-direct-message-form">
+                <input type="hidden" id="eess_send_msg_stu_id">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 800; color: #334155; margin-bottom: 6px;">نص الرسالة الرسمية: <span style="color: #dc2626;">*</span></label>
+                    <textarea id="eess_stu_message_text" required rows="4" placeholder="اكتب الرسالة الموجهة للطالب هنا... ستظهر للطالب بصفحة دخوله ويلزم تأكيد قراءتها." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; box-sizing: border-box; font-family: 'Cairo', sans-serif; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="submit" class="sm-btn" style="background: #16a34a; color: #ffffff; height: 38px; padding: 0 22px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer;">إرسال الرسالة</button>
+                    <button type="button" onclick="document.getElementById('eess-send-message-modal').style.display='none'" class="sm-btn" style="background: #f1f5f9; color: #64748b; height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;">إلغاء</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -975,32 +1064,45 @@ $to_num = min($offset + $limit, $total_students_count);
             document.querySelectorAll('.eess-stu-account-menu').forEach(m => m.style.display = 'none');
         });
 
-        window.eessRestrictStudentAccount = function(stuId) {
-            if (!confirm('هل أنت متأكد من تقييد / تعطيل حساب هذا الطالب؟')) return;
+        window.eessOpenRestrictModal = function(stuId, stuName, currentStatus) {
+            document.getElementById('eess_restrict_stu_id').value = stuId;
+            document.getElementById('eess-restrict-modal-msg').innerHTML = `تأكيد تقييد / تعطيل حساب الطالب <strong>"${stuName}"</strong>؟<br><span style="font-size:11.5px; color:#64748b;">حالة الحساب الحالية: (${currentStatus})</span>`;
+            document.getElementById('eess-restrict-account-modal').style.display = 'flex';
+        };
+
+        window.eessConfirmRestrictAccountSubmit = function() {
+            const stuId = document.getElementById('eess_restrict_stu_id').value;
             jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
                 action: 'eess_restrict_student_account',
                 student_id: stuId,
                 nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
             }, function(res) {
+                document.getElementById('eess-restrict-account-modal').style.display = 'none';
                 if (res.success) {
                     if (typeof smShowNotification === 'function') smShowNotification('تم تقييد / تعطيل حساب الطالب بنجاح');
-                    else alert('تم تقييد / تعطيل حساب الطالب بنجاح');
+                    setTimeout(() => location.reload(), 500);
                 } else {
                     alert('خطأ: ' + (res.data || 'فشل تقييد الحساب'));
                 }
             });
         };
 
-        window.eessSendPasswordChangeRequest = function(stuId) {
-            if (!confirm('هل تريد إرسال طلب إجباري لتغيير كلمة المرور عند تسجيل دخول الطالب القادم؟')) return;
+        window.eessOpenPasswordRequestModal = function(stuId, stuName) {
+            document.getElementById('eess_pass_req_stu_id').value = stuId;
+            document.getElementById('eess-pass-req-modal-msg').innerHTML = `تأكيد إصدار وإرسال طلب إجباري لتغيير كلمة المرور للطالب <strong>"${stuName}"</strong>؟<br><span style="font-size:11.5px; color:#64748b;">سيُلزم الطالب بتعيين كلمة مرور جديدة فور تسجيل الدخول القادم.</span>`;
+            document.getElementById('eess-password-request-modal').style.display = 'flex';
+        };
+
+        window.eessConfirmPasswordRequestSubmit = function() {
+            const stuId = document.getElementById('eess_pass_req_stu_id').value;
             jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
                 action: 'eess_request_student_password_change',
                 student_id: stuId,
                 nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
             }, function(res) {
+                document.getElementById('eess-password-request-modal').style.display = 'none';
                 if (res.success) {
                     if (typeof smShowNotification === 'function') smShowNotification('تم إصدار وإرسال طلب تغيير كلمة المرور بنجاح');
-                    else alert('تم إصدار وإرسال طلب تغيير كلمة المرور بنجاح');
                 } else {
                     alert('خطأ: ' + (res.data || 'فشل إرسال الطلب'));
                 }
@@ -1008,23 +1110,36 @@ $to_num = min($offset + $limit, $total_students_count);
         };
 
         window.eessOpenSendMessageModal = function(stuId, stuName) {
-            const msg = prompt(`أدخل نص الرسالة الموجهة للطالب "${stuName}":`);
-            if (!msg || !msg.trim()) return;
-
-            jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
-                action: 'eess_send_message_to_student',
-                student_id: stuId,
-                message: msg.trim(),
-                nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
-            }, function(res) {
-                if (res.success) {
-                    if (typeof smShowNotification === 'function') smShowNotification('تم إرسال الرسالة للطالب بنجاح وتوثيقها بصفحة دخوله');
-                    else alert('تم إرسال الرسالة للطالب بنجاح');
-                } else {
-                    alert('خطأ: ' + (res.data || 'فشل إرسال الرسالة'));
-                }
-            });
+            document.getElementById('eess_send_msg_stu_id').value = stuId;
+            document.getElementById('eess-send-msg-modal-title').innerText = `إرسال رسالة رسمية للطالب (${stuName})`;
+            document.getElementById('eess_stu_message_text').value = '';
+            document.getElementById('eess-send-message-modal').style.display = 'flex';
         };
+
+        const msgForm = document.getElementById('eess-student-direct-message-form');
+        if (msgForm) {
+            msgForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const stuId = document.getElementById('eess_send_msg_stu_id').value;
+                const msgText = document.getElementById('eess_stu_message_text').value.trim();
+
+                if (!msgText) return;
+
+                jQuery.post('<?php echo admin_url("admin-ajax.php"); ?>', {
+                    action: 'eess_send_message_to_student',
+                    student_id: stuId,
+                    message: msgText,
+                    nonce: '<?php echo wp_create_nonce("sm_admin_action"); ?>'
+                }, function(res) {
+                    document.getElementById('eess-send-message-modal').style.display = 'none';
+                    if (res.success) {
+                        if (typeof smShowNotification === 'function') smShowNotification('تم إرسال الرسالة للطالب بنجاح وتوثيقها بصفحة دخوله');
+                    } else {
+                        alert('خطأ: ' + (res.data || 'فشل إرسال الرسالة'));
+                    }
+                });
+            });
+        }
     })();
     </script>
 </div>
