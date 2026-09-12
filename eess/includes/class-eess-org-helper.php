@@ -633,12 +633,32 @@ class EESS_Org_Helper {
     }
 
     /**
+     * Ensures all student records have a unique verification token
+     */
+    public static function ensure_student_verification_tokens() {
+        global $wpdb;
+        $tbl_stu = "{$wpdb->prefix}sm_students";
+
+        $check_vt = $wpdb->get_results("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tbl_stu' AND COLUMN_NAME = 'verification_token'");
+        if (empty($check_vt)) {
+            $wpdb->query("ALTER TABLE {$tbl_stu} ADD COLUMN verification_token varchar(100) DEFAULT NULL, ADD KEY verification_token (verification_token)");
+        }
+
+        $untokened = $wpdb->get_results("SELECT id FROM {$tbl_stu} WHERE verification_token IS NULL OR verification_token = ''");
+        foreach ($untokened as $s) {
+            $token = 'EESS-VER-' . strtoupper(bin2hex(random_bytes(8)));
+            $wpdb->update($tbl_stu, array('verification_token' => $token), array('id' => $s->id));
+        }
+    }
+
+    /**
      * Seeds initial institutions and central structure
      */
     public static function seed_default_structure() {
         self::seed_mandatory_institutions();
         self::seed_and_migrate_central_org_structure();
         self::seed_official_evaluation_models();
+        self::ensure_student_verification_tokens();
     }
 
     /**
