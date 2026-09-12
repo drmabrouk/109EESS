@@ -8257,52 +8257,86 @@ class SM_Public {
         }
     }
 
+    public function eess_generate_barcode_svg($data) {
+        return $this->eess_generate_qr_code_svg($data);
+    }
+
     private function eess_generate_qr_code_svg($data) {
-        $hash = md5($data);
-        $size = 21;
-        $modules = array_fill(0, $size, array_fill(0, $size, false));
+        $text = trim((string)$data);
+        if ($text === '') $text = 'STU000';
 
-        $draw_finder = function(&$m, $top, $left) {
-            for ($r = 0; $r < 7; $r++) {
-                for ($c = 0; $c < 7; $c++) {
-                    if ($r == 0 || $r == 6 || $c == 0 || $c == 6 || ($r >= 2 && $r <= 4 && $c >= 2 && $c <= 4)) {
-                        $m[$top + $r][$left + $c] = true;
-                    }
-                }
-            }
-        };
+        // Official 107 Code 128 pattern table (0-106)
+        $patterns = array(
+            0 => "212222", 1 => "222122", 2 => "222221", 3 => "121223", 4 => "121322",
+            5 => "131222", 6 => "122213", 7 => "122312", 8 => "132212", 9 => "221213",
+            10 => "221312", 11 => "231212", 12 => "112232", 13 => "122132", 14 => "122231",
+            15 => "113222", 16 => "123122", 17 => "123221", 18 => "223211", 19 => "221132",
+            20 => "221231", 21 => "213212", 22 => "223112", 23 => "312131", 24 => "311222",
+            25 => "321122", 26 => "321221", 27 => "312212", 28 => "322112", 29 => "322211",
+            30 => "212123", 31 => "212321", 32 => "232121", 33 => "111323", 34 => "131123",
+            35 => "131321", 36 => "112313", 37 => "132113", 38 => "132311", 39 => "211313",
+            40 => "231113", 41 => "231311", 42 => "112133", 43 => "112331", 44 => "132131",
+            45 => "113123", 46 => "113321", 47 => "133121", 48 => "313121", 49 => "211331",
+            50 => "231131", 51 => "213113", 52 => "213311", 53 => "213131", 54 => "311123",
+            55 => "311321", 56 => "331121", 57 => "312113", 58 => "312311", 59 => "332111",
+            60 => "314111", 61 => "221411", 62 => "411131", 63 => "111224", 64 => "111422",
+            65 => "121124", 66 => "121421", 67 => "141122", 68 => "141221", 69 => "112214",
+            70 => "112412", 71 => "122114", 72 => "122411", 73 => "142112", 74 => "142211",
+            75 => "241211", 76 => "221114", 77 => "411112", 78 => "421111", 79 => "214112",
+            80 => "211214", 81 => "211412", 82 => "231112", 83 => "211132", 84 => "211231",
+            85 => "211321", 86 => "221131", 87 => "221211", 88 => "231121", 89 => "211114",
+            90 => "211411", 91 => "211211", 92 => "211124", 93 => "211142", 94 => "211241",
+            95 => "211421", 96 => "233111", 97 => "211133", 98 => "241112", 99 => "134111",
+            100 => "111242", 101 => "121142", 102 => "121241", 103 => "211412", 104 => "211214",
+            105 => "211232", 106 => "2331112"
+        );
 
-        $draw_finder($modules, 0, 0);
-        $draw_finder($modules, 0, $size - 7);
-        $draw_finder($modules, $size - 7, 0);
+        $symbol_sequence = array(104);
+        $checksum = 104;
 
-        for ($i = 8; $i < $size - 8; $i++) {
-            $modules[6][$i] = ($i % 2 == 0);
-            $modules[$i][6] = ($i % 2 == 0);
+        for ($i = 0; $i < strlen($text); $i++) {
+            $char = $text[$i];
+            $ascii = ord($char);
+            $val = $ascii - 32;
+            if ($val < 0 || $val > 95) $val = 0;
+            $symbol_sequence[] = $val;
+            $checksum += $val * ($i + 1);
         }
 
-        $bit_idx = 0;
-        for ($r = 0; $r < $size; $r++) {
-            for ($c = 0; $c < $size; $c++) {
-                if (($r < 8 && $c < 8) || ($r < 8 && $c >= $size - 8) || ($r >= $size - 8 && $c < 8) || $r == 6 || $c == 6) {
-                    continue;
+        $check_symbol = $checksum % 103;
+        $symbol_sequence[] = $check_symbol;
+        $symbol_sequence[] = 106;
+
+        $modules = array();
+        foreach ($symbol_sequence as $sym_idx) {
+            $pat = $patterns[$sym_idx];
+            $is_bar = true;
+            for ($p = 0; $p < strlen($pat); $p++) {
+                $w = intval($pat[$p]);
+                for ($b = 0; $b < $w; $b++) {
+                    $modules[] = $is_bar ? 1 : 0;
                 }
-                $hex_char = $hash[$bit_idx % strlen($hash)];
-                $bit_val = (hexdec($hex_char) + $r * 3 + $c * 7) % 2 == 0;
-                $modules[$r][$c] = $bit_val;
-                $bit_idx++;
+                $is_bar = !$is_bar;
             }
         }
 
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $size . ' ' . $size . '" width="100%" height="100%" shape-rendering="crispEdges">';
-        $svg .= '<rect width="' . $size . '" height="' . $size . '" fill="#ffffff"/>';
-        for ($r = 0; $r < $size; $r++) {
-            for ($c = 0; $c < $size; $c++) {
-                if ($modules[$r][$c]) {
-                    $svg .= '<rect x="' . $c . '" y="' . $r . '" width="1" height="1" fill="#0f172a"/>';
-                }
+        $quiet = 10;
+        $bar_width = 2;
+        $height = 50;
+        $total_modules = count($modules) + ($quiet * 2);
+        $width = $total_modules * $bar_width;
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '" width="100%" height="100%" shape-rendering="crispEdges">';
+        $svg .= '<rect width="' . $width . '" height="' . $height . '" fill="#ffffff"/>';
+
+        $x = $quiet * $bar_width;
+        foreach ($modules as $m) {
+            if ($m === 1) {
+                $svg .= '<rect x="' . $x . '" y="0" width="' . $bar_width . '" height="' . $height . '" fill="#0f172a"/>';
             }
+            $x += $bar_width;
         }
+
         $svg .= '</svg>';
         return $svg;
     }
