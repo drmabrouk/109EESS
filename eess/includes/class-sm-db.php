@@ -534,17 +534,26 @@ class SM_DB {
         $clean_code = trim((string)$code);
         if ($clean_code === '') return null;
 
+        // If URL scanned, extract token parameter value
+        if (preg_match('/[?&]code=([^&]+)/i', $clean_code, $matches)) {
+            $clean_code = urldecode($matches[1]);
+        }
+
         $scope_filter = class_exists('EESS_Org_Helper') ? EESS_Org_Helper::filter_students_query() : ' 1=1 ';
 
-        // Priority 1: Match Student Code (Official Barcode Identity)
+        // Priority 1: Match Verification Token
+        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE verification_token = %s AND $scope_filter LIMIT 1", $clean_code));
+        if ($student) return $student;
+
+        // Priority 2: Match Student Code (Official Barcode Identity)
         $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE student_code = %s AND $scope_filter LIMIT 1", $clean_code));
         if ($student) return $student;
 
-        // Priority 2: Match National ID
+        // Priority 3: Match National ID
         $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE national_id = %s AND $scope_filter LIMIT 1", $clean_code));
         if ($student) return $student;
 
-        // Priority 3: Match Internal ID
+        // Priority 4: Match Internal ID
         if (is_numeric($clean_code)) {
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE id = %d AND $scope_filter LIMIT 1", intval($clean_code)));
         }

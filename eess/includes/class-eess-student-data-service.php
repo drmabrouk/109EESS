@@ -290,6 +290,9 @@ class EESS_Student_Data_Service {
                 }
                 $fields['student_code'] = $generated_code;
             }
+            if (empty($fields['verification_token'])) {
+                $fields['verification_token'] = 'EESS-VER-' . strtoupper(bin2hex(random_bytes(8)));
+            }
             $inserted = $wpdb->insert("{$wpdb->prefix}sm_students", $fields);
             if ($inserted === false || !$wpdb->insert_id) {
                 return new WP_Error('db_insert_failed', 'فشل إضافة الطالب في قاعدة البيانات: ' . $wpdb->last_error);

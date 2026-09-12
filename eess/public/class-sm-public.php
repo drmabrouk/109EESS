@@ -352,6 +352,7 @@ class SM_Public {
         add_shortcode('sm_login', array($this, 'shortcode_login'));
         add_shortcode('sm_admin', array($this, 'shortcode_admin_dashboard'));
         add_shortcode('sm_class_attendance', array($this, 'shortcode_class_attendance'));
+        add_shortcode('verify', array($this, 'shortcode_verify'));
     }
 
     public function eess_render_mobile_lesson_prep() {
@@ -4556,6 +4557,115 @@ class SM_Public {
         return ob_get_clean();
     }
 
+    public function shortcode_verify() {
+        global $wpdb;
+        $code = sanitize_text_field($_GET['code'] ?? ($_GET['token'] ?? ''));
+
+        $student = null;
+        if (!empty($code)) {
+            $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE verification_token = %s OR student_code = %s OR national_id = %s LIMIT 1", $code, $code, $code));
+        }
+
+        $school_info = SM_Settings::get_school_info();
+        $system_logo = !empty($school_info['school_logo']) ? $school_info['school_logo'] : (!empty($school_info['logo_url']) ? $school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
+
+        ob_start();
+        ?>
+        <div class="eess-public-verify-container" dir="rtl" style="font-family: 'Cairo', sans-serif; max-width: 520px; margin: 30px auto; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15); overflow: hidden; box-sizing: border-box;">
+            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 24px 20px; text-align: center; border-bottom: 3px solid #dc2626; position: relative;">
+                <img src="<?php echo esc_url($system_logo); ?>" alt="EESS Logo" style="height: 50px; width: auto; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display='none'">
+                <h2 style="margin: 0; font-size: 18px; font-weight: 900; color: #ffffff; font-family: 'Cairo', sans-serif;">خدمة التحقق الرقمي من هوية الطالب</h2>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: 700; margin-top: 4px;">An Official Verification Service via shola.eess.online</div>
+            </div>
+
+            <div style="padding: 24px; box-sizing: border-box;">
+                <?php if ($student):
+                    $inst_obj = $student->institution_id ? EESS_Org_Helper::get_institution_by_id($student->institution_id) : null;
+                    $sch_obj  = $student->school_id ? EESS_Org_Helper::get_school_by_id($student->school_id) : null;
+                    $s_name   = $inst_obj ? $inst_obj->name : ($sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مؤسسة الشعلة التعليمية'));
+
+                    $raw_status = strtolower($student->student_status ?: ($student->enrollment_status ?: 'active'));
+                    $status_badge_bg = '#dcfce7';
+                    $status_badge_color = '#15803d';
+                    $status_badge_border = '#86efac';
+                    $status_title = 'VALID — بطاقة وهوية طالب معتمدة';
+                    $status_sub = 'تم التحقق من صحة وقانونية البيانات مباشرة من المنظومة المركزية.';
+
+                    if ($raw_status === 'suspended' || $raw_status === 'restricted' || $raw_status === 'موقوف') {
+                        $status_badge_bg = '#fef3c7';
+                        $status_badge_color = '#b45309';
+                        $status_badge_border = '#fde68a';
+                        $status_title = 'SUSPENDED — البطاقة موقوفة مؤقتاً';
+                        $status_sub = 'يرجى مراجعة إدارة الشؤون الطلابية والمدرسية.';
+                    } elseif ($raw_status === 'expired' || $raw_status === 'منتهي') {
+                        $status_badge_bg = '#ffedd5';
+                        $status_badge_color = '#c2410c';
+                        $status_badge_border = '#fed7aa';
+                        $status_title = 'EXPIRED — بطاقة منتهية الصلاحية';
+                        $status_sub = 'يرجى تحديث بيانات البطاقة للعام الأكاديمي الحالي.';
+                    } elseif ($raw_status === 'revoked' || $raw_status === 'inactive' || $raw_status === 'ملغى') {
+                        $status_badge_bg = '#fee2e2';
+                        $status_badge_color = '#b91c1c';
+                        $status_badge_border = '#fca5a5';
+                        $status_title = 'REVOKED — بطاقة ملغاة';
+                        $status_sub = 'تم إلغاء اعتماد هذه البطاقة رسمياً.';
+                    }
+
+                    $has_photo = !empty($student->photo_url);
+                    $clean_class = trim(preg_replace('/^(الصف|صف|Grade|grade)\s*:?\s*/u', '', $student->class_name ?: ''));
+                    $clean_section = trim(preg_replace('/^(الشعبة|شعبة|Section|section)\s*:?\s*/u', '', $student->section ?: 'أ'));
+                ?>
+                    <div style="background: <?php echo $status_badge_bg; ?>; border: 1.5px solid <?php echo $status_badge_border; ?>; border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 15px; font-weight: 900; color: <?php echo $status_badge_color; ?>; margin-bottom: 4px; display: inline-flex; align-items: center; gap: 6px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <span><?php echo esc_html($status_title); ?></span>
+                        </div>
+                        <div style="font-size: 11.5px; font-weight: 700; color: #475569; border-top: 1px solid rgba(0,0,0,0.08); margin-top: 8px; padding-top: 8px;"><?php echo esc_html($status_sub); ?></div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+                        <div style="width: 80px; height: 100px; border-radius: 10px; border: 2px solid #0f172a; overflow: hidden; flex-shrink: 0; background: #cbd5e1; display: flex; align-items: center; justify-content: center;">
+                            <?php if ($has_photo): ?>
+                                <img src="<?php echo esc_url($student->photo_url); ?>" alt="Student Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php else: ?>
+                                <span class="dashicons dashicons-admin-users" style="font-size: 40px; color: #64748b;"></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 900; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px;"><?php echo esc_html($student->name); ?></h3>
+                            <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                                <span style="color: #64748b;">كود الطالب:</span> <strong style="color: #881337; font-weight: 900;"><?php echo esc_html($student->student_code ?: ('STU-' . $student->id)); ?></strong>
+                            </div>
+                            <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                                <span style="color: #64748b;">المؤسسة/المدرسة:</span> <?php echo esc_html($s_name); ?>
+                            </div>
+                            <div style="font-size: 12px; font-weight: 700; color: #334155;">
+                                <span style="color: #64748b;">الصف والشعبة:</span> الصف <?php echo esc_html($clean_class ?: 'الأول'); ?> (شعبة <?php echo esc_html($clean_section ?: 'أ'); ?>)
+                            </div>
+                        </div>
+                    </div>
+
+                <?php else: ?>
+                    <div style="background: #fee2e2; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 16px; font-weight: 900; color: #991b1b; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 6px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <span>INVALID — رمز التحقق غير صحيح</span>
+                        </div>
+                        <div style="font-size: 12px; font-weight: 700; color: #7f1d1d;">رمز التحقق الرقمي الممسوح غير مسجل في منظومة EESS أو تم إلغاؤه.</div>
+                    </div>
+                <?php endif; ?>
+
+                <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 10px;">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 12px;">© 2026 Educational Electronic Systems Services — shola.eess.online</div>
+                    <a href="<?php echo esc_url(wp_login_url()); ?>" style="display: inline-block; padding: 8px 18px; background: #0f172a; color: #ffffff !important; border-radius: 10px; font-size: 11.5px; font-weight: 800; text-decoration: none; transition: background 0.2s;">🔒 تسجيل دخول الكادر الإداري والتعليمي</a>
+                </div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
     public function ajax_save_attendance() {
         if (!wp_verify_nonce($_POST['nonce'], 'sm_attendance_action')) wp_send_json_error('Security check failed');
 
@@ -8261,6 +8371,219 @@ class SM_Public {
         return $this->eess_generate_qr_code_svg($data);
     }
 
+    private static function eess_gf_mul($x, $y) {
+        if ($x === 0 || $y === 0) return 0;
+        static $exp = null, $log = null;
+        if ($exp === null) {
+            $exp = array_fill(0, 512, 0);
+            $log = array_fill(0, 256, 0);
+            $x_val = 1;
+            for ($i = 0; $i < 255; $i++) {
+                $exp[$i] = $x_val;
+                $exp[$i + 255] = $x_val;
+                $log[$x_val] = $i;
+                $x_val <<= 1;
+                if ($x_val & 256) $x_val ^= 285;
+            }
+        }
+        return $exp[$log[$x] + $log[$y]];
+    }
+
+    private static function eess_rs_encode($data, $nsym) {
+        static $exp = null;
+        if ($exp === null) {
+            $exp = array_fill(0, 512, 0);
+            $x_val = 1;
+            for ($i = 0; $i < 255; $i++) {
+                $exp[$i] = $x_val;
+                $exp[$i + 255] = $x_val;
+                $x_val <<= 1;
+                if ($x_val & 256) $x_val ^= 285;
+            }
+        }
+        $gen = array(1);
+        for ($i = 0; $i < $nsym; $i++) {
+            $g_next = array_fill(0, count($gen) + 1, 0);
+            $root = $exp[$i];
+            for ($j = 0; $j < count($gen); $j++) {
+                $g_next[$j] ^= self::eess_gf_mul($gen[$j], $root);
+                $g_next[$j + 1] ^= $gen[$j];
+            }
+            $gen = $g_next;
+        }
+
+        $res = array_merge($data, array_fill(0, $nsym, 0));
+        for ($i = 0; $i < count($data); $i++) {
+            $coef = $res[$i];
+            if ($coef !== 0) {
+                for ($j = 0; $j < count($gen); $j++) {
+                    $res[$i + $j] ^= self::eess_gf_mul($gen[$j], $coef);
+                }
+            }
+        }
+        return array_slice($res, count($data));
+    }
+
+    public function eess_generate_2d_qr_svg($data) {
+        $url = trim((string)$data);
+        if ($url === '') $url = 'https://shola.eess.online/verify/';
+
+        $size = 33;
+        $data_capacity = 80;
+        $ec_len = 20;
+
+        $bits = '0100' . sprintf('%08b', strlen($url));
+        for ($i = 0; $i < strlen($url); $i++) {
+            $bits .= sprintf('%08b', ord($url[$i]));
+        }
+
+        $total_data_bits = $data_capacity * 8;
+        if (strlen($bits) < $total_data_bits) {
+            $bits .= substr('0000', 0, min(4, $total_data_bits - strlen($bits)));
+        }
+        while (strlen($bits) % 8 !== 0) {
+            $bits .= '0';
+        }
+
+        $pad_bytes = array(236, 17);
+        $pad_idx = 0;
+        while (strlen($bits) < $total_data_bits) {
+            $bits .= sprintf('%08b', $pad_bytes[$pad_idx]);
+            $pad_idx = ($pad_idx + 1) % 2;
+        }
+
+        $data_bytes = array();
+        for ($i = 0; $i < strlen($bits); $i += 8) {
+            $data_bytes[] = bindec(substr($bits, $i, 8));
+        }
+
+        $ec_bytes = self::eess_rs_encode($data_bytes, $ec_len);
+        $all_bytes = array_merge($data_bytes, $ec_bytes);
+
+        $final_bits = '';
+        foreach ($all_bytes as $b) {
+            $final_bits .= sprintf('%08b', $b);
+        }
+
+        $matrix = array_fill(0, $size, array_fill(0, $size, null));
+
+        $draw_finder = function(&$m, $r, $c) {
+            for ($i = -1; $i <= 7; $i++) {
+                for ($j = -1; $j <= 7; $j++) {
+                    $row = $r + $i;
+                    $col = $c + $j;
+                    if ($row >= 0 && $row < 33 && $col >= 0 && $col < 33) {
+                        if ($i >= 0 && $i <= 6 && $j >= 0 && $j <= 6) {
+                            if ($i === 0 || $i === 6 || $j === 0 || $j === 6 || ($i >= 2 && $i <= 4 && $j >= 2 && $j <= 4)) {
+                                $m[$row][$col] = 1;
+                            } else {
+                                $m[$row][$col] = 0;
+                            }
+                        } else {
+                            $m[$row][$col] = 0;
+                        }
+                    }
+                }
+            }
+        };
+
+        $draw_finder($matrix, 0, 0);
+        $draw_finder($matrix, 0, $size - 7);
+        $draw_finder($matrix, $size - 7, 0);
+
+        for ($i = -2; $i <= 2; $i++) {
+            for ($j = -2; $j <= 2; $j++) {
+                $r = 24 + $i;
+                $c = 24 + $j;
+                if ($matrix[$r][$c] === null) {
+                    if (abs($i) === 2 || abs($j) === 2 || ($i === 0 && $j === 0)) {
+                        $matrix[$r][$c] = 1;
+                    } else {
+                        $matrix[$r][$c] = 0;
+                    }
+                }
+            }
+        }
+
+        for ($i = 8; $i < $size - 8; $i++) {
+            if ($matrix[6][$i] === null) $matrix[6][$i] = ($i % 2 === 0) ? 1 : 0;
+            if ($matrix[$i][6] === null) $matrix[$i][6] = ($i % 2 === 0) ? 1 : 0;
+        }
+
+        $matrix[25][8] = 1;
+
+        for ($i = 0; $i < 9; $i++) {
+            if ($matrix[8][$i] === null) $matrix[8][$i] = 0;
+            if ($matrix[$i][8] === null) $matrix[$i][8] = 0;
+            if ($matrix[8][$size - 1 - $i] === null) $matrix[8][$size - 1 - $i] = 0;
+            if ($matrix[$size - 1 - $i][8] === null) $matrix[$size - 1 - $i][8] = 0;
+        }
+
+        for ($r = 0; $r < 6; $r++) {
+            for ($c = 0; $c < 3; $c++) {
+                if ($matrix[$size - 11 + $c][$r] === null) $matrix[$size - 11 + $c][$r] = 0;
+                if ($matrix[$r][$size - 11 + $c] === null) $matrix[$r][$size - 11 + $c] = 0;
+            }
+        }
+
+        $bit_pos = 0;
+        $num_bits = strlen($final_bits);
+        $col = $size - 1;
+        $up = true;
+
+        while ($col > 0) {
+            if ($col === 6) $col--;
+            $row_start = $up ? ($size - 1) : 0;
+            $row_end   = $up ? -1 : $size;
+            $row_step  = $up ? -1 : 1;
+
+            for ($row = $row_start; $row !== $row_end; $row += $row_step) {
+                for ($c_off = 0; $c_off < 2; $c_off++) {
+                    $c = $col - $c_off;
+                    if ($matrix[$row][$c] === null) {
+                        $bit = ($bit_pos < $num_bits) ? intval($final_bits[$bit_pos]) : 0;
+                        $bit_pos++;
+                        if (($row + $c) % 2 === 0) {
+                            $bit ^= 1;
+                        }
+                        $matrix[$row][$c] = $bit;
+                    }
+                }
+            }
+            $col -= 2;
+            $up = !$up;
+        }
+
+        $fmt_str = "111011111000100";
+        $fmt_coords = array(
+            array(8,0), array(8,1), array(8,2), array(8,3), array(8,4), array(8,5), array(8,7), array(8,8),
+            array(7,8), array(5,8), array(4,8), array(3,8), array(2,8), array(1,8), array(0,8)
+        );
+        for ($i = 0; $i < 15; $i++) {
+            $matrix[$fmt_coords[$i][0]][$fmt_coords[$i][1]] = intval($fmt_str[$i]);
+        }
+
+        $fmt_coords_2 = array(
+            array(32,8), array(31,8), array(30,8), array(29,8), array(28,8), array(27,8), array(26,8),
+            array(8,25), array(8,26), array(8,27), array(8,28), array(8,29), array(8,30), array(8,31), array(8,32)
+        );
+        for ($i = 0; $i < 15; $i++) {
+            $matrix[$fmt_coords_2[$i][0]][$fmt_coords_2[$i][1]] = intval($fmt_str[$i]);
+        }
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $size . ' ' . $size . '" width="100%" height="100%" shape-rendering="crispEdges">';
+        $svg .= '<rect width="' . $size . '" height="' . $size . '" fill="#ffffff"/>';
+        for ($r = 0; $r < $size; $r++) {
+            for ($c = 0; $c < $size; $c++) {
+                if ($matrix[$r][$c] === 1) {
+                    $svg .= '<rect x="' . $c . '" y="' . $r . '" width="1" height="1" fill="#0f172a"/>';
+                }
+            }
+        }
+        $svg .= '</svg>';
+        return $svg;
+    }
+
     private function eess_generate_qr_code_svg($data) {
         $text = trim((string)$data);
         if ($text === '') $text = 'STU000';
@@ -9613,8 +9936,9 @@ class SM_Public {
                         $s_logo   = ($inst_obj && !empty($inst_obj->logo_url)) ? esc_url($inst_obj->logo_url) : (($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo);
 
                         $serial = !empty($st->student_code) ? $st->student_code : ('STU-' . $st->id);
-                        $barcode_identity = $serial;
-                        $qr_svg = $this->eess_generate_qr_code_svg($barcode_identity);
+                        $token = !empty($st->verification_token) ? $st->verification_token : ('EESS-VER-' . strtoupper(dechex($st->id)));
+                        $verify_url = 'https://shola.eess.online/verify/?code=' . urlencode($token);
+                        $qr_svg = $this->eess_generate_2d_qr_svg($verify_url);
                         $has_photo = !empty($st->photo_url);
                         $photo_src = $has_photo ? esc_url($st->photo_url) : '';
 

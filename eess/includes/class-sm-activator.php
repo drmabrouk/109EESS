@@ -20,6 +20,7 @@ class SM_Activator {
             nationality varchar(100) DEFAULT '',
             registration_date date DEFAULT NULL,
             student_code varchar(50),
+            verification_token varchar(100) DEFAULT NULL,
             parent_user_id bigint(20) DEFAULT NULL,
             teacher_id bigint(20) DEFAULT NULL,
             photo_url varchar(255) DEFAULT '',
@@ -52,6 +53,7 @@ class SM_Activator {
             payment_status varchar(100) DEFAULT 'Pending',
             PRIMARY KEY  (id),
             KEY student_code (student_code),
+            KEY verification_token (verification_token),
             KEY teacher_id (teacher_id),
             KEY sort_order (sort_order),
             KEY institution_id (institution_id),
@@ -692,6 +694,10 @@ class SM_Activator {
             'attendance' => array(
                 'title'   => 'تسجيل حضور الفصول',
                 'content' => '[sm_class_attendance]',
+            ),
+            'verify' => array(
+                'title'   => 'التحقق الرقمي من بطاقات الطلاب',
+                'content' => '[verify]',
             ),
         );
 
