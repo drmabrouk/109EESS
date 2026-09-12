@@ -651,8 +651,11 @@ class SM_Activator {
         self::create_default_pages();
         self::cleanup_legacy_pages();
         self::migrate_old_roles();
-        self::seed_default_subjects();
-        self::translate_subjects_to_arabic();
+
+        // Delegate structure seeding and migration to EESS_Org_Helper
+        if (class_exists('EESS_Org_Helper')) {
+            EESS_Org_Helper::seed_default_structure();
+        }
     }
 
     private static function cleanup_legacy_pages() {

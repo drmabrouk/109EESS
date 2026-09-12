@@ -130,18 +130,9 @@
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الصف الدراسي (Grade): <span style="color: #dc2626;">*</span></label>
                             <select name="class" id="edit_stu_class" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                                <option value="الصف الأول">الصف الأول</option>
-                                <option value="الصف الثاني">الصف الثاني</option>
-                                <option value="الصف الثالث">الصف الثالث</option>
-                                <option value="الصف الرابع">الصف الرابع</option>
-                                <option value="الصف الخامس">الصف الخامس</option>
-                                <option value="الصف السادس">الصف السادس</option>
-                                <option value="الصف السابع">الصف السابع</option>
-                                <option value="الصف الثامن">الصف الثامن</option>
-                                <option value="الصف التاسع">الصف التاسع</option>
-                                <option value="الصف العاشر">الصف العاشر</option>
-                                <option value="الصف الحادي عشر">الصف الحادي عشر</option>
-                                <option value="الصف الثاني عشر">الصف الثاني عشر</option>
+                                <?php foreach (EESS_Org_Helper::get_official_grades() as $g_item): ?>
+                                    <option value="<?php echo esc_attr($g_item['name']); ?>"><?php echo esc_html($g_item['name']); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="sm-form-group">

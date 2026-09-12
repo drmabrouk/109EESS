@@ -3,8 +3,8 @@ if (!defined('ABSPATH')) exit;
 
 $institutions = class_exists('EESS_Org_Helper') ? EESS_Org_Helper::get_institutions() : array();
 $all_schools  = class_exists('EESS_Org_Helper') ? EESS_Org_Helper::get_all_schools() : array();
-$subjects     = class_exists('SM_Settings') ? SM_Settings::get_subjects() : array();
-$departments  = class_exists('SM_Settings') ? SM_Settings::get_departments() : array();
+$subjects     = class_exists('EESS_Org_Helper') ? array_column(EESS_Org_Helper::get_official_subjects(), 'name', 'code') : array();
+$departments  = class_exists('EESS_Org_Helper') ? array_column(EESS_Org_Helper::get_official_departments(), 'name', 'code') : array();
 ?>
 
 <!-- UNIFIED USER & EMPLOYEE MANAGEMENT MODAL -->
@@ -223,20 +223,12 @@ $departments  = class_exists('SM_Settings') ? SM_Settings::get_departments() : a
                             <div id="u_grades_wrapper">
                                 <label style="display: block; font-size: 12px; font-weight: 800; color: #334155; margin-bottom: 6px;">الصفوف الدراسية المسندة (كبسولات متعددة):</label>
                                 <div style="display: flex; flex-wrap: wrap; gap: 6px; background: #ffffff; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; max-height: 120px; overflow-y: auto;">
-                                    <label class="u-grade-capsule-label" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 11.5px; font-weight: 700; color: #334155; cursor: pointer; user-select: none;">
-                                        <input type="checkbox" name="assigned_grades[]" value="الروضة الأولى" onchange="eessToggleGradeCapsule(this)" style="display: none;">
-                                        <span>الروضة الأولى (KG1)</span>
-                                    </label>
-                                    <label class="u-grade-capsule-label" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 11.5px; font-weight: 700; color: #334155; cursor: pointer; user-select: none;">
-                                        <input type="checkbox" name="assigned_grades[]" value="الروضة الثانية" onchange="eessToggleGradeCapsule(this)" style="display: none;">
-                                        <span>الروضة الثانية (KG2)</span>
-                                    </label>
-                                    <?php for ($g = 1; $g <= 12; $g++): ?>
+                                    <?php foreach (EESS_Org_Helper::get_official_grades() as $g_item): ?>
                                         <label class="u-grade-capsule-label" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 11.5px; font-weight: 700; color: #334155; cursor: pointer; user-select: none;">
-                                            <input type="checkbox" name="assigned_grades[]" value="الصف <?php echo $g; ?>" onchange="eessToggleGradeCapsule(this)" style="display: none;">
-                                            <span>الصف <?php echo $g; ?></span>
+                                            <input type="checkbox" name="assigned_grades[]" value="<?php echo esc_attr($g_item['name']); ?>" onchange="eessToggleGradeCapsule(this)" style="display: none;">
+                                            <span><?php echo esc_html($g_item['name']); ?></span>
                                         </label>
-                                    <?php endfor; ?>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
