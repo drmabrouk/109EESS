@@ -9872,36 +9872,44 @@ class SM_Public {
     public function ajax_save_evaluation_submission() {
         if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
 
-        $evaluator_id = get_current_user_id();
-        $employee_id = intval($_POST['employee_id'] ?? 0);
-        $template_id = intval($_POST['template_id'] ?? 0);
+        $evaluator_id  = get_current_user_id();
+        $employee_id   = intval($_POST['employee_id'] ?? 0);
         $academic_year = sanitize_text_field($_POST['academic_year'] ?? '2025/2026');
-        $category_name = sanitize_text_field($_POST['category_name'] ?? 'تقييم الانضباط والسلوك');
-        $comments = sanitize_textarea_field($_POST['comments'] ?? '');
+        $comments      = sanitize_textarea_field($_POST['comments'] ?? '');
+
+        // Scores array submitted per model: [1 => score_1, 2 => score_2, 3 => score_3, 4 => score_4]
+        $scores_raw = $_POST['model_scores'] ?? array();
         $answers_raw = $_POST['answers'] ?? array();
 
-        if ($employee_id <= 0 || empty($answers_raw)) {
-            wp_send_json_error('يرجى اختيار الموظف والإجابة على أسئلة التقييم.');
+        if ($employee_id <= 0 || empty($scores_raw)) {
+            wp_send_json_error('يرجى اختيار الموظف ورصد درجات أسئلة التقييم.');
         }
 
-        $total_score = 0;
-        $max_total = 0;
-        $clean_answers = array();
+        $gen1 = floatval($scores_raw[1] ?? 0);
+        $gen2 = floatval($scores_raw[2] ?? 0);
+        $gen3 = floatval($scores_raw[3] ?? 0);
+        $spec = isset($scores_raw[4]) ? floatval($scores_raw[4]) : null;
 
-        foreach ($answers_raw as $q_id => $a_val) {
-            $score = floatval($a_val['score'] ?? 0);
-            $q_text = sanitize_text_field($a_val['question_text'] ?? '');
-            $total_score += $score;
-            $max_total += 10;
-            $clean_answers[] = array(
-                'question_id' => $q_id,
-                'question_text' => $q_text,
-                'score' => $score,
-                'max' => 10
-            );
+        $general_score = round(($gen1 + $gen2 + $gen3) / 3, 1);
+
+        if ($spec !== null) {
+            $final_score = round(($general_score * 0.60) + ($spec * 0.40), 1);
+        } else {
+            $final_score = $general_score;
         }
 
-        $average_pct = $max_total > 0 ? round(($total_score / $max_total) * 100, 1) : 0;
+        // Automatic Performance Classification
+        if ($final_score >= 90) {
+            $classification = 'متميز';
+        } elseif ($final_score >= 80) {
+            $classification = 'جيد جدًا';
+        } elseif ($final_score >= 70) {
+            $classification = 'جيد';
+        } elseif ($final_score >= 60) {
+            $classification = 'مقبول';
+        } else {
+            $classification = 'يحتاج إلى تحسين';
+        }
 
         global $wpdb;
         $wpdb->insert(
@@ -9909,24 +9917,30 @@ class SM_Public {
             array(
                 'employee_id' => $employee_id,
                 'evaluator_id' => $evaluator_id,
-                'template_id' => $template_id,
+                'template_id' => 1,
                 'academic_year' => $academic_year,
-                'category_name' => $category_name,
-                'answers_json' => wp_json_encode($clean_answers),
-                'subjective_score' => $total_score,
-                'system_score' => 0,
-                'total_score' => $total_score,
-                'average_pct' => $average_pct,
-                'comments' => $comments,
+                'category_name' => 'النتيجة الشاملة المعتمدة للأداء',
+                'answers_json' => wp_json_encode($answers_raw),
+                'subjective_score' => $general_score,
+                'system_score' => $spec !== null ? $spec : 0,
+                'total_score' => $final_score,
+                'average_pct' => $final_score,
+                'comments' => "التصنيف النهائى: {$classification}. " . $comments,
                 'status' => 'submitted',
                 'created_at' => current_time('mysql'),
                 'updated_at' => current_time('mysql')
             )
         );
 
-        SM_Logger::log('save_evaluation', "قام المعيّن بتسجيل تقييم أداء جديد للموظف رقم #{$employee_id} بنسبة {$average_pct}%");
+        SM_Logger::log('save_evaluation', "تم حفظ التقييم الشامل للموظف #{$employee_id} بنتيجة نهائية {$final_score}% ({$classification})");
 
-        wp_send_json_success(array('eval_id' => $wpdb->insert_id, 'average_pct' => $average_pct));
+        wp_send_json_success(array(
+            'eval_id' => $wpdb->insert_id,
+            'general_score' => $general_score,
+            'specialty_score' => $spec,
+            'final_score' => $final_score,
+            'classification' => $classification
+        ));
     }
 
     public function ajax_get_evaluations_archive() {

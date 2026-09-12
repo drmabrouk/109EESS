@@ -444,11 +444,169 @@ class EESS_Org_Helper {
     }
 
     /**
+     * Creates and seeds official Employee & Staff Evaluation Models (General & Specialty)
+     */
+    public static function seed_official_evaluation_models() {
+        global $wpdb;
+
+        $table_models = "{$wpdb->prefix}eess_eval_models";
+        $table_questions = "{$wpdb->prefix}eess_eval_questions";
+        $charset_collate = $wpdb->get_charset_collate();
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_models'") !== $table_models) {
+            $sql1 = "CREATE TABLE $table_models (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                title varchar(255) NOT NULL,
+                type varchar(50) NOT NULL DEFAULT 'general',
+                scope varchar(50) NOT NULL DEFAULT 'teachers',
+                role_key varchar(50) NOT NULL DEFAULT 'sm_teacher',
+                subject_code int(11) DEFAULT NULL,
+                dept_code int(11) DEFAULT NULL,
+                is_active tinyint(1) NOT NULL DEFAULT 1,
+                total_questions int(11) NOT NULL DEFAULT 10,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY  (id)
+            ) $charset_collate;";
+            dbDelta($sql1);
+        }
+
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_questions'") !== $table_questions) {
+            $sql2 = "CREATE TABLE $table_questions (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                model_id bigint(20) NOT NULL,
+                question_order int(11) NOT NULL DEFAULT 1,
+                question_text text NOT NULL,
+                max_score int(11) NOT NULL DEFAULT 10,
+                status varchar(20) DEFAULT 'active',
+                PRIMARY KEY  (id),
+                KEY model_id (model_id)
+            ) $charset_collate;";
+            dbDelta($sql2);
+        }
+
+        // Purge legacy evaluation categories ("تقييم الالتزام", "التواصل")
+        $wpdb->query("DELETE FROM {$wpdb->prefix}sm_evaluations WHERE category_name LIKE '%الالتزام%' OR category_name LIKE '%التواصل%'");
+
+        // 4 Official Models Seeding Data
+        $official_models = array(
+            1 => array(
+                'title' => 'تقييم الانضباط والسلوك',
+                'type' => 'general',
+                'questions' => array(
+                    'ما مدى التزام المعلم بالحضور والانصراف والالتزام بالمواعيد الرسمية؟',
+                    'ما مدى التزام المعلم بأداء المناوبات المكلف بها في أوقاتها وأماكنها المحددة؟',
+                    'ما مدى التزام المعلم بالانضباط والوجود الفعلي أثناء فترات المناوبة؟',
+                    'ما مدى التزام المعلم بالتعامل باحترام ومهنية مع الطلبة؟',
+                    'ما مدى قدرة المعلم على ضبط سلوك الطلبة والتعامل مع المواقف السلوكية بحكمة؟',
+                    'ما مدى التزام المعلم بالأنظمة واللوائح والسياسات المعتمدة في المدرسة؟',
+                    'ما مدى التزام المعلم بالمظهر والسلوك المهني المناسب داخل المدرسة؟',
+                    'ما مدى تعاونه واحترامه للإدارة والزملاء وأعضاء المجتمع المدرسي؟',
+                    'ما مدى حرص المعلم على سلامة الطلبة ومتابعتهم أثناء الحصص والمناوبات والأنشطة؟',
+                    'ما مدى التزام المعلم العام بالانضباط والسلوك المهني وتحمل المسؤولية الوظيفية؟'
+                )
+            ),
+            2 => array(
+                'title' => 'التقييم التربوي والمهني',
+                'type' => 'general',
+                'questions' => array(
+                    'ما مدى التزام المعلم بالتخطيط الجيد للدروس وإعدادها وفق المنهج ونواتج التعلم؟',
+                    'ما مدى فاعلية المعلم في استخدام استراتيجيات تدريس متنوعة ومناسبة لمستويات الطلبة؟',
+                    'ما مدى قدرة المعلم على تحقيق نواتج التعلم ورفع مستوى تحصيل الطلبة؟',
+                    'ما مدى كفاءة المعلم في إدارة الصف وتهيئة بيئة تعليمية إيجابية ومحفزة؟',
+                    'ما مدى استخدام المعلم لأساليب التقويم المناسبة وقياس تقدم الطلبة بصورة مستمرة؟',
+                    'ما مدى مراعاة المعلم للفروق الفردية وااحتياجات الطلبة التعليمية؟',
+                    'ما مدى توظيف المعلم للتكنولوجيا والموارد التعليمية بما يدعم عملية التعلم؟',
+                    'ما مدى التزام المعلم بالتطوير المهني المستمر وتطبيق التغذية الراجعة لتحسين أدائه؟',
+                    'ما مدى تعاون المعلم مع الإدارة والزملاء وأولياء الأمور بما يخدم مصلحة الطلبة؟',
+                    'ما مدى كفاءة المعلم التربوية والمهنية والتزامه بتحقيق معايير الأداء التعليمي المعتمدة؟'
+                )
+            ),
+            3 => array(
+                'title' => 'تقييم الأداء الوظيفي',
+                'type' => 'general',
+                'questions' => array(
+                    'ما مدى التزام المعلم بأداء المهام والمسؤوليات الوظيفية المكلف بها؟',
+                    'ما مدى الالتزام بالحضور والانصراف والمواعيد الرسمية للعمل؟',
+                    'ما مدى إنجاز المعلم للمهام المطلوبة منه في الوقت المحدد وبالجودة المطلوبة؟',
+                    'ما مدى التزام المعلم بالأنظمة واللوائح والسياسات والإجراءات المعتمدة في المدرسة؟',
+                    'ما مدى دقة المعلم في تنفيذ الأعمال وتوثيق السجلات والبيانات المطلوبة؟',
+                    'ما مدى تحمله للمسؤولية والمبادرة في أداء واجباته الوظيفية؟',
+                    'ما مدى تعاونه مع الإدارة والزملاء في تنفيذ الأعمال والمهام المشتركة؟',
+                    'ما مدى استجابته للتوجيهات والتعليمات والملاحظات الإدارية؟',
+                    'ما مدى كفاءة المعلم في إدارة وقته وترتيب أولويات مهامه الوظيفية؟',
+                    'ما مدى كفاءة المعلم في أداء واجباته الوظيفية وتحقيق متطلبات العمل المدرسي؟'
+                )
+            ),
+            4 => array(
+                'title' => 'تقييم التربية البدنية والصحية',
+                'type' => 'specialty',
+                'subject_code' => 10,
+                'dept_code' => 10,
+                'questions' => array(
+                    'ما مدى جودة تخطيط المعلم للحصة وفق المنهج ونواتج التعلم المعتمدة؟',
+                    'ما مدى فاعلية المعلم في تنفيذ التدريس وتحفيز مشاركة الطلبة؟',
+                    'ما مدى تحقيق المعلم لنواتج التعلم البدنية والمهارية والصحية المستهدفة؟',
+                    'ما مدى كفاءة المعلم في إدارة الحصة وتنظيم الوقت والمرافق والأدوات؟',
+                    'ما مدى مراعاة المعلم للفروق الفردية واحتياجات وقدرات الطلبة؟',
+                    'ما مدى التزام المعلم بمعايير الأمن والسلامة والوقاية من الإصابات أثناء الأنشطة؟',
+                    'ما مدى دقة المعلم في تقييم أداء الطلبة وقياس تقدمهم وتوثيق النتائج؟',
+                    'ما مدى إسهام المعلم في تعزيز اللياقة البدنية والصحة ونمط الحياة الصحي لدى الطلبة؟',
+                    'ما مدى التزام المعلم بالتعاون المهني والمشاركة في الأنشطة والفعاليات المدرسية؟',
+                    'ما مدى التزام المعلم بالتطوير المهني المستمر وتطبيق الممارسات الحديثة في التربية البدنية والصحية؟'
+                )
+            )
+        );
+
+        foreach ($official_models as $m_id => $m_data) {
+            $existing_m_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_models WHERE id = %d OR title = %s LIMIT 1", $m_id, $m_data['title']));
+            if (!$existing_m_id) {
+                $wpdb->insert($table_models, array(
+                    'id' => $m_id,
+                    'title' => $m_data['title'],
+                    'type' => $m_data['type'],
+                    'scope' => 'teachers',
+                    'role_key' => 'sm_teacher',
+                    'subject_code' => $m_data['subject_code'] ?? null,
+                    'dept_code' => $m_data['dept_code'] ?? null,
+                    'is_active' => 1,
+                    'total_questions' => 10,
+                    'created_at' => current_time('mysql')
+                ));
+                $existing_m_id = $wpdb->insert_id ?: $m_id;
+            } else {
+                $wpdb->update($table_models, array(
+                    'title' => $m_data['title'],
+                    'type' => $m_data['type'],
+                    'subject_code' => $m_data['subject_code'] ?? null,
+                    'dept_code' => $m_data['dept_code'] ?? null,
+                    'is_active' => 1,
+                    'total_questions' => 10
+                ), array('id' => $existing_m_id));
+            }
+
+            // Sync 10 Questions
+            $wpdb->delete($table_questions, array('model_id' => $existing_m_id));
+            foreach ($m_data['questions'] as $q_idx => $q_text) {
+                $wpdb->insert($table_questions, array(
+                    'model_id' => $existing_m_id,
+                    'question_order' => $q_idx + 1,
+                    'question_text' => $q_text,
+                    'max_score' => 10,
+                    'status' => 'active'
+                ));
+            }
+        }
+    }
+
+    /**
      * Seeds initial institutions and central structure
      */
     public static function seed_default_structure() {
         self::seed_mandatory_institutions();
         self::seed_and_migrate_central_org_structure();
+        self::seed_official_evaluation_models();
     }
 
     /**
