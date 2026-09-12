@@ -10847,9 +10847,16 @@ class SM_Public {
 
         global $wpdb;
 
-        // Ensure columns exist on database table dynamically
-        $wpdb->query("ALTER TABLE {$wpdb->prefix}sm_term_plans ADD COLUMN IF NOT EXISTS plan_file_url text DEFAULT NULL");
-        $wpdb->query("ALTER TABLE {$wpdb->prefix}sm_term_plans ADD COLUMN IF NOT EXISTS planning_method varchar(50) DEFAULT 'create' NOT NULL");
+        // Ensure columns exist on database table dynamically using safe INFORMATION_SCHEMA checks
+        $tbl_plans = "{$wpdb->prefix}sm_term_plans";
+        $check_pf = $wpdb->get_results("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tbl_plans' AND COLUMN_NAME = 'plan_file_url'");
+        if (empty($check_pf)) {
+            $wpdb->query("ALTER TABLE {$tbl_plans} ADD COLUMN plan_file_url text DEFAULT NULL");
+        }
+        $check_pm = $wpdb->get_results("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tbl_plans' AND COLUMN_NAME = 'planning_method'");
+        if (empty($check_pm)) {
+            $wpdb->query("ALTER TABLE {$tbl_plans} ADD COLUMN planning_method varchar(50) DEFAULT 'create' NOT NULL");
+        }
 
         $data_fields = array(
             'teacher_id' => $user_id,

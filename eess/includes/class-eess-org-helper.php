@@ -148,55 +148,11 @@ class EESS_Org_Helper {
     }
 
     /**
-     * Ensures an Institution has its complete 9 department structure & subjects
+     * Ensures an Institution has its department structure initialized
      */
     public static function seed_institution_departments($inst_id) {
-        global $wpdb;
+        // Department & Subject seeding is centrally managed via seed_and_migrate_central_org_structure()
         self::ensure_institutions_columns_exist();
-
-        $std_depts = self::get_standard_departments();
-        $dept_ids = array();
-
-        foreach ($std_depts as $d_name) {
-            $existing_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}eess_departments WHERE institution_id = %d AND name = %s",
-                $inst_id, $d_name
-            ));
-            if (!$existing_id) {
-                $code = 'DEPT-' . $inst_id . '-' . substr(md5($d_name), 0, 4);
-                $wpdb->insert("{$wpdb->prefix}eess_departments", array(
-                    'institution_id' => $inst_id,
-                    'code'           => $code,
-                    'name'           => $d_name,
-                    'status'         => 'active'
-                ));
-                $existing_id = $wpdb->insert_id;
-            }
-            $dept_ids[$d_name] = $existing_id;
-        }
-
-        // Seed Standard Subjects into the Academic Department
-        if (!empty($dept_ids['الأقسام الأكاديمية - المواد الدراسية'])) {
-            $acad_dept_id = $dept_ids['الأقسام الأكاديمية - المواد الدراسية'];
-            $std_subjects = self::get_standard_subjects();
-
-            foreach ($std_subjects as $s_name) {
-                $sub_exists = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM {$wpdb->prefix}eess_subjects WHERE institution_id = %d AND name = %s",
-                    $inst_id, $s_name
-                ));
-                if (!$sub_exists) {
-                    $sub_code = 'SUBJ-' . substr(md5($s_name), 0, 5);
-                    $wpdb->insert("{$wpdb->prefix}eess_subjects", array(
-                        'institution_id' => $inst_id,
-                        'department_id'  => $acad_dept_id,
-                        'code'           => $sub_code,
-                        'name'           => $s_name,
-                        'status'         => 'active'
-                    ));
-                }
-            }
-        }
     }
 
     /**
@@ -297,62 +253,119 @@ class EESS_Org_Helper {
 
         // 1. Migrate & Ensure 25 Official Departments (Codes 1 - 25)
         $official_depts = self::get_official_departments();
-        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_departments WHERE code NOT IN (" . implode(',', range(1, 25)) . ")");
+        $dept_code_to_id = array();
 
         foreach ($official_depts as $d_code => $d_info) {
-            $existing_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}eess_departments WHERE code = %s OR name = %s LIMIT 1",
+            // Find existing department by code or name
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT id, code, name FROM {$wpdb->prefix}eess_departments WHERE code = %s OR name = %s ORDER BY id ASC",
                 (string)$d_code, $d_info['name']
             ));
 
-            if (!$existing_id) {
+            $authoritative_id = null;
+            if (!empty($rows)) {
+                $authoritative_id = $rows[0]->id;
+                // Update authoritative record
+                $wpdb->update("{$wpdb->prefix}eess_departments", array(
+                    'code'   => (string)$d_code,
+                    'name'   => $d_info['name'],
+                    'status' => 'active'
+                ), array('id' => $authoritative_id));
+
+                // Handle duplicates if more than 1 record matches
+                for ($i = 1; $i < count($rows); $i++) {
+                    $obsolete_id = $rows[$i]->id;
+                    // Migrate dependent relationships from obsolete_id to authoritative_id
+                    $wpdb->update("{$wpdb->prefix}eess_user_assignments", array('department_id' => $authoritative_id), array('department_id' => $obsolete_id));
+                    $wpdb->update("{$wpdb->prefix}eess_subjects", array('department_id' => $authoritative_id), array('department_id' => $obsolete_id));
+                    $wpdb->update("{$wpdb->prefix}sm_students", array('department_id' => $authoritative_id), array('department_id' => $obsolete_id));
+                    $wpdb->delete("{$wpdb->prefix}eess_departments", array('id' => $obsolete_id));
+                }
+            } else {
                 $wpdb->insert("{$wpdb->prefix}eess_departments", array(
                     'institution_id' => 1,
                     'code'           => (string)$d_code,
                     'name'           => $d_info['name'],
                     'status'         => 'active'
                 ));
-            } else {
-                $wpdb->update("{$wpdb->prefix}eess_departments", array(
-                    'code'           => (string)$d_code,
-                    'name'           => $d_info['name'],
-                    'status'         => 'active'
-                ), array('id' => $existing_id));
+                $authoritative_id = $wpdb->insert_id;
+            }
+            $dept_code_to_id[$d_code] = $authoritative_id;
+        }
+
+        // Clean up any remaining legacy/obsolete departments outside 1-25
+        $valid_dept_ids = array_values($dept_code_to_id);
+        if (!empty($valid_dept_ids)) {
+            $in_clause = implode(',', array_map('intval', $valid_dept_ids));
+            $obsolete_depts = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_departments WHERE id NOT IN ($in_clause) AND code NOT IN (" . implode(',', range(1, 25)) . ")");
+            foreach ($obsolete_depts as $obs_dept_id) {
+                // Migrate to fallback department (Code 2 - الشؤون الأكاديمية)
+                $fallback_dept_id = $dept_code_to_id[2] ?? 2;
+                $wpdb->update("{$wpdb->prefix}eess_user_assignments", array('department_id' => $fallback_dept_id), array('department_id' => $obs_dept_id));
+                $wpdb->update("{$wpdb->prefix}eess_subjects", array('department_id' => $fallback_dept_id), array('department_id' => $obs_dept_id));
+                $wpdb->update("{$wpdb->prefix}sm_students", array('department_id' => $fallback_dept_id), array('department_id' => $obs_dept_id));
+                $wpdb->delete("{$wpdb->prefix}eess_departments", array('id' => $obs_dept_id));
             }
         }
 
         // 2. Migrate & Ensure 19 Official Subjects (Codes 1 - 19)
         $official_subjs = self::get_official_subjects();
-        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_subjects WHERE code NOT IN (" . implode(',', range(1, 19)) . ")");
+        $subj_code_to_id = array();
 
         foreach ($official_subjs as $s_code => $s_info) {
-            $existing_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}eess_subjects WHERE code = %s OR name = %s LIMIT 1",
+            $target_dept_id = $dept_code_to_id[$s_info['dept_code']] ?? $s_info['dept_code'];
+
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT id, code, name FROM {$wpdb->prefix}eess_subjects WHERE code = %s OR name = %s ORDER BY id ASC",
                 (string)$s_code, $s_info['name']
             ));
 
-            if (!$existing_id) {
+            $authoritative_id = null;
+            if (!empty($rows)) {
+                $authoritative_id = $rows[0]->id;
+                $wpdb->update("{$wpdb->prefix}eess_subjects", array(
+                    'department_id' => $target_dept_id,
+                    'code'          => (string)$s_code,
+                    'name'          => $s_info['name'],
+                    'status'        => 'active'
+                ), array('id' => $authoritative_id));
+
+                for ($i = 1; $i < count($rows); $i++) {
+                    $obsolete_id = $rows[$i]->id;
+                    $wpdb->update("{$wpdb->prefix}eess_user_assignments", array('subject_id' => $authoritative_id), array('subject_id' => $obsolete_id));
+                    $wpdb->update("{$wpdb->prefix}eess_subject_grades", array('subject_id' => $authoritative_id), array('subject_id' => $obsolete_id));
+                    $wpdb->update("{$wpdb->prefix}eess_subject_schools", array('subject_id' => $authoritative_id), array('subject_id' => $obsolete_id));
+                    $wpdb->delete("{$wpdb->prefix}eess_subjects", array('id' => $obsolete_id));
+                }
+            } else {
                 $wpdb->insert("{$wpdb->prefix}eess_subjects", array(
                     'institution_id' => 1,
-                    'department_id'  => $s_info['dept_code'],
+                    'department_id'  => $target_dept_id,
                     'code'           => (string)$s_code,
                     'name'           => $s_info['name'],
                     'status'         => 'active'
                 ));
-            } else {
-                $wpdb->update("{$wpdb->prefix}eess_subjects", array(
-                    'department_id'  => $s_info['dept_code'],
-                    'code'           => (string)$s_code,
-                    'name'           => $s_info['name'],
-                    'status'         => 'active'
-                ), array('id' => $existing_id));
+                $authoritative_id = $wpdb->insert_id;
+            }
+            $subj_code_to_id[$s_code] = $authoritative_id;
+        }
+
+        // Clean up obsolete subjects outside 1-19
+        $valid_subj_ids = array_values($subj_code_to_id);
+        if (!empty($valid_subj_ids)) {
+            $in_clause_sub = implode(',', array_map('intval', $valid_subj_ids));
+            $obsolete_subjs = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_subjects WHERE id NOT IN ($in_clause_sub) AND code NOT IN (" . implode(',', range(1, 19)) . ")");
+            foreach ($obsolete_subjs as $obs_sub_id) {
+                $fallback_sub_id = $subj_code_to_id[1] ?? 1;
+                $wpdb->update("{$wpdb->prefix}eess_user_assignments", array('subject_id' => $fallback_sub_id), array('subject_id' => $obs_sub_id));
+                $wpdb->delete("{$wpdb->prefix}eess_subject_grades", array('subject_id' => $obs_sub_id));
+                $wpdb->delete("{$wpdb->prefix}eess_subject_schools", array('subject_id' => $obs_sub_id));
+                $wpdb->delete("{$wpdb->prefix}eess_subjects", array('id' => $obs_sub_id));
             }
         }
 
         // 3. Migrate & Ensure 12 Official Grades (Codes 1 - 12)
         $official_grades = self::get_official_grades();
-        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_grades WHERE id > 12");
-
         foreach ($official_grades as $g_code => $g_info) {
             $existing_id = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM {$wpdb->prefix}eess_grades WHERE id = %d OR name = %s LIMIT 1",
@@ -367,10 +380,19 @@ class EESS_Org_Helper {
                 ));
             } else {
                 $wpdb->update("{$wpdb->prefix}eess_grades", array(
+                    'id'        => $g_code,
                     'name'      => $g_info['name'],
                     'school_id' => 1
                 ), array('id' => $existing_id));
             }
+        }
+        // Remove orphan grades above ID 12 with controlled relationship migration
+        $obsolete_grades = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}eess_grades WHERE id > 12");
+        foreach ($obsolete_grades as $obs_gid) {
+            $wpdb->update("{$wpdb->prefix}sm_students", array('grade_id' => 1), array('grade_id' => $obs_gid));
+            $wpdb->update("{$wpdb->prefix}eess_user_assignments", array('grade_id' => 1), array('grade_id' => $obs_gid));
+            $wpdb->update("{$wpdb->prefix}eess_subject_grades", array('grade_id' => 1), array('grade_id' => $obs_gid));
+            $wpdb->delete("{$wpdb->prefix}eess_grades", array('id' => $obs_gid));
         }
 
         // 4. Ensure Sections Table Exists & Migrate 26 Official Sections (Codes 1 - 26)
