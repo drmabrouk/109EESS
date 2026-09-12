@@ -4,8 +4,6 @@ class SM_DB {
     public static function get_students($filters = array()) {
         global $wpdb;
 
-        // Auto-resolve any unmapped students first (Self-healing backfill)
-        EESS_Org_Helper::ensure_all_students_resolved();
 
         $user = wp_get_current_user();
         $is_teacher = in_array('sm_teacher', (array)$user->roles);
