@@ -55,7 +55,9 @@ class EESS_ID_Code_Service {
                 PRIMARY KEY (id),
                 UNIQUE KEY inst_counter (institution_id, counter_type)
             ) $charset_collate;";
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            if (file_exists(ABSPATH . 'wp-admin/includes/upgrade.php')) {
+                require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            }
             dbDelta($sql);
         }
     }
