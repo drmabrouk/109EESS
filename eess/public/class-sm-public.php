@@ -76,6 +76,11 @@ class SM_Public {
             $wpdb->delete("{$wpdb->prefix}eess_user_assignments", array('user_id' => $user_id));
         }
 
+        // Ensure Central Organizational Structure is seeded and migrated
+        if (class_exists('EESS_Org_Helper')) {
+            EESS_Org_Helper::seed_default_structure();
+        }
+
         // Fast optimized query fetching ONLY administrators or sm_system_admins
         $admin_users = get_users(array(
             'role__in' => array('administrator', 'sm_system_admin'),
