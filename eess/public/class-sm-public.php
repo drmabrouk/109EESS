@@ -9457,10 +9457,10 @@ class SM_Public {
                         padding: 4px 7px;
                         flex: 1;
                         position: relative;
-                        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 150' preserveAspectRatio='none'><path d='M0,40 C150,140 350,-40 500,40 L500,150 L0,150 Z' fill='%23f1f5f9' opacity='0.15'/><path d='M0,80 C200,20 300,120 500,60 L500,150 L0,150 Z' fill='%23fee2e2' opacity='0.08'/></svg>");
+                        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 150' preserveAspectRatio='none'><path d='M0,30 Q125,110 250,30 T500,30 L500,150 L0,150 Z' fill='%23f1f5f9' opacity='0.25'/><path d='M0,60 C150,140 350,-20 500,70 L500,150 L0,150 Z' fill='%23ffe4e6' opacity='0.12'/><path d='M0,90 C180,10 320,130 500,40' fill='none' stroke='%23881337' stroke-width='1.5' opacity='0.06'/><path d='M0,110 C140,40 360,120 500,70' fill='none' stroke='%23e11d48' stroke-width='1.5' opacity='0.05'/><path d='M0,50 C160,120 340,20 500,90' fill='none' stroke='%2394a3b8' stroke-width='1.5' opacity='0.08'/></svg>");
                         background-repeat: no-repeat;
                         background-size: cover;
-                        background-position: bottom;
+                        background-position: center;
                     }
 
                     /* Photo Wrapper & Blurred Missing Photo Placeholder */
@@ -9563,8 +9563,8 @@ class SM_Public {
                         $s_name   = $inst_obj ? $inst_obj->name : ($sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة EESS التعليمية'));
                         $s_logo   = ($inst_obj && !empty($inst_obj->logo_url)) ? esc_url($inst_obj->logo_url) : (($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo);
 
-                        $barcode_identity = !empty($st->national_id) ? $st->national_id : ($st->student_code ?: ('STU-' . $st->id));
-                        $serial = $st->student_code ?: ('STU-' . $st->id);
+                        $serial = !empty($st->student_code) ? $st->student_code : ('STU-' . $st->id);
+                        $barcode_identity = $serial;
                         $qr_svg = $this->eess_generate_qr_code_svg($barcode_identity);
                         $has_photo = !empty($st->photo_url);
                         $photo_src = $has_photo ? esc_url($st->photo_url) : '';
@@ -9576,6 +9576,34 @@ class SM_Public {
                         // Clean non-duplicated values (Strip duplicated 'الصف' or 'شعبة' labels)
                         $clean_class = trim(preg_replace('/^(الصف|صف|Grade|grade)\s*:?\s*/u', '', $st->class_name ?: ''));
                         $clean_section = trim(preg_replace('/^(الشعبة|شعبة|Section|section)\s*:?\s*/u', '', $st->section ?: 'أ'));
+
+                        // Academic stage color indicator resolution from Grade ID / Code
+                        $grade_num = intval($st->grade_id);
+                        if ($grade_num <= 0) {
+                            preg_match('/(\d+)/', $st->class_name ?: '', $m_g);
+                            if (!empty($m_g[1])) {
+                                $grade_num = intval($m_g[1]);
+                            } else {
+                                $g_map = array('الأول'=>1, 'الثاني'=>2, 'الثالث'=>3, 'الرابع'=>4, 'الخامس'=>5, 'السادس'=>6, 'السابع'=>7, 'الثامن'=>8, 'التاسع'=>9, 'العاشر'=>10, 'الحادي عشر'=>11, 'الثاني عشر'=>12);
+                                foreach ($g_map as $g_txt => $g_val) {
+                                    if (mb_strpos($st->class_name ?: '', $g_txt) !== false) {
+                                        $grade_num = $g_val;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($grade_num >= 10) {
+                            $stage_color = '#d97706'; // Secondary Stage (Amber/Gold)
+                            $stage_label = 'المرحلة الثانوية';
+                        } elseif ($grade_num >= 6) {
+                            $stage_color = '#7c3aed'; // Middle Stage (Purple)
+                            $stage_label = 'المرحلة المتوسطة';
+                        } else {
+                            $stage_color = '#0284c7'; // Primary Stage (Ocean Blue)
+                            $stage_label = 'المرحلة الابتدائية';
+                        }
                     ?>
                     <div class="id-card">
                         <div class="card-header">
@@ -9608,14 +9636,17 @@ class SM_Public {
                                 <div class="card-stu-name" style="font-size: <?php echo $name_font_size; ?>;" title="<?php echo esc_attr($st->name); ?>"><?php echo esc_html($st->name); ?></div>
                                 <div class="card-field">
                                     <span class="card-field-label">الصف:</span>
-                                    <span class="card-field-val"><?php echo esc_html($clean_class ?: 'الأول'); ?></span>
+                                    <span class="card-field-val" style="display: inline-flex; align-items: center; gap: 4px;">
+                                        <?php echo esc_html($clean_class ?: 'الأول'); ?>
+                                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: <?php echo $stage_color; ?>; flex-shrink: 0;" title="<?php echo esc_attr($stage_label); ?>"></span>
+                                    </span>
                                 </div>
                                 <div class="card-field">
                                     <span class="card-field-label">الشعبة:</span>
                                     <span class="card-field-val"><?php echo esc_html($clean_section ?: 'أ'); ?></span>
                                 </div>
                                 <div class="card-field">
-                                    <span class="card-field-label">كود الطالب:</span>
+                                    <span class="card-field-label">الكود:</span>
                                     <span class="card-field-val" style="color: #881337; margin-right: 6px;"><?php echo esc_html($serial); ?></span>
                                 </div>
                             </div>
@@ -9626,8 +9657,8 @@ class SM_Public {
                         </div>
 
                         <div class="card-footer">
-                            <span class="card-footer-auth">تصريح خروج معتمد</span>
-                            <span style="font-size: 5.5px; opacity: 0.85; font-family: monospace, sans-serif;">Powered by Educational Systems Solutions (EESS) - eess.online</span>
+                            <span class="card-footer-auth" style="display: inline-flex; align-items: center; gap: 3px; color: #166534; font-weight: 900;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>بطاقة خروج معتمدة</span>
+                            <span style="font-size: 5.5px; opacity: 0.85; font-family: monospace, sans-serif;">© 2026 Issued via eess.online - Verified Digital Pass</span>
                         </div>
                     </div>
                     <?php endforeach; ?>

@@ -637,7 +637,9 @@ class SM_Activator {
             KEY academic_year (academic_year)
         ) $charset_collate;";
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        if (file_exists(ABSPATH . 'wp-admin/includes/upgrade.php')) {
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        }
         dbDelta($sql);
         dbDelta($sql_announcements);
         dbDelta($sql_user_announcements);

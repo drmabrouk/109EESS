@@ -408,7 +408,9 @@ class EESS_Org_Helper {
                 PRIMARY KEY  (id),
                 UNIQUE KEY code (code)
             ) $charset_collate;";
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            if (file_exists(ABSPATH . 'wp-admin/includes/upgrade.php')) {
+                require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            }
             dbDelta($sql);
         }
 
@@ -475,7 +477,9 @@ class EESS_Org_Helper {
         $table_questions = "{$wpdb->prefix}eess_eval_questions";
         $charset_collate = $wpdb->get_charset_collate();
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        if (file_exists(ABSPATH . 'wp-admin/includes/upgrade.php')) {
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        }
 
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_models'") !== $table_models) {
             $sql1 = "CREATE TABLE $table_models (
@@ -1399,7 +1403,9 @@ class EESS_Org_Helper {
                 created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 PRIMARY KEY  (id)
             ) $charset_collate;";
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            if (file_exists(ABSPATH . 'wp-admin/includes/upgrade.php')) {
+                require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            }
             dbDelta($sql);
         }
 
