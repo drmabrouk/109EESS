@@ -147,11 +147,9 @@
                         <div class="sm-form-group">
                             <label class="sm-label" style="font-size: 12px; font-weight: 700;">الشعبة (Section): <span style="color: #dc2626;">*</span></label>
                             <select name="section" id="edit_stu_section" class="sm-select" required style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 12.5px; width: 100%;">
-                                <option value="أ">أ</option>
-                                <option value="ب">ب</option>
-                                <option value="ج">ج</option>
-                                <option value="د">د</option>
-                                <option value="هـ">هـ</option>
+                                <?php foreach (EESS_Org_Helper::get_official_sections() as $sec): ?>
+                                    <option value="<?php echo esc_attr($sec['ar']); ?>"><?php echo esc_html($sec['ar']); ?> (<?php echo esc_html($sec['en']); ?>)</option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="sm-form-group" style="grid-column: span 2; position: relative;">
