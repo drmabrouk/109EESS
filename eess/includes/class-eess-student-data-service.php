@@ -60,12 +60,11 @@ class EESS_Student_Data_Service {
      * Normalize Section input
      */
     public static function normalize_section($input) {
-        $clean = strtoupper(trim($input));
-        $section_map = array(
-            'A' => 'أ', 'B' => 'ب', 'C' => 'ج', 'D' => 'د',
-            'أ' => 'أ', 'ب' => 'ب', 'ج' => 'ج', 'د' => 'د'
-        );
-        return $section_map[$clean] ?? (!empty($clean) ? $clean : 'أ');
+        if (class_exists('EESS_Org_Helper')) {
+            $resolved = EESS_Org_Helper::normalize_section($input);
+            return $resolved['ar'];
+        }
+        return 'أ';
     }
 
     /**

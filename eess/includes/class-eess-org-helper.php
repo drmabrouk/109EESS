@@ -34,41 +34,116 @@ class EESS_Org_Helper {
     }
 
     /**
-     * Standard 9 Departments required inside EVERY Institution
+     * Official 19 Central Subjects Registry (Code 1 - 19)
      */
-    public static function get_standard_departments() {
+    public static function get_official_subjects() {
         return array(
-            'الأقسام الأكاديمية - المواد الدراسية',
-            'إدارة الموارد البشرية (HR)',
-            'شؤون الطلاب والانضباط السلوكي',
-            'الأنشطة المدرسية والفعاليات',
-            'المالية والحسابات',
-            'الخدمات المساندة والنقل',
-            'العيادة المدرسية والرعاية الصحية',
-            'الإدارة المدرسية العليا',
-            'الدعم الفني والتقني'
+            1  => array('code' => 1,  'name' => 'التربية الإسلامية',          'dept_code' => 13),
+            2  => array('code' => 2,  'name' => 'اللغة العربية',              'dept_code' => 7),
+            3  => array('code' => 3,  'name' => 'اللغة الإنجليزية',           'dept_code' => 8),
+            4  => array('code' => 4,  'name' => 'الرياضيات',                  'dept_code' => 9),
+            5  => array('code' => 5,  'name' => 'العلوم',                     'dept_code' => 11),
+            6  => array('code' => 6,  'name' => 'الدراسات الاجتماعية',        'dept_code' => 12),
+            7  => array('code' => 7,  'name' => 'التربية الأخلاقية',          'dept_code' => 15),
+            8  => array('code' => 8,  'name' => 'الحوسبة والتصميم والابتكار', 'dept_code' => 14),
+            9  => array('code' => 9,  'name' => 'الفنون',                     'dept_code' => 16),
+            10 => array('code' => 10, 'name' => 'التربية البدنية والصحية',    'dept_code' => 10),
+            11 => array('code' => 11, 'name' => 'الفيزياء',                   'dept_code' => 11),
+            12 => array('code' => 12, 'name' => 'الكيمياء',                    'dept_code' => 11),
+            13 => array('code' => 13, 'name' => 'الأحياء',                    'dept_code' => 11),
+            14 => array('code' => 14, 'name' => 'العلوم الصحية',              'dept_code' => 19),
+            15 => array('code' => 15, 'name' => 'إدارة الأعمال',              'dept_code' => 25),
+            16 => array('code' => 16, 'name' => 'ريادة الأعمال',              'dept_code' => 25),
+            17 => array('code' => 17, 'name' => 'اللغات الإضافية',            'dept_code' => 8),
+            18 => array('code' => 18, 'name' => 'الإرشاد المهني',             'dept_code' => 17),
+            19 => array('code' => 19, 'name' => 'الابتكار',                   'dept_code' => 14)
         );
     }
 
     /**
-     * Standard 14 Academic Subjects
+     * Official 25 Central Departments Registry (Code 1 - 25)
      */
-    public static function get_standard_subjects() {
+    public static function get_official_departments() {
         return array(
-            'التربية الرياضية والصحية',
-            'العلوم الصحية',
-            'الكيمياء',
-            'الرياضيات',
-            'التربية الإسلامية',
-            'اللغة العربية',
-            'اللغة الإنجليزية',
-            'الفيزياء',
-            'الدراسات الاجتماعية',
-            'علوم الحاسوب والتكنولوجيا',
-            'العلوم العامة',
-            'الأحياء',
-            'التربية الموسيقية',
-            'الفنون البصرية'
+            1  => array('code' => 1,  'name' => 'الإدارة المدرسية'),
+            2  => array('code' => 2,  'name' => 'الشؤون الأكاديمية'),
+            3  => array('code' => 3,  'name' => 'شؤون الطلبة'),
+            4  => array('code' => 4,  'name' => 'الشؤون الإدارية'),
+            5  => array('code' => 5,  'name' => 'الموارد البشرية'),
+            6  => array('code' => 6,  'name' => 'الشؤون المالية'),
+            7  => array('code' => 7,  'name' => 'قسم اللغة العربية'),
+            8  => array('code' => 8,  'name' => 'قسم اللغة الإنجليزية'),
+            9  => array('code' => 9,  'name' => 'قسم الرياضيات'),
+            10 => array('code' => 10, 'name' => 'قسم التربية البدنية والصحية'),
+            11 => array('code' => 11, 'name' => 'قسم العلوم'),
+            12 => array('code' => 12, 'name' => 'قسم الدراسات الاجتماعية'),
+            13 => array('code' => 13, 'name' => 'قسم التربية الإسلامية'),
+            14 => array('code' => 14, 'name' => 'قسم الحوسبة والتصميم والابتكار'),
+            15 => array('code' => 15, 'name' => 'قسم التربية الأخلاقية'),
+            16 => array('code' => 16, 'name' => 'قسم الفنون'),
+            17 => array('code' => 17, 'name' => 'قسم الإرشاد الأكاديمي والمهني'),
+            18 => array('code' => 18, 'name' => 'قسم الأنشطة المدرسية'),
+            19 => array('code' => 19, 'name' => 'قسم الصحة والسلامة المدرسية'),
+            20 => array('code' => 20, 'name' => 'قسم تقنية المعلومات'),
+            21 => array('code' => 21, 'name' => 'قسم النقل والمواصلات'),
+            22 => array('code' => 22, 'name' => 'قسم الأمن والسلامة'),
+            23 => array('code' => 23, 'name' => 'قسم الخدمات الطلابية'),
+            24 => array('code' => 24, 'name' => 'قسم المرافق والخدمات العامة'),
+            25 => array('code' => 25, 'name' => 'قسم الجودة والتطوير المؤسسي')
+        );
+    }
+
+    /**
+     * Official 12 Central Grades Registry (Code 1 - 12)
+     */
+    public static function get_official_grades() {
+        return array(
+            1  => array('code' => 1,  'name' => 'الصف الأول'),
+            2  => array('code' => 2,  'name' => 'الصف الثاني'),
+            3  => array('code' => 3,  'name' => 'الصف الثالث'),
+            4  => array('code' => 4,  'name' => 'الصف الرابع'),
+            5  => array('code' => 5,  'name' => 'الصف الخامس'),
+            6  => array('code' => 6,  'name' => 'الصف السادس'),
+            7  => array('code' => 7,  'name' => 'الصف السابع'),
+            8  => array('code' => 8,  'name' => 'الصف الثامن'),
+            9  => array('code' => 9,  'name' => 'الصف التاسع'),
+            10 => array('code' => 10, 'name' => 'الصف العاشر'),
+            11 => array('code' => 11, 'name' => 'الصف الحادي عشر'),
+            12 => array('code' => 12, 'name' => 'الصف الثاني عشر')
+        );
+    }
+
+    /**
+     * Official 26 Central Sections Registry (Code 1 - 26)
+     */
+    public static function get_official_sections() {
+        return array(
+            1  => array('code' => 1,  'ar' => 'أ',  'en' => 'A'),
+            2  => array('code' => 2,  'ar' => 'ب',  'en' => 'B'),
+            3  => array('code' => 3,  'ar' => 'ج',  'en' => 'C'),
+            4  => array('code' => 4,  'ar' => 'د',  'en' => 'D'),
+            5  => array('code' => 5,  'ar' => 'هـ', 'en' => 'E'),
+            6  => array('code' => 6,  'ar' => 'و',  'en' => 'F'),
+            7  => array('code' => 7,  'ar' => 'ز',  'en' => 'G'),
+            8  => array('code' => 8,  'ar' => 'ح',  'en' => 'H'),
+            9  => array('code' => 9,  'ar' => 'ط',  'en' => 'I'),
+            10 => array('code' => 10, 'ar' => 'ي',  'en' => 'J'),
+            11 => array('code' => 11, 'ar' => 'ك',  'en' => 'K'),
+            12 => array('code' => 12, 'ar' => 'ل',  'en' => 'L'),
+            13 => array('code' => 13, 'ar' => 'م',  'en' => 'M'),
+            14 => array('code' => 14, 'ar' => 'ن',  'en' => 'N'),
+            15 => array('code' => 15, 'ar' => 'س',  'en' => 'O'),
+            16 => array('code' => 16, 'ar' => 'ع',  'en' => 'P'),
+            17 => array('code' => 17, 'ar' => 'ف',  'en' => 'Q'),
+            18 => array('code' => 18, 'ar' => 'ص',  'en' => 'R'),
+            19 => array('code' => 19, 'ar' => 'ق',  'en' => 'S'),
+            20 => array('code' => 20, 'ar' => 'ر',  'en' => 'T'),
+            21 => array('code' => 21, 'ar' => 'ش',  'en' => 'U'),
+            22 => array('code' => 22, 'ar' => 'ت',  'en' => 'V'),
+            23 => array('code' => 23, 'ar' => 'ث',  'en' => 'W'),
+            24 => array('code' => 24, 'ar' => 'خ',  'en' => 'X'),
+            25 => array('code' => 25, 'ar' => 'ذ',  'en' => 'Y'),
+            26 => array('code' => 26, 'ar' => 'ض',  'en' => 'Z')
         );
     }
 
@@ -213,10 +288,167 @@ class EESS_Org_Helper {
     }
 
     /**
-     * Seeds initial institutions and schools if none exist
+     * Seeds and migrates Central Organizational Structure (19 Subjects, 25 Departments, 12 Grades, 26 Sections)
+     */
+    public static function seed_and_migrate_central_org_structure() {
+        global $wpdb;
+        self::ensure_institutions_columns_exist();
+        self::seed_mandatory_institutions();
+
+        // 1. Migrate & Ensure 25 Official Departments (Codes 1 - 25)
+        $official_depts = self::get_official_departments();
+        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_departments WHERE code NOT IN (" . implode(',', range(1, 25)) . ")");
+
+        foreach ($official_depts as $d_code => $d_info) {
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}eess_departments WHERE code = %s OR name = %s LIMIT 1",
+                (string)$d_code, $d_info['name']
+            ));
+
+            if (!$existing_id) {
+                $wpdb->insert("{$wpdb->prefix}eess_departments", array(
+                    'institution_id' => 1,
+                    'code'           => (string)$d_code,
+                    'name'           => $d_info['name'],
+                    'status'         => 'active'
+                ));
+            } else {
+                $wpdb->update("{$wpdb->prefix}eess_departments", array(
+                    'code'           => (string)$d_code,
+                    'name'           => $d_info['name'],
+                    'status'         => 'active'
+                ), array('id' => $existing_id));
+            }
+        }
+
+        // 2. Migrate & Ensure 19 Official Subjects (Codes 1 - 19)
+        $official_subjs = self::get_official_subjects();
+        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_subjects WHERE code NOT IN (" . implode(',', range(1, 19)) . ")");
+
+        foreach ($official_subjs as $s_code => $s_info) {
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}eess_subjects WHERE code = %s OR name = %s LIMIT 1",
+                (string)$s_code, $s_info['name']
+            ));
+
+            if (!$existing_id) {
+                $wpdb->insert("{$wpdb->prefix}eess_subjects", array(
+                    'institution_id' => 1,
+                    'department_id'  => $s_info['dept_code'],
+                    'code'           => (string)$s_code,
+                    'name'           => $s_info['name'],
+                    'status'         => 'active'
+                ));
+            } else {
+                $wpdb->update("{$wpdb->prefix}eess_subjects", array(
+                    'department_id'  => $s_info['dept_code'],
+                    'code'           => (string)$s_code,
+                    'name'           => $s_info['name'],
+                    'status'         => 'active'
+                ), array('id' => $existing_id));
+            }
+        }
+
+        // 3. Migrate & Ensure 12 Official Grades (Codes 1 - 12)
+        $official_grades = self::get_official_grades();
+        $wpdb->query("DELETE FROM {$wpdb->prefix}eess_grades WHERE id > 12");
+
+        foreach ($official_grades as $g_code => $g_info) {
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}eess_grades WHERE id = %d OR name = %s LIMIT 1",
+                $g_code, $g_info['name']
+            ));
+
+            if (!$existing_id) {
+                $wpdb->insert("{$wpdb->prefix}eess_grades", array(
+                    'id'        => $g_code,
+                    'school_id' => 1,
+                    'name'      => $g_info['name']
+                ));
+            } else {
+                $wpdb->update("{$wpdb->prefix}eess_grades", array(
+                    'name'      => $g_info['name'],
+                    'school_id' => 1
+                ), array('id' => $existing_id));
+            }
+        }
+
+        // 4. Ensure Sections Table Exists & Migrate 26 Official Sections (Codes 1 - 26)
+        $table_sections = "{$wpdb->prefix}eess_sections";
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_sections'") !== $table_sections) {
+            $charset_collate = $wpdb->get_charset_collate();
+            $sql = "CREATE TABLE $table_sections (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                code int(11) NOT NULL,
+                name_ar varchar(50) NOT NULL,
+                name_en varchar(50) NOT NULL,
+                status varchar(20) DEFAULT 'active',
+                PRIMARY KEY  (id),
+                UNIQUE KEY code (code)
+            ) $charset_collate;";
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            dbDelta($sql);
+        }
+
+        $official_sections = self::get_official_sections();
+        foreach ($official_sections as $sec_code => $sec_info) {
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}eess_sections WHERE code = %d LIMIT 1",
+                $sec_code
+            ));
+
+            if (!$existing_id) {
+                $wpdb->insert("{$wpdb->prefix}eess_sections", array(
+                    'code'    => $sec_code,
+                    'name_ar' => $sec_info['ar'],
+                    'name_en' => $sec_info['en'],
+                    'status'  => 'active'
+                ));
+            } else {
+                $wpdb->update("{$wpdb->prefix}eess_sections", array(
+                    'name_ar' => $sec_info['ar'],
+                    'name_en' => $sec_info['en'],
+                    'status'  => 'active'
+                ), array('id' => $existing_id));
+            }
+        }
+    }
+
+    /**
+     * Centralized Section Normalization Resolver (maps Arabic 'أ', English 'A', or numeric code '1' to authoritative section)
+     */
+    public static function normalize_section($input) {
+        $clean = trim((string)$input);
+        if ($clean === '') return array('code' => 1, 'ar' => 'أ', 'en' => 'A');
+
+        $sections = self::get_official_sections();
+
+        // 1. Check numeric code (1-26)
+        if (is_numeric($clean)) {
+            $num = intval($clean);
+            if (isset($sections[$num])) {
+                return $sections[$num];
+            }
+        }
+
+        // 2. Check Arabic or English letter match
+        $upper_clean = mb_strtoupper($clean, 'UTF-8');
+        foreach ($sections as $s) {
+            if (mb_strtoupper($s['ar'], 'UTF-8') === $upper_clean || mb_strtoupper($s['en'], 'UTF-8') === $upper_clean) {
+                return $s;
+            }
+        }
+
+        // Default fallback to Section 1 ('أ' / 'A')
+        return array('code' => 1, 'ar' => 'أ', 'en' => 'A');
+    }
+
+    /**
+     * Seeds initial institutions and central structure
      */
     public static function seed_default_structure() {
         self::seed_mandatory_institutions();
+        self::seed_and_migrate_central_org_structure();
     }
 
     /**
@@ -361,6 +593,33 @@ class EESS_Org_Helper {
     }
 
     /**
+     * Resolves Department Code automatically from Subject Code or Subject Name
+     */
+    public static function resolve_department_from_subject($subject_input) {
+        $clean = trim((string)$subject_input);
+        if ($clean === '') return 2; // Default to 'الشؤون الأكاديمية'
+
+        $subjects = self::get_official_subjects();
+
+        // 1. Check numeric subject code
+        if (is_numeric($clean)) {
+            $code = intval($clean);
+            if (isset($subjects[$code])) {
+                return $subjects[$code]['dept_code'];
+            }
+        }
+
+        // 2. Check subject name
+        foreach ($subjects as $s) {
+            if ($s['name'] === $clean || mb_strpos($s['name'], $clean) !== false || mb_strpos($clean, $s['name']) !== false) {
+                return $s['dept_code'];
+            }
+        }
+
+        return 2; // Default fallback to الشؤون الأكاديمية
+    }
+
+    /**
      * Centralized Assignment Saver
      */
     public static function save_user_assignments($user_id, $data) {
@@ -373,6 +632,16 @@ class EESS_Org_Helper {
         $class_ids = !empty($data['classes']) ? array_map('intval', (array)$data['classes']) : array();
         $subject_ids = !empty($data['subjects']) ? array_map('intval', (array)$data['subjects']) : array();
         $dept_ids = !empty($data['departments']) ? array_map('intval', (array)$data['departments']) : array();
+
+        // Auto-resolve Department Codes from assigned Subject Codes
+        if (!empty($subject_ids)) {
+            foreach ($subject_ids as $sub_code) {
+                $auto_dept_code = self::resolve_department_from_subject($sub_code);
+                if ($auto_dept_code && !in_array($auto_dept_code, $dept_ids, true)) {
+                    $dept_ids[] = $auto_dept_code;
+                }
+            }
+        }
 
         $max_count = max(count($inst_ids), count($school_ids), count($grade_ids), count($class_ids), count($subject_ids), count($dept_ids), 1);
 

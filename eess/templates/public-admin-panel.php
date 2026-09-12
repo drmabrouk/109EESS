@@ -984,7 +984,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 </div>
                             </div>
 
-                            <!-- 4 Primary Sub-Tabs Navigation for Organizational Structure -->
+                            <!-- 5 Primary Sub-Tabs Navigation for Organizational Structure -->
                             <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; overflow-x: auto;">
                                 <button type="button" onclick="eessSwitchOrgTab('institutions', this)" class="eess-org-tab-btn active" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: none; background: #881337; color: #ffffff; font-weight: 800; font-size: 13px; cursor: pointer;">
                                     المؤسسات
@@ -997,6 +997,9 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 </button>
                                 <button type="button" onclick="eessSwitchOrgTab('grades', this)" class="eess-org-tab-btn" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-weight: 800; font-size: 13px; cursor: pointer;">
                                     الصفوف الدراسية
+                                </button>
+                                <button type="button" onclick="eessSwitchOrgTab('sections', this)" class="eess-org-tab-btn" style="height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-weight: 800; font-size: 13px; cursor: pointer;">
+                                    التشعيب / الشعب
                                 </button>
                             </div>
 
@@ -1190,31 +1193,45 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <!-- GRADES SUB-TAB GRID (3-Card Central Registry) -->
                             <div id="eess-grades-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                                 <?php
-                                $central_grades = EESS_Org_Helper::get_grades();
-                                if (empty($central_grades)): ?>
+                                $official_grades_list = EESS_Org_Helper::get_official_grades();
+                                if (empty($official_grades_list)): ?>
                                     <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; padding: 40px; text-align: center; color: #64748b;">
                                         <span class="dashicons dashicons-welcome-learn-more" style="font-size: 40px; width: 40px; height: 40px; color: #cbd5e1; margin-bottom: 10px;"></span>
                                         <div style="font-size: 15px; font-weight: 800; color: #0f172a;">لا توجد صفوف دراسية مركزية مسجلة حالياً</div>
                                     </div>
                                 <?php else: ?>
-                                    <?php foreach ($central_grades as $grd):
-                                        $clean_num = intval(preg_replace('/[^0-9]/', '', $grd->name)) ?: $grd->id;
-                                    ?>
+                                    <?php foreach ($official_grades_list as $g_code => $grd): ?>
                                         <div style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
                                             <div>
                                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                                                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;"><?php echo esc_html($grd->name); ?></h3>
-                                                    <span style="font-family: monospace; font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fde68a;">كود الصف الرقمي: <?php echo $clean_num; ?></span>
+                                                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;"><?php echo esc_html($grd['name']); ?></h3>
+                                                    <span style="font-family: monospace; font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #fde68a;">كود الصف الرقمي: <?php echo $g_code; ?></span>
                                                 </div>
-                                            </div>
-                                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                                                <button type="button" data-json="<?php echo esc_attr(json_encode($grd)); ?>" onclick="eessOpenEditGradeModal(this)" title="تعديل اسم الصف" style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
-                                                    <span class="dashicons dashicons-edit" style="font-size: 15px;"></span>
-                                                </button>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
+                            </div>
+
+                            <!-- SECTIONS SUB-TAB GRID (3-Card Central Registry for 26 Official Sections) -->
+                            <div id="eess-sections-grid" class="eess-org-subtab-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                                <?php
+                                $official_sections_list = EESS_Org_Helper::get_official_sections();
+                                foreach ($official_sections_list as $sec_code => $sec_info):
+                                ?>
+                                    <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 42px; height: 42px; border-radius: 12px; background: #fef2f2; color: #881337; border: 1px solid #fecdd3; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900;">
+                                                <?php echo esc_html($sec_info['ar']); ?>
+                                            </div>
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 800; color: #0f172a;">الشعبة <?php echo esc_html($sec_info['ar']); ?></div>
+                                                <div style="font-size: 11px; color: #64748b; font-weight: 600;">رمز إنجليزي: <strong style="color: #0284c7; font-family: monospace;"><?php echo esc_html($sec_info['en']); ?></strong></div>
+                                            </div>
+                                        </div>
+                                        <span style="font-family: monospace; font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #bae6fd;">كود الشعبة: <?php echo $sec_code; ?></span>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
 
                         </div>
