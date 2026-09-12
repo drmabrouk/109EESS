@@ -60,10 +60,17 @@
                     </div>
 
                     <!-- Camera / Scan Button -->
-                    <button id="start-scanner" type="button" class="sm-btn" title="فتح الكاميرا والماسح الضوئي" style="height: 42px; padding: 0 16px; background: #0f172a; color: #ffffff !important; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 12px; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#0f172a'">
+                    <button id="start-scanner" type="button" class="sm-btn" title="فتح الكاميرا والماسح الضوئي" style="height: 42px; padding: 0 14px; background: #0f172a; color: #ffffff !important; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 12px; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#0f172a'">
                         <span class="dashicons dashicons-camera" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                        <span>الماسح الضوئي</span>
+                        <span>الكاميرا</span>
                     </button>
+
+                    <!-- Barcode Image Upload Button -->
+                    <label id="upload-barcode-btn" class="sm-btn" title="رفع صورة الباركوود وقراءتها" style="height: 42px; padding: 0 14px; background: #0284c7; color: #ffffff !important; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 12px; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
+                        <span class="dashicons dashicons-upload" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                        <span>رفع باركوود</span>
+                        <input type="file" id="barcode-file-input" accept="image/*" style="display: none;">
+                    </label>
                 </div>
             </div>
 
@@ -549,87 +556,141 @@ function renderSelectedStudents() {
         });
     }
 
+    // Non-blocking toast notification helper
+    function eessShowToast(message, type) {
+        let container = document.getElementById('eess-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'eess-toast-container';
+            container.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        let bg = '#0f172a';
+        if (type === 'success') bg = '#166534';
+        if (type === 'warning') bg = '#854d0e';
+        if (type === 'error') bg = '#991b1b';
+
+        toast.style.cssText = `background: ${bg}; color: #ffffff; padding: 10px 16px; border-radius: 10px; font-size: 12px; font-weight: 800; font-family: 'Cairo', sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.25); text-align: center; opacity: 0; transition: all 0.3s ease; pointer-events: auto;`;
+        toast.innerText = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => { toast.style.opacity = '1'; });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+        }, 2500);
+    }
+
+    function eessProcessDecodedStudentCode(rawCode) {
+        const cleanCode = (rawCode || '').trim();
+        if (!cleanCode) return;
+
+        // Check if student already in selected list
+        const isDuplicate = window.selectedStudents.some(s =>
+            s.student_code === cleanCode || s.national_id === cleanCode || String(s.id) === cleanCode
+        );
+
+        if (isDuplicate) {
+            eessShowToast('الطالب مضاف بالفعل في هذه الجلسة', 'warning');
+            return;
+        }
+
+        if (window.selectedStudents.length >= 30) {
+            eessShowToast('تم الوصول إلى الحد الأقصى (30 طالب)', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'sm_get_student');
+        formData.append('code', cleanCode);
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && res.data) {
+                selectStudent(res.data);
+                eessShowToast('تمت إضافة الطالب: ' + res.data.name, 'success');
+            } else {
+                eessShowToast('عذراً، كود الطالب أو الباركوود غير مسجل في النظام: ' + cleanCode, 'error');
+            }
+        })
+        .catch(() => {
+            eessShowToast('حدث خطأ أثناء الاتصال بالخادم', 'error');
+        });
+    }
+
+    // Barcode Image Upload File Handler
+    const barcodeFileInput = document.getElementById('barcode-file-input');
+    if (barcodeFileInput) {
+        barcodeFileInput.addEventListener('change', function(e) {
+            if (!e.target.files || !e.target.files[0]) return;
+            const file = e.target.files[0];
+            let hiddenDiv = document.getElementById('reader-file-temp');
+            if (!hiddenDiv) {
+                hiddenDiv = document.createElement('div');
+                hiddenDiv.id = 'reader-file-temp';
+                hiddenDiv.style.display = 'none';
+                document.body.appendChild(hiddenDiv);
+            }
+
+            if (typeof Html5Qrcode !== 'undefined') {
+                const html5QrCode = new Html5Qrcode("reader-file-temp");
+                html5QrCode.scanFile(file, true)
+                .then(decodedText => {
+                    eessProcessDecodedStudentCode(decodedText);
+                })
+                .catch(err => {
+                    eessShowToast('تعذر قراءة الباركوود من الصورة المرفوعة', 'error');
+                })
+                .finally(() => { e.target.value = ''; });
+            }
+        });
+    }
+
     // Camera / Scanner Integration
     const scannerBtn = document.getElementById('start-scanner');
+    let desktopHtml5QrCode = null;
+    let lastScannedCode = '';
+    let lastScanTime = 0;
+
     if (scannerBtn) {
         scannerBtn.addEventListener('click', function() {
             const reader = document.getElementById('reader');
             if (!reader) return;
 
             if (reader.style.display === 'block') {
-                reader.style.display = 'none';
+                if (desktopHtml5QrCode) {
+                    desktopHtml5QrCode.stop().then(() => { reader.style.display = 'none'; }).catch(() => { reader.style.display = 'none'; });
+                } else {
+                    reader.style.display = 'none';
+                }
                 return;
             }
 
             reader.style.display = 'block';
-            function startScannerInstance() {
-                if (typeof Html5Qrcode !== 'undefined') {
-                    const html5QrCode = new Html5Qrcode("reader");
-                    let lastScannedCode = '';
-                    let lastScanTime = 0;
-                    let scanLock = false;
 
-                    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
-                    .catch(err => {
-                        alert('تعذر الوصول للكاميرا: ' + err);
-                        reader.style.display = 'none';
-                    });
+            if (typeof Html5Qrcode !== 'undefined') {
+                desktopHtml5QrCode = new Html5Qrcode("reader");
+                const config = { fps: 15, qrbox: { width: 250, height: 160 } };
 
-                    function onScanSuccess(decodedText) {
-                        const code = decodedText.trim();
-                        const now = Date.now();
+                desktopHtml5QrCode.start({ facingMode: "environment" }, config, function(decodedText) {
+                    const now = Date.now();
+                    const code = decodedText.trim();
 
-                        // 1-second continuous cycle & duplicate check
-                        if (now - lastScanTime < 1000 || scanLock) return;
-                        scanLock = true;
-                        lastScanTime = now;
+                    if (now - lastScanTime < 1200 && code === lastScannedCode) return;
+                    lastScanTime = now;
+                    lastScannedCode = code;
 
-                        if (code === lastScannedCode) {
-                            if (typeof eessShowMobileToast === 'function') {
-                                eessShowMobileToast('تم إدخال الطالب بالفعل', 'warning');
-                            } else if (typeof smShowNotification === 'function') {
-                                smShowNotification('تم إدخال الطالب بالفعل');
-                            }
-                            scanLock = false;
-                            return;
-                        }
-
-                        lastScannedCode = code;
-
-                        const formData = new FormData();
-                        formData.append('action', 'sm_get_student');
-                        formData.append('code', code);
-
-                        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
-                        .then(r => r.json())
-                        .then(res => {
-                            scanLock = false;
-                            if (res.success && res.data) {
-                                selectStudent(res.data);
-                                html5QrCode.stop().then(() => { reader.style.display = 'none'; }).catch(() => {});
-                            } else {
-                                alert('عذراً، الهوية الرقمية أو كود الطالب غير مسجل في النظام: ' + code);
-                            }
-                        })
-                        .catch(() => { scanLock = false; });
-                    }
-                } else {
-                    alert('جاري تحميل مكتبة الماسح الضوئي... يرجى المحاولة بعد ثوانٍ.');
+                    eessProcessDecodedStudentCode(code);
+                }).catch(err => {
+                    eessShowToast('تعذر فتح الكاميرا: ' + err, 'error');
                     reader.style.display = 'none';
-                }
-            }
-
-            if (typeof Html5Qrcode === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/html5-qrcode';
-                script.onload = startScannerInstance;
-                script.onerror = function() {
-                    alert('عذراً، تعذر تحميل مكتبة الماسح الضوئي عبر الشبكة.');
-                    reader.style.display = 'none';
-                };
-                document.head.appendChild(script);
+                });
             } else {
-                startScannerInstance();
+                eessShowToast('جاري تحميل مكتبة الماسح الضوئي...', 'warning');
+                reader.style.display = 'none';
             }
         });
     }

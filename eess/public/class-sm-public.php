@@ -249,7 +249,7 @@ class SM_Public {
         wp_enqueue_style('dashicons');
         wp_enqueue_style('google-font-cairo', 'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Noto+Kufi+Arabic:wght@300;400;600;700;800&display=swap', array(), null);
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '4.4.1', true);
-        wp_enqueue_script('html5-qrcode', 'https://unpkg.com/html5-qrcode', array(), '2.3.8', true);
+        wp_enqueue_script('html5-qrcode', SM_PLUGIN_URL . 'assets/js/html5-qrcode.min.js', array(), '2.3.8', true);
         wp_enqueue_style($this->plugin_name, SM_PLUGIN_URL . 'assets/css/sm-public.css', array('dashicons'), $this->version, 'all');
 
         $app = SM_Settings::get_appearance();
@@ -609,9 +609,15 @@ class SM_Public {
                         <button type="button" onclick="eessSwitchMobileIdentMethod('code', this)" class="m-ident-tab" style="flex: 1; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 800; font-size: 11px; cursor: pointer;">🔢 بكود الطالب</button>
                     </div>
 
-                    <!-- Method 1: Camera Scanner -->
+                    <!-- Method 1: Camera Scanner & Image Upload -->
                     <div id="m-ident-panel-camera" style="display: block; margin-bottom: 14px;">
-                        <button type="button" onclick="eessStartMobileViolCamera()" style="width: 100%; height: 40px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 12.5px; cursor: pointer;">تشغيل كاميرا الماسح الضوئي</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="eessStartMobileViolCamera()" style="flex: 1; height: 40px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 12.5px; cursor: pointer;">الكاميرا</button>
+                            <label style="flex: 1; height: 40px; background: #0284c7; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span>رفع باركوود</span>
+                                <input type="file" accept="image/*" onchange="eessMobileScanBarcodeImage(this)" style="display: none;">
+                            </label>
+                        </div>
                         <div id="m-viol-camera-reader" style="display: none; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 2px solid #dc2626;"></div>
                     </div>
 
@@ -818,32 +824,45 @@ class SM_Public {
             let lastViolScannedCode = '';
             let lastViolScanTime = 0;
 
+            function eessMobileScanBarcodeImage(input) {
+                if (!input.files || !input.files[0]) return;
+                var file = input.files[0];
+                var hiddenDiv = document.getElementById('m-reader-file-temp');
+                if (!hiddenDiv) {
+                    hiddenDiv = document.createElement('div');
+                    hiddenDiv.id = 'm-reader-file-temp';
+                    hiddenDiv.style.display = 'none';
+                    document.body.appendChild(hiddenDiv);
+                }
+                if (typeof Html5Qrcode !== 'undefined') {
+                    var html5QrCode = new Html5Qrcode("m-reader-file-temp");
+                    html5QrCode.scanFile(file, true).then(function(decodedText) {
+                        eessResolveMobileViolStudent(decodedText.trim());
+                    }).catch(function(err) {
+                        eessShowMobileToast('تعذر قراءة الباركوود من الصورة', 'error');
+                    }).finally(function() {
+                        input.value = '';
+                    });
+                }
+            }
+
             function eessStartMobileViolCamera() {
                 var reader = document.getElementById('m-viol-camera-reader');
                 reader.style.display = 'block';
 
                 if (typeof Html5Qrcode !== 'undefined') {
                     mViolScannerInstance = new Html5Qrcode("m-viol-camera-reader");
-                    mViolScannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, function(decodedText) {
+                    mViolScannerInstance.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 240, height: 160 } }, function(decodedText) {
                         const code = decodedText.trim();
                         const now = Date.now();
 
-                        if (now - lastViolScanTime < 1000) return;
+                        if (now - lastViolScanTime < 1200 && code === lastViolScannedCode) return;
                         lastViolScanTime = now;
-
-                        if (code === lastViolScannedCode) {
-                            eessShowMobileToast('تم إدخال الطالب بالفعل', 'warning');
-                            return;
-                        }
-
                         lastViolScannedCode = code;
 
-                        mViolScannerInstance.stop().then(function() {
-                            reader.style.display = 'none';
-                            eessResolveMobileViolStudent(code);
-                        }).catch(function() { reader.style.display = 'none'; });
+                        eessResolveMobileViolStudent(code);
                     }).catch(function(err) {
-                        alert('تعذر فتح الكاميرا: ' + err);
+                        eessShowMobileToast('تعذر فتح الكاميرا: ' + err, 'error');
                         reader.style.display = 'none';
                     });
                 }

@@ -531,15 +531,22 @@ class SM_DB {
 
     public static function get_student_by_code($code) {
         global $wpdb;
-        // Priority 1: Match National ID. Priority 2: Match Student Code. Priority 3: Match ID.
-        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE national_id = %s", $code));
+        $clean_code = trim((string)$code);
+        if ($clean_code === '') return null;
+
+        $scope_filter = class_exists('EESS_Org_Helper') ? EESS_Org_Helper::filter_students_query() : ' 1=1 ';
+
+        // Priority 1: Match Student Code (Official Barcode Identity)
+        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE student_code = %s AND $scope_filter LIMIT 1", $clean_code));
         if ($student) return $student;
 
-        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE student_code = %s", $code));
+        // Priority 2: Match National ID
+        $student = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE national_id = %s AND $scope_filter LIMIT 1", $clean_code));
         if ($student) return $student;
 
-        if (is_numeric($code)) {
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE id = %d", intval($code)));
+        // Priority 3: Match Internal ID
+        if (is_numeric($clean_code)) {
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_students WHERE id = %d AND $scope_filter LIMIT 1", intval($clean_code)));
         }
 
         return null;
