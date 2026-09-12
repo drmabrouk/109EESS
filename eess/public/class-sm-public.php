@@ -3856,7 +3856,9 @@ class SM_Public {
 
 
     public function ajax_delete_record() {
-        if (!current_user_can('إدارة_المخالفات')) wp_send_json_error('Unauthorized');
+        $user_roles = (array) wp_get_current_user()->roles;
+        $can_delete = current_user_can('manage_options') || current_user_can('إدارة_المخالفات') || in_array('sm_principal', $user_roles) || in_array('sm_system_admin', $user_roles);
+        if (!$can_delete) wp_send_json_error('Unauthorized');
         if (!wp_verify_nonce($_POST['nonce'], 'sm_record_action')) wp_send_json_error('Security check failed');
 
         $record_id = intval($_POST['record_id']);
@@ -9505,7 +9507,7 @@ class SM_Public {
                     .card-stu-name { font-weight: 900; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
                     .card-field { font-size: 8.5px; color: #334155; font-weight: 700; margin-bottom: 1px; display: flex; align-items: center; gap: 2px; }
                     .card-field-label { color: #64748b; font-weight: 700; width: 42px; min-width: 42px; flex-shrink: 0; }
-                    .card-field-val { color: #0f172a; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 2px; }
+                    .card-field-val { color: #0f172a; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 2px; padding-left: 6px; }
 
                     /* Barcode / Serial Stack Vertically Centered */
                     .card-qr-stack { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 21mm; flex-shrink: 0; text-align: center; }
@@ -9551,9 +9553,10 @@ class SM_Public {
 
                 <div class="cards-container">
                     <?php foreach ($printable_students as $st):
-                        $sch_obj = $st->school_id ? EESS_Org_Helper::get_school_by_id($st->school_id) : null;
-                        $s_name = $sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة EESS التعليمية');
-                        $s_logo = ($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo;
+                        $inst_obj = $st->institution_id ? EESS_Org_Helper::get_institution_by_id($st->institution_id) : ($st->school_id ? EESS_Org_Helper::get_institution_by_id($st->school_id) : null);
+                        $sch_obj  = $st->school_id ? EESS_Org_Helper::get_school_by_id($st->school_id) : null;
+                        $s_name   = $inst_obj ? $inst_obj->name : ($sch_obj ? $sch_obj->name : ($school_info['school_name'] ?? 'مدرسة EESS التعليمية'));
+                        $s_logo   = ($inst_obj && !empty($inst_obj->logo_url)) ? esc_url($inst_obj->logo_url) : (($sch_obj && !empty($sch_obj->logo_url)) ? esc_url($sch_obj->logo_url) : $system_logo);
 
                         $barcode_identity = !empty($st->national_id) ? $st->national_id : ($st->student_code ?: ('STU-' . $st->id));
                         $serial = $st->student_code ?: ('STU-' . $st->id);
