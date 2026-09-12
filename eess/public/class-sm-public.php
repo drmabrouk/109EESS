@@ -1064,35 +1064,35 @@ class SM_Public {
                 $m_school_info = SM_Settings::get_school_info();
                 $m_login_sys_logo = !empty($m_school_info['school_logo']) ? $m_school_info['school_logo'] : (!empty($m_school_info['logo_url']) ? $m_school_info['logo_url'] : SM_PLUGIN_URL . 'assets/images/logo.png');
             ?>
-            <!-- Compact Single-Viewport Mobile Login Container -->
-            <div style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 12px 16px; box-sizing: border-box; overflow: hidden; font-family: 'Cairo', sans-serif;">
+            <!-- Single-Viewport Mobile Login Container (No Vertical or Horizontal Scrolling) -->
+            <div style="height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; width: 100%; max-width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 16px 8px 16px; box-sizing: border-box; overflow-x: hidden; overflow-y: hidden; font-family: 'Cairo', sans-serif;">
 
                 <!-- System Branding & Logo Area -->
-                <div style="text-align: center; margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                    <div style="width: 62px; height: 62px; border-radius: 14px; background: #ffffff; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
-                        <img src="<?php echo esc_url($m_login_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px;" alt="EESS Logo">
+                <div style="text-align: center; margin-top: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0;">
+                    <div style="width: 68px; height: 68px; border-radius: 16px; background: #ffffff; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; flex-shrink: 0;">
+                        <img src="<?php echo esc_url($m_login_sys_logo); ?>" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;" alt="EESS Logo">
                     </div>
-                    <h1 style="margin: 0; font-size: 19px; font-weight: 900; color: #0f172a; line-height: 1.2;">نظام الإدارة المدرسية</h1>
+                    <h1 style="margin: 2px 0 0 0; font-size: 21px; font-weight: 900; color: #0f172a; line-height: 1.2;">نظام الإدارة المدرسية</h1>
                     <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 600;">المنظومة التعليمية الرقمية الموحدة والمعتمدة</p>
                 </div>
 
                 <!-- Centered Authentication Box -->
-                <div id="m-step-verify" style="background: #ffffff; border-radius: 18px; padding: 16px 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 380px; box-sizing: border-box; margin: 4px 0;">
+                <div id="m-step-verify" style="background: #ffffff; border-radius: 18px; padding: 14px 18px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); width: 100%; max-width: 380px; box-sizing: border-box; margin: 2px 0; flex-shrink: 0;">
 
                     <!-- Centered Welcome Header -->
-                    <div style="text-align: center; margin-bottom: 12px;">
+                    <div style="text-align: center; margin-bottom: 10px;">
                         <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 2px;">أهلاً.. بعودتك!</div>
                         <div style="font-size: 11px; color: #64748b; font-weight: 600;">يرجى تسجيل دخولك لإدارة حسابك</div>
                     </div>
 
-                    <div style="margin-bottom: 12px; position: relative;">
+                    <div style="margin-bottom: 10px; position: relative;">
                         <div class="eess-float-container" style="position: relative; width: 100%;">
                             <input type="text" id="m_emp_id_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 13px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
                             <label for="m_emp_id_input" class="eess-float-label">الهوية الوطنية / الرقم الوظيفي / الكود *</label>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 12px; position: relative;">
+                    <div style="margin-bottom: 10px; position: relative;">
                         <div class="eess-float-container eess-password-wrapper" style="position: relative; width: 100%;">
                             <input type="password" id="m_password_input" class="eess-float-input" placeholder=" " style="width: 100%; height: 42px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px 0 38px; font-size: 13.5px; font-weight: 700; color: #0f172a; box-sizing: border-box; outline: none; transition: all 0.2s ease;">
                             <label for="m_password_input" class="eess-float-label">كلمة المرور *</label>
@@ -1105,32 +1105,32 @@ class SM_Public {
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 11.5px; color: #475569;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 11.5px; color: #475569;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="checkbox" id="m_remember_me" checked style="width: 15px; height: 15px; border-radius: 4px;">
                             <span>تذكرني وإبقاء الجلسة نشطة</span>
                         </label>
                     </div>
 
-                    <div id="m_verify_msg" style="display: none; margin-bottom: 12px; padding: 8px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700;"></div>
+                    <div id="m_verify_msg" style="display: none; margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700;"></div>
 
                     <div style="display: flex; justify-content: flex-start;">
-                        <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="height: 40px; padding: 0 24px; background: #000000; color: #ffffff !important; border: none; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s ease;">
+                        <button type="button" onclick="eessVerifyMobileEmp()" id="m_btn_verify" style="height: 42px; padding: 0 26px; background: #000000; color: #ffffff !important; border: none; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s ease;">
                             <span>تسجيل الدخول</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Computer Access Notice with Tight Margin -->
-                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 8px 12px; width: 100%; max-width: 380px; box-sizing: border-box; display: flex; align-items: flex-start; gap: 8px; margin-top: 2px;">
+                <div style="background: #fef2f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 6px 10px; width: 100%; max-width: 380px; box-sizing: border-box; display: flex; align-items: flex-start; gap: 8px; margin-top: 2px; flex-shrink: 0;">
                     <span class="dashicons dashicons-info" style="color: #991b1b; font-size: 15px; width: 15px; height: 15px; margin-top: 1px; flex-shrink: 0;"></span>
-                    <div style="font-size: 11px; color: #991b1b; line-height: 1.4; font-weight: 600;">
+                    <div style="font-size: 11px; color: #991b1b; line-height: 1.35; font-weight: 600;">
                         لإدارة حسابك الكامل، واستعراض التحضيرات السابقة، ومتابعة التقارير، يُرجى تسجيل الدخول من جهاز الكمبيوتر أو المحمول.
                     </div>
                 </div>
 
-                <!-- Footer Branding -->
-                <div style="font-size: 10px; color: #94a3b8; text-align: center; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.3px;">
+                <!-- Footer Branding with Small Safe Bottom Margin -->
+                <div style="font-size: 10px; color: #94a3b8; text-align: center; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.3px; flex-shrink: 0;">
                     Powered by Educational Systems Solutions (EESS)
                 </div>
 
