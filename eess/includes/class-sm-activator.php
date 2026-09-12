@@ -54,6 +54,11 @@ class SM_Activator {
             KEY student_code (student_code),
             KEY teacher_id (teacher_id),
             KEY sort_order (sort_order),
+            KEY institution_id (institution_id),
+            KEY school_id (school_id),
+            KEY grade_id (grade_id),
+            KEY department_id (department_id),
+            KEY class_name (class_name),
             UNIQUE KEY national_id (national_id)
         ) $charset_collate;
 
@@ -107,7 +112,9 @@ class SM_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY  (id),
             KEY institution_id (institution_id),
-            KEY school_id (school_id)
+            KEY school_id (school_id),
+            KEY code (code),
+            KEY status (status)
         ) $charset_collate;
 
         CREATE TABLE {$wpdb->prefix}eess_subjects (
@@ -124,7 +131,9 @@ class SM_Activator {
             PRIMARY KEY  (id),
             KEY institution_id (institution_id),
             KEY school_id (school_id),
-            KEY department_id (department_id)
+            KEY department_id (department_id),
+            KEY code (code),
+            KEY status (status)
         ) $charset_collate;
 
         CREATE TABLE {$wpdb->prefix}eess_subject_grades (
@@ -169,7 +178,10 @@ class SM_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
-            KEY school_id (school_id)
+            KEY institution_id (institution_id),
+            KEY school_id (school_id),
+            KEY department_id (department_id),
+            KEY subject_id (subject_id)
         ) $charset_collate;
 
         CREATE TABLE $table_records (

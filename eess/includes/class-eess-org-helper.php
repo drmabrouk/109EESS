@@ -3,6 +3,12 @@ if (!defined('ABSPATH')) exit;
 
 class EESS_Org_Helper {
 
+    private static $cache = array();
+
+    public static function flush_cache() {
+        self::$cache = array();
+    }
+
     /**
      * Seeds initial institutions and schools if none exist
      */
@@ -640,6 +646,9 @@ class EESS_Org_Helper {
      */
     public static function get_user_scope($user_id = null) {
         if (!$user_id) $user_id = get_current_user_id();
+        if (isset(self::$cache['scope_' . $user_id])) {
+            return self::$cache['scope_' . $user_id];
+        }
         global $wpdb;
 
         $user = get_userdata($user_id);
@@ -764,7 +773,7 @@ class EESS_Org_Helper {
             }
         }
 
-        return array(
+        $scope_res = array(
             'unrestricted' => false,
             'institutions' => array_unique(array_filter($institutions)),
             'schools' => array_unique(array_filter($schools)),
@@ -774,6 +783,8 @@ class EESS_Org_Helper {
             'subjects' => array_unique(array_filter($subjects)),
             'departments' => array_unique(array_filter($departments))
         );
+        self::$cache['scope_' . $user_id] = $scope_res;
+        return $scope_res;
     }
 
     /**
@@ -809,6 +820,7 @@ class EESS_Org_Helper {
     public static function save_user_assignments($user_id, $data) {
         global $wpdb;
         $wpdb->delete("{$wpdb->prefix}eess_user_assignments", array('user_id' => $user_id));
+        self::flush_cache();
 
         $inst_ids = !empty($data['institutions']) ? array_map('intval', (array)$data['institutions']) : array();
         $school_ids = !empty($data['schools']) ? array_map('intval', (array)$data['schools']) : array();
@@ -1001,21 +1013,35 @@ class EESS_Org_Helper {
 
     // --- ORGANIZATIONAL CRUD METHODS ---
     public static function get_institutions() {
+        if (isset(self::$cache['institutions'])) {
+            return self::$cache['institutions'];
+        }
         global $wpdb;
-        self::ensure_institutions_columns_exist();
-        self::seed_mandatory_institutions();
-        return $wpdb->get_results("SELECT i.*, u.display_name as manager_display_name FROM {$wpdb->prefix}eess_institutions i LEFT JOIN {$wpdb->users} u ON i.manager_id = u.ID WHERE (i.status = 'active' OR i.status IS NULL) ORDER BY CAST(i.code AS UNSIGNED) ASC, i.id ASC");
+        $res = $wpdb->get_results("SELECT i.*, u.display_name as manager_display_name FROM {$wpdb->prefix}eess_institutions i LEFT JOIN {$wpdb->users} u ON i.manager_id = u.ID WHERE (i.status = 'active' OR i.status IS NULL) ORDER BY CAST(i.code AS UNSIGNED) ASC, i.id ASC");
+        self::$cache['institutions'] = $res;
+        return $res;
     }
 
     public static function get_institution_by_id($id) {
+        $id = intval($id);
+        if (isset(self::$cache['inst_' . $id])) {
+            return self::$cache['inst_' . $id];
+        }
         global $wpdb;
-        self::ensure_institutions_columns_exist();
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}eess_institutions WHERE id = %d LIMIT 1", intval($id)));
+        $res = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}eess_institutions WHERE id = %d LIMIT 1", $id));
+        self::$cache['inst_' . $id] = $res;
+        return $res;
     }
 
     public static function get_school_by_id($id) {
+        $id = intval($id);
+        if (isset(self::$cache['sch_' . $id])) {
+            return self::$cache['sch_' . $id];
+        }
         global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}eess_schools WHERE id = %d LIMIT 1", intval($id)));
+        $res = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}eess_schools WHERE id = %d LIMIT 1", $id));
+        self::$cache['sch_' . $id] = $res;
+        return $res;
     }
 
     public static function add_institution($data) {
@@ -1038,6 +1064,7 @@ class EESS_Org_Helper {
             'status'        => 'active'
         );
         $wpdb->insert("{$wpdb->prefix}eess_institutions", $insert);
+        self::flush_cache();
         return $wpdb->insert_id;
     }
 
@@ -1059,7 +1086,9 @@ class EESS_Org_Helper {
             'manager_id'    => !empty($data['manager_id']) ? intval($data['manager_id']) : null,
             'director_name' => sanitize_text_field($data['director_name'] ?? '')
         );
-        return $wpdb->update("{$wpdb->prefix}eess_institutions", $update, array('id' => intval($id)));
+        $res = $wpdb->update("{$wpdb->prefix}eess_institutions", $update, array('id' => intval($id)));
+        self::flush_cache();
+        return $res;
     }
 
     public static function delete_institution($id) {
@@ -1075,23 +1104,28 @@ class EESS_Org_Helper {
             return new WP_Error('has_users', 'لا يمكن حذف المؤسسة لوجود مستخدمين/كوادر مكلفة بها.');
         }
 
-        return $wpdb->delete("{$wpdb->prefix}eess_institutions", array('id' => $id));
+        $res = $wpdb->delete("{$wpdb->prefix}eess_institutions", array('id' => $id));
+        self::flush_cache();
+        return $res;
     }
 
     // --- DEPARTMENT CRUD METHODS ---
     public static function get_departments_by_institution($inst_id) {
+        $inst_id = intval($inst_id);
+        if (isset(self::$cache['depts_' . $inst_id])) {
+            return self::$cache['depts_' . $inst_id];
+        }
         global $wpdb;
-        self::ensure_institutions_columns_exist();
-        self::seed_institution_departments($inst_id);
-        return $wpdb->get_results($wpdb->prepare(
-            "SELECT d.*, u.display_name as head_display_name FROM {$wpdb->prefix}eess_departments d LEFT JOIN {$wpdb->users} u ON d.head_user_id = u.ID WHERE d.institution_id = %d AND (d.status = 'active' OR d.status IS NULL) ORDER BY d.id ASC",
-            intval($inst_id)
+        $res = $wpdb->get_results($wpdb->prepare(
+            "SELECT d.*, u.display_name as head_display_name FROM {$wpdb->prefix}eess_departments d LEFT JOIN {$wpdb->users} u ON d.head_user_id = u.ID WHERE (d.institution_id = %d OR d.institution_id = 1) AND (d.status = 'active' OR d.status IS NULL) ORDER BY d.id ASC",
+            $inst_id
         ));
+        self::$cache['depts_' . $inst_id] = $res;
+        return $res;
     }
 
     public static function add_department($inst_id, $data) {
         global $wpdb;
-        self::ensure_institutions_columns_exist();
         $name = sanitize_text_field($data['name'] ?? '');
         if (empty($name)) return new WP_Error('empty_name', 'اسم القسم مطلوب');
 
@@ -1112,12 +1146,12 @@ class EESS_Org_Helper {
             'name'           => $name,
             'status'         => 'active'
         ));
+        self::flush_cache();
         return $wpdb->insert_id;
     }
 
     public static function update_department($id, $data) {
         global $wpdb;
-        self::ensure_institutions_columns_exist();
         $update = array();
         if (isset($data['name'])) $update['name'] = sanitize_text_field($data['name']);
         if (isset($data['code'])) {
@@ -1135,28 +1169,36 @@ class EESS_Org_Helper {
         if (!empty($update)) {
             $wpdb->update("{$wpdb->prefix}eess_departments", $update, array('id' => intval($id)));
         }
+        self::flush_cache();
         return true;
     }
 
     public static function delete_department($id) {
         global $wpdb;
-        return $wpdb->delete("{$wpdb->prefix}eess_departments", array('id' => intval($id)));
+        $res = $wpdb->delete("{$wpdb->prefix}eess_departments", array('id' => intval($id)));
+        self::flush_cache();
+        return $res;
     }
 
     // --- SUBJECT CRUD METHODS ---
     public static function get_subjects_by_institution($inst_id) {
+        $inst_id = intval($inst_id);
+        if (isset(self::$cache['subjs_' . $inst_id])) {
+            return self::$cache['subjs_' . $inst_id];
+        }
         global $wpdb;
-        self::ensure_institutions_columns_exist();
-        return $wpdb->get_results($wpdb->prepare(
+        $res = $wpdb->get_results($wpdb->prepare(
             "SELECT s.*, d.name as department_name, u1.display_name as hod_display_name, u2.display_name as coordinator_display_name
              FROM {$wpdb->prefix}eess_subjects s
              LEFT JOIN {$wpdb->prefix}eess_departments d ON s.department_id = d.id
              LEFT JOIN {$wpdb->users} u1 ON s.hod_user_id = u1.ID
              LEFT JOIN {$wpdb->users} u2 ON s.coordinator_user_id = u2.ID
-             WHERE s.institution_id = %d AND (s.status = 'active' OR s.status IS NULL)
+             WHERE (s.institution_id = %d OR s.institution_id = 1) AND (s.status = 'active' OR s.status IS NULL)
              ORDER BY s.name ASC",
-            intval($inst_id)
+            $inst_id
         ));
+        self::$cache['subjs_' . $inst_id] = $res;
+        return $res;
     }
 
     public static function get_subject_assigned_grades($subject_id) {
@@ -1228,6 +1270,7 @@ class EESS_Org_Helper {
             }
         }
 
+        self::flush_cache();
         return $sub_id;
     }
 
@@ -1240,7 +1283,9 @@ class EESS_Org_Helper {
 
         $wpdb->delete("{$wpdb->prefix}eess_subject_grades", array('subject_id' => intval($id)));
         $wpdb->delete("{$wpdb->prefix}eess_subject_schools", array('subject_id' => intval($id)));
-        return $wpdb->delete("{$wpdb->prefix}eess_subjects", array('id' => intval($id)));
+        $res = $wpdb->delete("{$wpdb->prefix}eess_subjects", array('id' => intval($id)));
+        self::flush_cache();
+        return $res;
     }
 
     public static function get_schools() {
